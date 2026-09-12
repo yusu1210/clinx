@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "shared-policy",
+  "title": "Reuse eligibility across reactor modules",
+  "outcome": "Application count delegates to policy and excludes unavailable items",
+  "mode": "implementation",
+  "scope": ["Two synthetic Java modules"],
+  "invariants": ["Application does not duplicate eligibility policy"],
+  "nonGoals": ["No framework setup, real database, remote API or deployment"],
+  "defaultClaim": "reactor-behavior",
+  "claims": ["reactor-behavior"],
+  "obligations": [
+    {
+      "id": "both-modules",
+      "description": "Both policy and application tests pass with expected case identities",
+      "claims": ["reactor-behavior"],
+      "checks": ["reactor-tests"]
+    }
+  ]
+}

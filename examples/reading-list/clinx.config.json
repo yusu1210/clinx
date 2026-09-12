@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "name": "reading-list",
+  "sources": [
+    {
+      "id": "app",
+      "path": ".",
+      "inputs": ["server.mjs", "public", "test", "package.json", "clinx.config.json", "README.md"]
+    }
+  ],
+  "checks": [
+    {
+      "id": "http-persistence",
+      "source": "app",
+      "description": "Real HTTP, server-owned roles, persistence failure and restart; not browser interaction",
+      "command": ["node", "--test", "--test-reporter=junit", "test/http.test.mjs"],
+      "result": {
+        "format": "junit",
+        "from": "stdout",
+        "minTests": 10,
+        "expectedTests": [
+          "test#starts on loopback; serves the browser; list starts empty",
+          "test#requires a valid server-issued identity",
+          "test#reader can save a trimmed title and author and read it back",
+          "test#reader cannot mark read through direct HTTP or forged role claims",
+          "test#server rejects blank, missing, wrong type, long, malformed and oversized input",
+          "test#cross-origin writes and unexpected Host are rejected",
+          "test#librarian marks read; repeating is idempotent; unknown book is 404",
+          "test#concurrent saves are serialized without losing recommendations",
+          "test#failed disk write returns an error and does not claim a saved change",
+          "test#saved list and read status survive an actual server process restart"
+        ]
+      }
+    }
+  ]
+}

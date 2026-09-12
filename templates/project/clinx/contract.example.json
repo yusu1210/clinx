@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "id": "example-change",
+  "title": "Replace this example with the requested outcome",
+  "outcome": "Describe an observable outcome before implementing",
+  "mode": "implementation",
+  "scope": ["Identify the actual affected surface"],
+  "nonGoals": ["No publication or deployment is implied"],
+  "invariants": [],
+  "authority": ["Follow the actual user request and repository rules"],
+  "decisions": [],
+  "context": [],
+  "defaultClaim": "local-behavior",
+  "claims": ["local-behavior"],
+  "obligations": [
+    {
+      "id": "acceptance",
+      "description": "Replace with the actual acceptance condition",
+      "claims": ["local-behavior"],
+      "external": "No checks selected yet. Discover the existing implementation and define meaningful observations."
+    }
+  ]
+}

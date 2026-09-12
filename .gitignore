@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.clinx/
+coverage/
+*.tgz
+target/
+.DS_Store
+.env
+.env.*
+clinx/tasks/*/checkpoints/
+clinx/tasks/*/revisions/

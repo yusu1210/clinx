@@ -1,0 +1,7 @@
+.clinx/
+**/.clinx/
+**/target/
+coverage/
+.env
+.env.*
+*.tgz

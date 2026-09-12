@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Reading Room — Local reading list</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">A SHARED SHELF</p>
+        <h1>The Reading Room</h1>
+        <p class="intro">Good books start with a recommendation.</p>
+      </header>
+      <aside class="demo">
+        Local demonstrator · Demo access codes are generated in the server terminal. They are not
+        production authentication.
+      </aside>
+      <section id="identity" class="card">
+        <h2>Step into the reading room</h2>
+        <p>Use the reader code to recommend a book, or the librarian code to mark one as read.</p>
+        <form id="login-form" novalidate>
+          <label for="access-code">Demo access code</label>
+          <div class="login-row">
+            <input
+              id="access-code"
+              name="access-code"
+              type="password"
+              autocomplete="off"
+              required
+              aria-describedby="login-feedback"
+            /><button id="login-button" type="submit">Enter room</button>
+          </div>
+        </form>
+        <p id="login-feedback" class="feedback" role="status" aria-live="polite"></p>
+      </section>
+      <div id="room" hidden>
+        <div class="identity-row">
+          <p>Browsing as <strong id="role"></strong></p>
+          <button id="logout" class="quiet" type="button">Change demo identity</button>
+        </div>
+        <section class="card">
+          <p class="eyebrow">PASS A GOOD BOOK ALONG</p>
+          <h2>Recommend a book</h2>
+          <form id="book-form" novalidate>
+            <div class="fields">
+              <div>
+                <label for="title">Book title</label
+                ><input
+                  id="title"
+                  name="title"
+                  maxlength="120"
+                  required
+                  placeholder="e.g. A Wizard of Earthsea"
+                  aria-describedby="form-feedback"
+                />
+              </div>
+              <div>
+                <label for="author">Author</label
+                ><input
+                  id="author"
+                  name="author"
+                  maxlength="120"
+                  required
+                  placeholder="e.g. Ursula K. Le Guin"
+                  aria-describedby="form-feedback"
+                />
+              </div>
+            </div>
+            <div class="form-bottom">
+              <span>Both fields required · up to 120 characters each</span
+              ><button id="save-button" type="submit">Add recommendation</button>
+            </div>
+          </form>
+          <p id="form-feedback" class="feedback" role="status" aria-live="polite"></p>
+        </section>
+        <section class="shelf" aria-labelledby="shelf-title">
+          <div class="shelf-heading">
+            <div>
+              <p class="eyebrow">OUR NEXT CHAPTER</p>
+              <h2 id="shelf-title">The reading list <span id="count" class="count">0</span></h2>
+            </div>
+            <button id="refresh" type="button" class="quiet">Refresh list</button>
+          </div>
+          <p id="list-feedback" class="feedback" role="status" aria-live="polite"></p>
+          <p id="empty" class="empty" hidden>
+            The shelf is waiting.<br /><span>Add the first recommendation above.</span>
+          </p>
+          <ul id="books" aria-label="Saved recommendations"></ul>
+          <p id="role-hint" class="hint"></p>
+        </section>
+      </div>
+      <footer>
+        Saved locally on this machine. Temporary storage may be cleared by your operating system.
+      </footer>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "name": "clinx",
+  "context": [
+    {
+      "path": "docs/method.md",
+      "description": "Method and semantic adequacy",
+      "when": ["discover", "contract", "learn"]
+    },
+    {
+      "path": "docs/architecture.md",
+      "description": "Canonical artifacts, runtime ownership and limits",
+      "when": ["discover", "contract", "build", "verify"]
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "description": "Local engineering and release authority",
+      "when": ["always"]
+    }
+  ],
+  "sources": [
+    {
+      "id": "project",
+      "path": ".",
+      "inputs": ["."],
+      "exclude": [
+        ".git",
+        ".DS_Store",
+        ".clinx",
+        "node_modules",
+        "dist",
+        "clinx/tasks",
+        "coverage",
+        "examples/maven-reactor/policy/target",
+        "examples/maven-reactor/application/target",
+        "examples/node-picker/.clinx",
+        "examples/reading-list/.clinx",
+        "examples/maven-reactor/.clinx"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "id": "types",
+      "source": "project",
+      "description": "Strict TypeScript model and implementation checks",
+      "command": ["npm", "run", "typecheck"],
+      "result": { "format": "exit-code" }
+    },
+    {
+      "id": "regressions",
+      "source": "project",
+      "description": "Build from the bound source, then run named semantic and CLI regressions",
+      "command": ["node", "scripts/junit-tests.mjs"],
+      "result": {
+        "format": "junit",
+        "from": "stdout",
+        "minTests": 137,
+        "expectedTests": [
+          "test#real Node domain + HTTP example and negative control",
+          "test#revision preserves old contract and invalidates prior handoff",
+          "test#a modified pass flag cannot override malformed saved test output",
+          "test#inspect empty project without initialization or mutation",
+          "test#client keeps the newest refresh and does not drop a post-write refresh",
+          "test#verification failure exposes the check, actual failure and readable log locations",
+          "test#real full-stack example verifies HTTP and persistence, not browser approval",
+          "test#attachments preserve artifacts and never satisfy an external obligation",
+          "test#cold-start fixture runs existing HTTP tests but fails the new product oracle",
+          "test#execution preserves symlink invocation identity and child-relative PATH",
+          "test#a change to an explicitly declared build directory invalidates old evidence",
+          "test#context and checkpoints refresh retained configuration instead of restoring an old index",
+          "test#Skill onboarding preserves existing configuration and does not scan generated environments",
+          "test#bounded reads allocate by file size and preserve exact-limit and empty-file behavior",
+          "test#evaluation arms receive identical raw projects without clinx task guidance",
+          "test#bulk boundary oracle accepts a compatible implementation through the actual receiver",
+          "test#bulk boundary oracle rejects encoding, capacity, retry and false-success regressions",
+          "test#CLI keeps passing baseline evidence separate from unresolved delivery semantics",
+          "test#collaboration declarations and a manual pass do not approve an external claim",
+          "test#changed confirmation context invalidates local bindings without interpreting approval",
+          "test#bounded reads reject a FIFO without waiting for a writer",
+          "test#suite-level errors cannot produce a supported CLI claim",
+          "test#source entry limits count empty directories as well as files",
+          "test#native test output works without JUnit and preserves real assertion failures",
+          "test#completed exit 0 survives stdout storage failure without a supported claim",
+          "test#interrupted execution and surviving artifacts are retained when archiving fails",
+          "test#unexpected execution errors are unknown, never a claim that nothing ran",
+          "test#unavailable source roots preserve history while current execution remains blocked"
+        ]
+      }
+    },
+    {
+      "id": "hygiene",
+      "source": "project",
+      "description": "Local Markdown links, model/schema sync, Skill metadata and basic leak heuristics",
+      "command": ["node", "scripts/check-project.mjs"],
+      "result": { "format": "exit-code" }
+    }
+  ]
+}

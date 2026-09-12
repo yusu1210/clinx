@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "focus": {
+      "type": "string",
+      "enum": [
+        "discover",
+        "contract",
+        "build",
+        "verify",
+        "learn"
+      ]
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "active",
+        "blocked",
+        "handoff"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384,
+      "pattern": "\\S"
+    },
+    "next": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384,
+      "pattern": "\\S"
+    },
+    "blockers": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 16384,
+        "pattern": "\\S"
+      }
+    }
+  },
+  "required": [
+    "focus",
+    "state",
+    "summary",
+    "next"
+  ],
+  "additionalProperties": false
+}

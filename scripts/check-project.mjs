@@ -1,0 +1,124 @@
+import { readdir, readFile, access } from 'node:fs/promises';
+import { join, dirname, resolve, relative } from 'node:path';
+import { assertPublicFile } from './release-scan.mjs';
+import { fileURLToPath } from 'node:url';
+import assert from 'node:assert/strict';
+import {
+  configSchema,
+  taskSchema,
+  receiptSchema,
+  checkpointSchema,
+  checkpointInputSchema,
+  evidenceSchema,
+  evidenceInputSchema,
+} from '../dist/schema.js';
+import { z } from 'zod';
+
+const root = fileURLToPath(new URL('../', import.meta.url));
+const omit = new Set(['node_modules', '.git', '.clinx', 'dist', 'target', 'coverage', '.DS_Store']);
+let count = 0;
+const walk = async (dir) => {
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    if (omit.has(entry.name)) continue;
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      await walk(path);
+      continue;
+    }
+    const content = await assertPublicFile(path, relative(root, path));
+    count++;
+    if (!path.endsWith('.md')) continue;
+    for (const match of content.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
+      const link = match[1].split('#')[0];
+      if (!link || /^[a-z]+:/i.test(link)) continue;
+      await access(resolve(dirname(path), link));
+    }
+  }
+};
+await walk(root);
+const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
+assert.equal(manifest.name, 'clinx');
+assert.equal(manifest.bin.clinx, 'bin/clinx.mjs');
+const lock = JSON.parse(await readFile(join(root, 'package-lock.json'), 'utf8'));
+assert.equal(lock.name, manifest.name);
+assert.equal(lock.version, manifest.version);
+assert.equal(lock.packages[''].version, manifest.version);
+for (const dir of [
+  'docs',
+  'examples/node-picker',
+  'examples/reading-list',
+  'examples/maven-reactor',
+]) {
+  for (const name of await readdir(join(root, dir))) {
+    if (!name.endsWith('.md') || name.endsWith('.zh-CN.md')) continue;
+    const translated = `${name.slice(0, -3)}.zh-CN.md`;
+    await access(join(root, dir, translated));
+    assert.ok(
+      (await readFile(join(root, dir, name), 'utf8')).includes(`](${translated})`),
+      `Missing language link: ${dir}/${name}`,
+    );
+    assert.ok(
+      (await readFile(join(root, dir, translated), 'utf8')).includes(`](${name})`),
+      `Missing language link: ${dir}/${translated}`,
+    );
+  }
+}
+for (const name of (await readdir(join(root, 'src'))).filter((name) => name.endsWith('.ts')))
+  assert.ok(
+    manifest.files.includes(`dist/${name.slice(0, -3)}.js`),
+    `Runtime module missing from package: ${name}`,
+  );
+for (const [name, schema] of Object.entries({
+  config: configSchema,
+  task: taskSchema,
+  receipt: receiptSchema,
+  checkpoint: checkpointSchema,
+  'checkpoint-input': checkpointInputSchema,
+  evidence: evidenceSchema,
+  'evidence-input': evidenceInputSchema,
+})) {
+  const actual = JSON.parse(await readFile(join(root, 'schemas', `${name}.schema.json`), 'utf8'));
+  assert.deepEqual(actual, z.toJSONSchema(schema, { target: 'draft-2020-12', io: 'input' }));
+}
+const skill = await readFile(join(root, 'skills/clinx-delivery/SKILL.md'), 'utf8');
+assert.match(skill, /^---\nname: clinx-delivery\ndescription: .+\n/);
+assert.match(skill, /\nlicense: MIT\n/);
+assert.equal(
+  await readFile(join(root, 'skills/clinx-delivery/LICENSE'), 'utf8'),
+  await readFile(join(root, 'LICENSE'), 'utf8'),
+);
+assert.ok(skill.split('\n').length < 160, 'Keep Skill entry concise');
+const metadata = await readFile(join(root, 'skills/clinx-delivery/agents/openai.yaml'), 'utf8');
+assert.ok(metadata.includes('$clinx-delivery'));
+const text = z.string().trim().min(1);
+const scenario = z
+  .object({
+    id: text.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+    request: text,
+    prepare: text.optional(),
+    fixture: text.optional(),
+    evaluatorSetup: text.optional(),
+    evaluate: z.array(text).min(1),
+  })
+  .strict()
+  .refine((s) => Boolean(s.prepare) !== Boolean(s.fixture), 'Choose preparation or fixture');
+const scenarios = z
+  .object({
+    version: z.literal(1),
+    status: z.literal('protocol-not-a-measured-agent-benchmark'),
+    scenarios: z.array(scenario).min(1),
+  })
+  .strict()
+  .parse(JSON.parse(await readFile(join(root, 'evals/scenarios.json'), 'utf8')));
+assert.equal(new Set(scenarios.scenarios.map((s) => s.id)).size, scenarios.scenarios.length);
+for (const scenario of scenarios.scenarios) {
+  if (scenario.fixture) await access(resolve(root, scenario.fixture));
+  if (scenario.prepare)
+    assert.match(
+      scenario.prepare,
+      /^node evals\/prepare\.mjs (greenfield|brownfield|cold-start|bulk-reset)$/,
+    );
+}
+process.stdout.write(
+  `PASS: ${count} authored/generated source files checked; local Markdown links, schema sync, Skill metadata and basic private-material heuristics.\n`,
+);

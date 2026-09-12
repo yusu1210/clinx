@@ -1,0 +1,4 @@
+interface:
+  display_name: 'clinx delivery'
+  short_description: 'Connect requirements to observable software outcomes'
+  default_prompt: 'Use $clinx-delivery to handle this engineering task within its requested scope, reuse existing capabilities, and verify the stated outcome.'

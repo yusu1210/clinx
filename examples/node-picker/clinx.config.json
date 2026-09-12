@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "name": "node-picker",
+  "sources": [
+    {
+      "id": "api",
+      "path": ".",
+      "inputs": ["catalog.mjs", "http.mjs", "catalog.test.mjs", "clinx.config.json"]
+    }
+  ],
+  "checks": [
+    {
+      "id": "picker-tests",
+      "source": "api",
+      "description": "Synthetic domain and real loopback HTTP checks",
+      "command": ["node", "--test", "--test-reporter=junit", "catalog.test.mjs"],
+      "result": {
+        "format": "junit",
+        "from": "stdout",
+        "minTests": 3,
+        "expectedTests": [
+          "test#filters before pagination and counts the same set",
+          "test#rejects invalid pagination",
+          "test#HTTP boundary preserves eligibility total and server tenant"
+        ]
+      }
+    }
+  ]
+}

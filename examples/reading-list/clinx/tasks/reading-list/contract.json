@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "id": "reading-list",
+  "title": "Persist a local reading recommendation and enforce librarian actions",
+  "outcome": "Reader recommendations persist; only librarian identity can mark read; browser reflects the result",
+  "mode": "implementation",
+  "scope": ["Synthetic loopback browser, HTTP API and temporary file store"],
+  "nonGoals": ["Production identity, external services, deployment, account administration"],
+  "invariants": [
+    "Server owns roles",
+    "Failed writes never report saved success",
+    "Saved state survives ordinary process restart"
+  ],
+  "authority": ["Run this synthetic example and its tests with isolated temporary data"],
+  "defaultClaim": "local-http",
+  "claims": ["local-http", "local-product"],
+  "obligations": [
+    {
+      "id": "http-state",
+      "description": "Exercise role enforcement, data validation, storage failure and restart over real HTTP",
+      "claims": ["local-http", "local-product"],
+      "checks": ["http-persistence"]
+    },
+    {
+      "id": "browser-journey",
+      "description": "Operate the real browser through the required user journey",
+      "claims": ["local-product"],
+      "external": "Use a browser against the current build to verify both roles, submission, refresh, read action, validation and offline feedback. HTTP tests do not establish these interactions; observation attachments do not automatically satisfy this obligation."
+    }
+  ]
+}

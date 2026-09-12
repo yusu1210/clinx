@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "id": "project",
+  "title": "clinx checkout validation",
+  "outcome": "Check the current CLI implementation, schema and documentation consistency under the declared local checks",
+  "scope": [
+    "Method documentation",
+    "Progressive delivery Skill",
+    "Task/context/verification CLI",
+    "Synthetic examples and regression tests",
+    "Local package and release-readiness documentation"
+  ],
+  "invariants": [
+    "Unknown or stale observations do not become verified completion",
+    "Only explicit project inputs and exclusions determine local evidence scope",
+    "Local checks do not authorize publication"
+  ],
+  "authority": [
+    "Run the reviewed local checks and isolated fixtures; no publication or shared-system changes"
+  ],
+  "context": [],
+  "mode": "implementation",
+  "defaultClaim": "local-core",
+  "claims": ["local-core", "public-release"],
+  "nonGoals": [
+    "No publication or global installation",
+    "No inference of agent effectiveness from implementation tests"
+  ],
+  "obligations": [
+    {
+      "id": "implementation-regressions",
+      "description": "Declared local type checks and semantic/CLI regressions pass",
+      "claims": ["local-core", "public-release"],
+      "checks": ["types", "regressions"]
+    },
+    {
+      "id": "artifact-consistency",
+      "description": "Schemas, local links and Skill metadata are internally consistent under the supplied checks",
+      "claims": ["local-core", "public-release"],
+      "checks": ["hygiene"]
+    },
+    {
+      "id": "release-owner",
+      "description": "Publication preparation and explicit owner authorization",
+      "claims": ["public-release"],
+      "external": "Review package/Maven checks, hosted CI, provenance, licenses, security reporting and the exact candidate; obtain owner authorization for the intended destination. Registry ownership applies only to npm publication."
+    }
+  ]
+}

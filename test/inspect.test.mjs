@@ -1,0 +1,113 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, readdir, symlink } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { cli, put, json, fixture } from './helpers.mjs';
+const empty = () => mkdtemp(join(tmpdir(), 'clinx-inspect-'));
+
+test('inspect empty project without initialization or mutation', async () => {
+  const dir = await empty();
+  const r = cli(dir, 'inspect');
+  assert.equal(r.status, 0);
+  assert.equal(r.out.configured, false);
+  assert.equal(r.out.executed, false);
+  assert.deepEqual(r.out.candidates, []);
+  assert.deepEqual(await readdir(dir), []);
+  assert.equal(cli(dir, 'inspect', '--run').status, 3);
+  assert.equal(cli(dir, 'inspect', 'unexpected').status, 3);
+});
+test('inspect scripts is inert, excludes bodies and includes real discovery origins', async () => {
+  const dir = await empty();
+  await json(join(dir, 'package.json'), {
+    scripts: {
+      test: 'touch should-not-exist',
+      pretest: 'echo do-not-leak-script-body',
+      dev: 'node server.mjs',
+    },
+    packageManager: 'pnpm@10.0.0',
+  });
+  await put(join(dir, 'AGENTS.md'), 'Project instructions');
+  await put(join(dir, '.env'), 'do-not-read-env');
+  const before = await readdir(dir);
+  const r = cli(dir, 'inspect');
+  assert.equal(r.status, 0);
+  assert.deepEqual(r.out.candidates.find((c) => c.purpose === 'test').command, [
+    'pnpm',
+    'run',
+    'test',
+  ]);
+  assert.equal(r.out.candidates[0].readiness, 'not-checked');
+  assert.equal(r.out.candidates[0].sideEffects, 'unreviewed');
+  assert.ok(r.out.sources[0].index.find((i) => i.path === 'AGENTS.md').sha256);
+  assert.doesNotMatch(
+    JSON.stringify(r.out),
+    /do-not-leak-script-body|do-not-read-env|should-not-exist/,
+  );
+  assert.deepEqual(await readdir(dir), before);
+});
+test('inspect lock conflicts and unknown managers without inventing an executable choice', async () => {
+  for (const mode of ['conflict', 'unknown']) {
+    const dir = await empty();
+    await json(join(dir, 'package.json'), {
+      scripts: { test: 'anything' },
+      ...(mode === 'unknown' ? { packageManager: 'unknown@1' } : {}),
+    });
+    if (mode === 'conflict') {
+      await put(join(dir, 'yarn.lock'), '');
+      await put(join(dir, 'package-lock.json'), '{}');
+    }
+    const r = cli(dir, 'inspect');
+    assert.deepEqual(r.out.candidates, []);
+    assert.ok(r.out.sources[0].diagnostics.length > 0);
+  }
+});
+test('inspect lockfile convention and Maven wrapper without executing either', async () => {
+  const dir = await empty();
+  await json(join(dir, 'package.json'), { scripts: { build: 'false' } });
+  await put(join(dir, 'yarn.lock'), '');
+  await put(join(dir, 'pom.xml'), '<project/>');
+  await put(join(dir, 'mvnw'), 'exit 1');
+  const r = cli(dir, 'inspect');
+  assert.ok(r.out.candidates.some((c) => c.command.join(' ') === 'yarn run build'));
+  assert.ok(r.out.candidates.some((c) => c.command.join(' ') === './mvnw test'));
+  assert.ok(r.out.candidates.every((c) => c.readiness === 'not-checked'));
+});
+test('inspect malformed, unsafe and oversized inputs as diagnostics, not successful parsing', async () => {
+  for (const [name, content] of [
+    ['package.json', '{broken'],
+    ['README.md', 'x'.repeat(262145)],
+  ]) {
+    const dir = await empty();
+    await put(join(dir, name), content);
+    const r = cli(dir, 'inspect');
+    assert.ok(r.out.sources[0].diagnostics.some((d) => d.path === name));
+    assert.deepEqual(r.out.candidates, []);
+  }
+  const dir = await empty();
+  const outside = await empty();
+  await put(join(outside, 'private'), 'do-not-read-outside');
+  await symlink(join(outside, 'private'), join(dir, 'README.md'));
+  const r = cli(dir, 'inspect');
+  assert.ok(r.out.sources[0].diagnostics.some((d) => /Symlink/.test(d.reason)));
+  assert.doesNotMatch(JSON.stringify(r.out), /do-not-read-outside/);
+});
+test('inspect declared sources and checks, not undeclared nested projects', async () => {
+  const sibling = await empty();
+  await put(join(sibling, 'pom.xml'), '<project/>');
+  const dir = await fixture((c) =>
+    c.sources.push({ id: 'java', path: sibling, inputs: ['pom.xml'] }),
+  );
+  await json(join(dir, 'nested/package.json'), { scripts: { test: 'false' } });
+  const r = cli(dir, 'inspect');
+  assert.equal(r.out.configured, true);
+  assert.equal(r.out.sources.length, 2);
+  assert.ok(r.out.candidates.some((c) => c.source === 'java' && c.command[0] === 'mvn'));
+  assert.ok(r.out.candidates.some((c) => c.origin.key === 'checks.unit'));
+  assert.ok(r.out.candidates.every((c) => !c.cwd.includes('nested')));
+});
+test('inspect invalid clinx configuration fails instead of treating it as an unconfigured project', async () => {
+  const dir = await empty();
+  await json(join(dir, 'clinx.config.json'), { version: 99 });
+  assert.equal(cli(dir, 'inspect').status, 3);
+});

@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "id": "eligible-picker",
+  "title": "Keep eligible rows and total consistent",
+  "outcome": "The synthetic HTTP API returns only active in-stock items for the server tenant, with total computed before pagination",
+  "mode": "implementation",
+  "scope": ["Existing predicate, query and HTTP handler"],
+  "nonGoals": ["No UI, authentication provider, pricing logic, persistence or deployment"],
+  "invariants": [
+    "Eligibility has one domain owner",
+    "Count and rows derive from the same filtered set",
+    "Client query cannot select another tenant"
+  ],
+  "authority": ["Read/write synthetic fixture and execute its local tests only"],
+  "decisions": [
+    {
+      "question": "Where should filtering live?",
+      "choice": "Reuse the domain predicate before pagination",
+      "basis": "catalog.mjs is the shared selection owner; HTTP delegates to it"
+    }
+  ],
+  "defaultClaim": "local-behavior",
+  "claims": ["local-behavior", "release-ready"],
+  "obligations": [
+    {
+      "id": "selection",
+      "description": "Observe filtering, count, pagination and HTTP tenant boundary",
+      "claims": ["local-behavior", "release-ready"],
+      "checks": ["picker-tests"]
+    },
+    {
+      "id": "real-target",
+      "description": "Real integration and release evidence",
+      "claims": ["release-ready"],
+      "external": "This synthetic fixture has no production target, auth provider, browser UI or release authority"
+    }
+  ]
+}

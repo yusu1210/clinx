@@ -1,0 +1,12 @@
+{
+  "name": "noticeboard-service-fixture",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.16.0"
+  },
+  "scripts": {
+    "dev": "node src/main.mjs",
+    "test:api": "node --test test/api.test.mjs"
+  }
+}

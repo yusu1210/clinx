@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "name": "maven-reactor",
+  "sources": [
+    {
+      "id": "reactor",
+      "path": ".",
+      "inputs": ["pom.xml", "policy", "application", "clinx.config.json"],
+      "exclude": ["policy/target", "application/target"]
+    }
+  ],
+  "checks": [
+    {
+      "id": "reactor-tests",
+      "source": "reactor",
+      "description": "Run both modules and observe their specific cases",
+      "command": ["mvn", "-B", "-ntp", "-Dmaven.repo.local=.clinx/m2", "test"],
+      "timeoutMs": 240000,
+      "result": {
+        "format": "junit",
+        "from": "files",
+        "minTests": 3,
+        "paths": [
+          "policy/target/surefire-reports/TEST-example.EligibilityTest.xml",
+          "application/target/surefire-reports/TEST-example.SelectionTest.xml"
+        ],
+        "expectedTests": [
+          "example.EligibilityTest#rejectsUnavailable",
+          "example.EligibilityTest#acceptsAvailable",
+          "example.SelectionTest#delegatesToSharedPolicy"
+        ]
+      }
+    }
+  ]
+}
