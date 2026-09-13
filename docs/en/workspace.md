@@ -125,15 +125,19 @@ When using the CLI:
   to `--root`, not to the task directory. These local references do not track changes
   behind a URL; check the effective upstream version when relying on remote material.
 - Include all material dependencies in task `sources`, including reused sources that
-  will not be edited. Omitting `sources` includes every configured source. This is
-  evidence scope and navigation selection, not an access-control boundary.
+  will not be edited. When a task is saved without `sources`, clinx resolves and
+  persists the current source set; later workspace additions cannot silently widen
+  that task. This is evidence scope and navigation selection, not an access-control
+  boundary.
 - Select meaningful source `inputs` and exclude generated results. Do not bind a
   constantly appended validation log as a design input, or assume `knowledge/` and
   task directories are automatically excluded. A changed bound design should require
   rechecking acceptance; writing a receipt should not invalidate that same receipt.
 
 See the [CLI reference](cli.md) for exact fields. Source scope records what was
-declared; it cannot prove that investigation found every dependency.
+declared; it cannot prove that investigation found every dependency. Source paths
+are local locators; verification identity binds source IDs, selectors, checks and
+content, so moving an unchanged checkout does not by itself invalidate a receipt.
 
 ## Parallel work and resumption
 

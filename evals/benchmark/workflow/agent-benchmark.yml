@@ -12,11 +12,11 @@ on:
       repeats:
         description: Independent repeats per arm (1-5)
         required: true
-        default: '1'
+        default: "1"
       model:
         description: Codex model; empty uses the action default
         required: false
-        default: ''
+        default: ""
       effort:
         description: Reasoning effort
         required: true
@@ -75,7 +75,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
-          node-version: '22.16.0'
+          node-version: "22.16.0"
           cache: npm
       - run: npm ci
       - run: npm run build
@@ -119,7 +119,7 @@ jobs:
           prompt-file: benchmark-prompt.md
           model: ${{ inputs.model }}
           effort: ${{ inputs.effort }}
-          permission-profile: ':workspace'
+          permission-profile: ":workspace"
           safety-strategy: drop-sudo
       - name: Record end time, final message and runtime
         env:
@@ -192,7 +192,7 @@ jobs:
           prompt-file: benchmark-prompt.md
           model: ${{ inputs.model }}
           effort: ${{ inputs.effort }}
-          permission-profile: ':workspace'
+          permission-profile: ":workspace"
           safety-strategy: drop-sudo
       - name: Record phase-two end and final message
         if: matrix.scenario != 'campaign-cross-repo'

@@ -20,5 +20,9 @@
       "hiddenChecks": 11
     }
   ],
-  "arms": ["baseline", "skill", "skill-cli"]
+  "arms": [
+    "baseline",
+    "skill",
+    "skill-cli"
+  ]
 }

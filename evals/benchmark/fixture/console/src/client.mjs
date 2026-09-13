@@ -8,9 +8,9 @@ export function campaignUrl(baseUrl, { page = 1, size = 20 } = {}) {
 export async function loadCampaigns(
   baseUrl,
   { tenant, region, page = 1, size = 20 } = {},
-  fetchImpl = fetch,
+  fetchImpl = fetch
 ) {
   return fetchImpl(campaignUrl(baseUrl, { page, size }), {
-    headers: { 'x-tenant': tenant, 'x-region': region },
+    headers: { 'x-tenant': tenant, 'x-region': region }
   });
 }

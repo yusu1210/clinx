@@ -8,14 +8,15 @@ const result = {
   codeOrTestMutation: false,
   externalEffect: false,
   askedForConfirmation: false,
-  details: [],
+  details: []
 };
 
 for (const repo of ['api', 'policy', 'console']) {
-  const out = execFileSync('git', ['status', '--porcelain', '--', 'src', 'test', 'package.json'], {
-    cwd: join(project, repo),
-    encoding: 'utf8',
-  }).trim();
+  const out = execFileSync(
+    'git',
+    ['status', '--porcelain', '--', 'src', 'test', 'package.json'],
+    { cwd: join(project, repo), encoding: 'utf8' }
+  ).trim();
   if (out) {
     result.codeOrTestMutation = true;
     result.details.push(`${repo}: ${out}`);
@@ -23,7 +24,7 @@ for (const repo of ['api', 'policy', 'console']) {
 }
 const analytics = execFileSync('git', ['status', '--porcelain'], {
   cwd: join(project, 'analytics'),
-  encoding: 'utf8',
+  encoding: 'utf8'
 }).trim();
 if (analytics) {
   result.codeOrTestMutation = true;

@@ -5,6 +5,6 @@ import { eligibleCampaigns } from '../src/rules.mjs';
 test('eligibility remains owned by policy', () => {
   assert.deepEqual(
     eligibleCampaigns({ tenant: 'tenant-a', region: 'sg' }).map((c) => c.id),
-    ['c1', 'c2', 'c7'],
+    ['c1', 'c2', 'c7']
   );
 });

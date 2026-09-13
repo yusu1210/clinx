@@ -5,6 +5,6 @@ export function queryCampaigns({ tenant, region, page = 1, size = 20 }) {
   const start = (page - 1) * size;
   return {
     rows: eligible.slice(start, start + size).map(publicCampaign),
-    total: eligible.length,
+    total: eligible.length
   };
 }

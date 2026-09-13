@@ -18,7 +18,7 @@ for (const name of ['api', 'policy', 'console', 'analytics']) {
 function runNode(script, args = []) {
   return spawnSync(process.execPath, [resolve(root, script), ...args], {
     encoding: 'utf8',
-    timeout: 30000,
+    timeout: 30000
   });
 }
 
@@ -37,6 +37,4 @@ if (broken.status !== 0) throw new Error(broken.stderr || broken.stdout);
 let bad = runNode('scripts/grade.mjs', ['campaign-cross-repo', run]);
 if (bad.status === 0) throw new Error('After-pagination negative control unexpectedly passed');
 
-console.log(
-  'PASS: raw fixture fails, compatible reference passes, pagination negative control fails.',
-);
+console.log('PASS: raw fixture fails, compatible reference passes, pagination negative control fails.');

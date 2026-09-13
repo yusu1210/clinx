@@ -169,9 +169,33 @@ export async function listTasks(root: string) {
   );
 }
 
+export async function showTask(root: string, id: string) {
+  root = await realpath(root);
+  const task = parseTask(await readJson(await boundedPath(root, `${taskPath(id)}/contract.json`)));
+  if (task.id !== id) throw new Error('Task ID does not match its directory');
+  const { checkpoint, issues } = await readCheckpoint(root, id);
+  let revisions: unknown[] = [];
+  try {
+    const directory = await boundedPath(root, `${taskPath(id)}/revisions`);
+    const names = (await readdir(directory)).sort();
+    revisions = await Promise.all(
+      names.map(async (name) =>
+        readJson(await boundedPath(root, `${taskPath(id)}/revisions/${name}`)),
+      ),
+    );
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT')
+      issues.push({ path: `${taskPath(id)}/revisions`, error: String(error) });
+  }
+  return { task, revisions, checkpoint, issues };
+}
+
 export async function addTask(p: Workspace, input: unknown) {
   p = await openWorkspace(p.root);
-  const task = validateTask(input, p.config);
+  const parsed = validateTask(input, p.config);
+  // Resolve the "all sources" shorthand once. Future workspace additions must
+  // not silently widen an existing task's evidence scope.
+  const task = parsed.sources ? parsed : { ...parsed, sources: p.config.sources.map((s) => s.id) };
   await taskBinding(p, task);
   return withLock(p.root, async () => {
     const dir = await makePrivateDir(p.root, taskPath(task.id));
@@ -183,7 +207,10 @@ export async function reviseTask(p: Workspace, id: string, input: unknown, reaso
   if (!reason.trim()) throw new Error('Revision reason is required');
   return withLock(p.root, async () => {
     p = await openWorkspace(p.root);
-    const task = validateTask(input, p.config);
+    const parsed = validateTask(input, p.config);
+    const task = parsed.sources
+      ? parsed
+      : { ...parsed, sources: p.config.sources.map((s) => s.id) };
     if (task.id !== id) throw new Error('Revision cannot change task ID');
     const nextDigest = await taskBinding(p, task);
     const contractFile = await boundedPath(p.root, `${taskPath(id)}/contract.json`);

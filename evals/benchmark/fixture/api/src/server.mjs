@@ -20,13 +20,7 @@ export function createCampaignServer() {
     const page = positiveInt(url.searchParams.get('page'), 1);
     const size = positiveInt(url.searchParams.get('size'), 20);
 
-    if (
-      typeof tenant !== 'string' ||
-      typeof region !== 'string' ||
-      page === null ||
-      size === null ||
-      size > 50
-    ) {
+    if (typeof tenant !== 'string' || typeof region !== 'string' || page === null || size === null || size > 50) {
       res.writeHead(400, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ error: 'invalid request' }));
       return;

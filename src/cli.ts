@@ -4,7 +4,7 @@ import { inside, MAX_FILE_BYTES, readJson, sourceRoots } from './files.js';
 import { inspect } from './inspect.js';
 import { addEvidence, listEvidence } from './evidence.js';
 import { openWorkspace, taskSources } from './workspace.js';
-import { addTask, checkpoint, context, listTasks, readTask, reviseTask } from './task.js';
+import { addTask, checkpoint, context, listTasks, readTask, reviseTask, showTask } from './task.js';
 import { focusSchema } from './schema.js';
 import { previewChecks, reconcile, verify } from './verify.js';
 import { version } from './version.js';
@@ -172,6 +172,8 @@ export async function main(argv: string[]): Promise<number> {
           : await copyExample(required(extra, 'example name'), required(values.to, '--to'));
     } else if (key === 'task list') {
       result = await listTasks(root);
+    } else if (key === 'task show') {
+      result = await showTask(root, required(extra, 'task ID'));
     } else {
       const p = await openWorkspace(root);
       if (command === 'validate') {

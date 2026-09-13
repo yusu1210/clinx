@@ -9,11 +9,7 @@ const scenario = process.argv[3];
 const arm = process.argv[4];
 const output = resolve(process.argv[5] ?? './benchmark-run');
 
-const scenarios = new Set([
-  'campaign-cross-repo',
-  'campaign-resume-drift',
-  'campaign-confirmation',
-]);
+const scenarios = new Set(['campaign-cross-repo', 'campaign-resume-drift', 'campaign-confirmation']);
 const arms = new Set(['baseline', 'skill', 'skill-cli']);
 if (!scenarios.has(scenario) || !arms.has(arm)) {
   console.error('Usage: prepare.mjs REPO_ROOT SCENARIO baseline|skill|skill-cli OUTPUT');
@@ -38,7 +34,7 @@ for (const name of ['api', 'policy', 'console', 'analytics']) {
 await mkdir(join(project, '.benchmark'), { recursive: true });
 if (arm !== 'baseline') {
   await cp(join(repoRoot, 'skills/clinx-delivery'), join(project, '.benchmark/clinx-delivery'), {
-    recursive: true,
+    recursive: true
   });
 }
 if (arm === 'skill-cli') {
@@ -55,17 +51,8 @@ if (arm === 'skill-cli') {
   await mkdir(install, { recursive: true });
   execFileSync(
     'npm',
-    [
-      'install',
-      '--prefix',
-      install,
-      '--ignore-scripts',
-      '--no-audit',
-      '--no-fund',
-      '--no-save',
-      runtime,
-    ],
-    { cwd: project, stdio: 'ignore' },
+    ['install', '--prefix', install, '--ignore-scripts', '--no-audit', '--no-fund', '--no-save', runtime],
+    { cwd: project, stdio: 'ignore' }
   );
   await mkdir(join(project, '.benchmark/bin'), { recursive: true });
   await writeFile(
@@ -75,7 +62,7 @@ set -eu
 base="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 printf '%s\\n' "$*" >> "$base/clinx-usage.log"
 exec "$base/tools/node_modules/.bin/clinx" "$@"
-`,
+`
   );
   await chmod(join(project, '.benchmark/bin/clinx'), 0o700);
 }
@@ -98,7 +85,7 @@ if (scenario === 'campaign-cross-repo') {
 await writeFile(join(project, 'request.md'), request + '\n');
 await writeFile(
   join(output, 'benchmark-meta.json'),
-  JSON.stringify({ version: 1, scenario, arm }, null, 2) + '\n',
+  JSON.stringify({ version: 1, scenario, arm }, null, 2) + '\n'
 );
 
 console.log(JSON.stringify({ scenario, arm, project, output }, null, 2));

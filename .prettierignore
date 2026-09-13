@@ -7,3 +7,5 @@ npm-shrinkwrap.json
 coverage/
 *.tgz
 artifacts/
+# Benchmark fixtures intentionally preserve byte-level baselines and oracle edge cases.
+evals/benchmark/

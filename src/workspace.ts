@@ -61,7 +61,11 @@ export function verificationDefinition(
 export function digestDefinition(definition: VerificationDefinition) {
   return sha256(
     canonical({
-      sources: [...definition.sources].sort((a, b) => compareText(a.id, b.id)),
+      // A checkout path is a local locator, not delivery semantics. Keep it in
+      // the saved definition for diagnostics, but exclude it from identity.
+      sources: [...definition.sources]
+        .map(({ path: _path, ...source }) => source)
+        .sort((a, b) => compareText(a.id, b.id)),
       checks: definition.checks.map(({ description: _description, ...check }) => check),
     }),
   );

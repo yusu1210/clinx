@@ -23,7 +23,7 @@
       "source": "docs/en/architecture.md",
       "translation": "docs/zh-CN/architecture.md",
       "sourceSha256": "bb3427251689406e739f84dd50e736179f29c52290e31aaeb13b8e00c679b62f",
-      "translationSha256": "bc64f33e47a15c2f8c06663fa4145fe85234253196950cb1a4fdcba5a2d827b8"
+      "translationSha256": "13a12471dfb583d966e1b46d50a9aa7b8bb688c370ff160cb16b68f11e645fde"
     },
     {
       "source": "docs/en/cli.md",
@@ -53,13 +53,13 @@
       "source": "docs/en/evidence.md",
       "translation": "docs/zh-CN/evidence.md",
       "sourceSha256": "1c9539071065033f7081394a40d2a91afe1cc200c8489ef09656a734192ea6f8",
-      "translationSha256": "2ba9c849673152949c5901add64a67bc9b9cfd4ae55a95bc8db21a2d3b7affcf"
+      "translationSha256": "388c67ff1f6b691d724bcf9613dea6bff34b969a3472c06b9a5d6db1208874e4"
     },
     {
       "source": "docs/en/hands-on.md",
       "translation": "docs/zh-CN/hands-on.md",
       "sourceSha256": "4556af21cc462f64c2cec3d635baacc1b8f008a1dc029cd3bf518e499564f3a2",
-      "translationSha256": "d1c0b410c8d1072019fd9545e620ba79dccbde68524a91d8a80bc916416284d8"
+      "translationSha256": "1a97250405d8752570028ed2cf528d855c463229edeff007b30d7da5ca1f15c6"
     },
     {
       "source": "docs/en/installation.md",
@@ -71,7 +71,7 @@
       "source": "docs/en/method.md",
       "translation": "docs/zh-CN/method.md",
       "sourceSha256": "e8b9e2c937dabf90d5ad9286ff7dfbd939472b11ab9193331f6add4ec9876020",
-      "translationSha256": "9bfa09ca4ee68190ce62efe7c0597d2bf2bce578d3cd8a78ef4de10d1b64984e"
+      "translationSha256": "a5b7dde296cccc50358be11579c6cac65bf85769f8e029579f1e2b20dd82d2f1"
     },
     {
       "source": "docs/en/README.md",
@@ -94,8 +94,8 @@
     {
       "source": "docs/en/workspace.md",
       "translation": "docs/zh-CN/workspace.md",
-      "sourceSha256": "ca7be35cdf3c678947f53af8eea9e79d722252c0f01ff5a4d76d72fb0c06239f",
-      "translationSha256": "a769e076284262f103b6f620d1014f04caeb8bf920edddbb3aec5fb95ff1c7b2"
+      "sourceSha256": "e0bd51e21ebfffb61366b680b4a805e9cbe27fac4ecbb9e3232966ff5b3a7ce8",
+      "translationSha256": "ccb959994555d9f5d05695f25cb54c151b0d6816d093d82b9bb23e6c46709d9f"
     },
     {
       "source": "examples/maven-reactor/README.md",
@@ -125,7 +125,7 @@
       "source": "README.md",
       "translation": "README.zh-CN.md",
       "sourceSha256": "42ecefb098e1ccde58bb10a1f5fd9bde55ede9044d808b6e3ee8a54796e2ab89",
-      "translationSha256": "11239336e7b64a3d0454f8038e9c62630c2f7212ee0711a3bb45d02545f3c4ee"
+      "translationSha256": "299e75b5669b47f5f6ba71303fb86720db8a879e5e864af0aa6347ad0db7a2d8"
     },
     {
       "source": "SECURITY.md",

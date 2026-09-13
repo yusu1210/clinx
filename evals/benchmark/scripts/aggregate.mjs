@@ -23,15 +23,19 @@ for (const scenario of scenarios) {
       passRate: sample.filter((r) => r.passed).length / sample.length,
       meanChecksPassed:
         sample.reduce((sum, r) => sum + r.passedChecks / r.totalChecks, 0) / sample.length,
-      meanElapsedMs: elapsed.length ? elapsed.reduce((a, b) => a + b, 0) / elapsed.length : null,
+      meanElapsedMs: elapsed.length
+        ? elapsed.reduce((a, b) => a + b, 0) / elapsed.length
+        : null,
       cliUseRate:
-        arm === 'skill-cli' ? sample.filter((r) => r.metrics.cliUsed).length / sample.length : null,
+        arm === 'skill-cli'
+          ? sample.filter((r) => r.metrics.cliUsed).length / sample.length
+          : null,
       operationalFailureRate:
         sample.filter((r) =>
           [r.metrics.phase1AgentOutcome, r.metrics.phase2AgentOutcome]
             .filter(Boolean)
-            .some((v) => v !== 'success'),
-        ).length / sample.length,
+            .some((v) => v !== 'success')
+        ).length / sample.length
     });
   }
 }
@@ -40,8 +44,9 @@ const output = {
   version: 1,
   generatedAt: new Date().toISOString(),
   runs: runs.length,
-  note: 'Descriptive matched-run summary only. Do not claim superiority from small n; retain per-run failures and inspect operational failures separately.',
-  summary,
+  note:
+    'Descriptive matched-run summary only. Do not claim superiority from small n; retain per-run failures and inspect operational failures separately.',
+  summary
 };
 await writeFile(join(dir, 'aggregate.json'), JSON.stringify(output, null, 2) + '\n');
 console.log(JSON.stringify(output, null, 2));

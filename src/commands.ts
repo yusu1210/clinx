@@ -104,6 +104,16 @@ export const commands: Record<string, Command> = {
       'Works without configuration. Never silently selects a task. Listing success is not task validity or current evidence; inspect issues for each entry.',
     examples: ['clinx task list', 'clinx task list --root ../delivery --json'],
   },
+  'task show': {
+    usage: 'task show ID',
+    summary:
+      'Read a task agreement, revisions and latest handoff without validating current inputs',
+    options: [],
+    positionals: 3,
+    details:
+      'Works without configuration or available source directories. Reads saved contract history and checkpoint issues only; it does not assess evidence applicability, execute commands or select a task.',
+    examples: ['clinx task show feature', 'clinx task show feature --json'],
+  },
   'task revise': {
     usage: 'task revise ID --file PATH --reason TEXT',
     summary: 'Preserve the old agreement and apply an explicit replacement',

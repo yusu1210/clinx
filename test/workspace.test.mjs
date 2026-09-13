@@ -237,6 +237,20 @@ test('revision preserves old contract and invalidates prior handoff', async () =
   );
   assert.equal(cli(dir, 'context', 'change').out.continuity, 'reconcile-required');
 });
+test('task show reads contract history without requiring current configuration', async () => {
+  const dir = await fixture();
+  const proposal = join(dir, 'proposal.json');
+  const changed = contract();
+  changed.outcome = 'A revised outcome';
+  await json(proposal, changed);
+  assert.equal(revise(dir, proposal).status, 0);
+  await put(join(dir, 'clinx.config.json'), '{broken');
+  const shown = cli(dir, 'task', 'show', 'change');
+  assert.equal(shown.status, 0, shown.err);
+  assert.equal(shown.out.task.id, 'change');
+  assert.equal(shown.out.revisions.length, 1);
+  assert.equal(shown.out.checkpoint, null);
+});
 test('revision repairs a moved design without reconstructing lost historical input bytes', async () => {
   const dir = await fixture();
   const original = { ...contract(), context: [{ path: 'design.md', why: 'Agreed behavior' }] };
