@@ -13,6 +13,10 @@
   excludes nested local state, with bounded traversal and private-file package checks.
 - Multi-source coordination: task-scoped inputs, source-owned references, scoped
   navigation and a runnable cross-repository HTTP example.
+- Bounded multi-source fingerprinting: 64 declared sources, per-source and task-wide
+  entry/byte ceilings, and sequential scans to avoid concurrency amplification.
+- Local Skill installation state under `.clinx/install/`, plus explicit host-access
+  guidance that separates declared sources from effective filesystem permissions.
 - Workspace ownership guide and hands-on PRD-to-delivery tutorial with executable
   Skill/CLI steps. Source repositories need no uniform documentation scaffold.
 - English and Chinese guides in `docs/en/` and `docs/zh-CN/`, with paired review

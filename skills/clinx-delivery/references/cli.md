@@ -21,11 +21,11 @@ Read `clinx/agent-entry.md`; existing host instructions are not edited. No proje
 configuration, map, guide or task is generated. Their optional templates remain
 available through `clinx resources`; create useful content only after discovering facts.
 
-`clinx/installation.json` records installed versions, baseline hashes and file
+`.clinx/install/state.json` records installed versions, baseline hashes and file
 ownership. `skill status` compares these with local and bundled files, not host
 discovery. `skill update` and `skill remove` preview; `--apply` writes only within
 the managed file boundary, preserving user files and backing up replacements under
-`clinx/install-backups/`. Modified managed files block writes; never change hashes
+`.clinx/install/backups/`. Modified managed files block writes; never change hashes
 or remove the record to bypass a conflict. CLI upgrades do not update Skill copies.
 Do not upgrade a shared Skill as an incidental step of an unrelated delivery.
 Keep customizations with project-owned guidance and use existing host discovery rules.

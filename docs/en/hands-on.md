@@ -153,8 +153,8 @@ clinx skill status --root "$clinx_demo/noticeboard"
 `inspect` reads command candidates without executing them. `skill status` checks the
 files installed in step 1, not project readiness or host discovery. Skill-only users
 can connect with `clinx init --agent codex --apply --root WORKSPACE` if now adding the
-CLI. Let the agent add `.clinx/` and `clinx/install-backups/` to the project's private
-output ignore rules. Use `--json` for structured command results.
+CLI. Let the agent add `.clinx/` to the project's private-output ignore rules. Use
+`--json` for structured command results.
 
 Ask the agent to create and review `noticeboard/clinx.config.json`:
 

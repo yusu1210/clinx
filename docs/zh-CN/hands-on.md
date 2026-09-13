@@ -136,7 +136,7 @@ clinx skill status --root "$clinx_demo/noticeboard"
 
 `inspect` 只读候选命令，不执行。`skill status` 检查步骤 1 安装的文件，不判断工程就绪或宿主发现。
 前面仅使用 Skill、此时才加入 CLI 的用户，可用 `clinx init --agent codex --apply --root WORKSPACE` 接入。
-让 Agent 把 `.clinx/` 和 `clinx/install-backups/` 加入项目私密输出忽略规则。
+让 Agent 把 `.clinx/` 加入项目私密输出忽略规则。
 程序消费命令结果时显式加 `--json`。
 
 让 Agent 创建并审阅 `noticeboard/clinx.config.json`：

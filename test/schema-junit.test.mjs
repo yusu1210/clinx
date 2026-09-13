@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateConfig, validateTask } from '../dist/schema.js';
+import { MAX_SOURCES, validateConfig, validateTask } from '../dist/schema.js';
 import { parseJUnit, mergeJUnit } from '../dist/junit.js';
 import { config, contract, xml, fixture, cli } from './helpers.mjs';
 
@@ -15,6 +15,14 @@ test('strict schemas reject typos and cross-reference errors', () => {
   const t = contract();
   t.obligations[0].checks = ['missing'];
   assert.throws(() => validateTask(t, validateConfig(config())));
+});
+test('source declarations have a task-scale ceiling', () => {
+  const c = config();
+  c.sources = Array.from({ length: MAX_SOURCES + 1 }, (_, index) => ({
+    ...c.sources[0],
+    id: `source-${index}`,
+  }));
+  assert.throws(() => validateConfig(c));
 });
 test('claim must have obligations and default must exist', () => {
   const t = contract();

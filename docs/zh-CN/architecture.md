@@ -46,20 +46,20 @@ Skill 的执行说明保持单一来源；宿主专用展示元数据不改变�
 
 ## 用户工作区
 
-| 产物                                  | 归属与作用                                     |
-| ------------------------------------- | ---------------------------------------------- |
-| `clinx/installation.json`             | Skill 位置、版本、基线哈希与文件归属，不是认证 |
-| `clinx/install-backups/UUID/`         | 更新/移除前保留的原文件与安装记录              |
-| `clinx.config.json`                   | 工作区拥有的源范围、上下文索引与已审阅检查     |
-| 既有地图与指南                        | 由原归属方维护的源事实、导航与操作步骤         |
-| 可选工作区地图或指南                  | 跨源导航和协调步骤，链接已有归属方             |
-| `clinx/tasks/ID/contract.json`        | 结果、范围、不变量、决策、权限、验收条件       |
-| 任务 `context`                        | 引用的本地方案，其内容参与任务绑定             |
-| `checkpoints/NNNNNNNN.json`           | 输入绑定的续接说明，不表示完成                 |
-| `revisions/*.json`                    | 旧约定及原因、摘要，不回滚代码                 |
-| `.clinx/runs/UUID/receipt.json`       | 本地执行记录，未签名、未独立认证               |
-| 同目录 stdout/stderr/XML              | 有界的原始执行输出                             |
-| `.clinx/evidence/ID/UUID/record.json` | 观察者声明与复制附件，不是验收结论             |
+| 产物                                  | 归属与作用                                          |
+| ------------------------------------- | --------------------------------------------------- |
+| `.clinx/install/state.json`           | 本地 Skill 位置、版本、基线哈希与文件归属，不是认证 |
+| `.clinx/install/backups/UUID/`        | 更新/移除前保留的原文件与安装状态                   |
+| `clinx.config.json`                   | 工作区拥有的源范围、上下文索引与已审阅检查          |
+| 既有地图与指南                        | 由原归属方维护的源事实、导航与操作步骤              |
+| 可选工作区地图或指南                  | 跨源导航和协调步骤，链接已有归属方                  |
+| `clinx/tasks/ID/contract.json`        | 结果、范围、不变量、决策、权限、验收条件            |
+| 任务 `context`                        | 引用的本地方案，其内容参与任务绑定                  |
+| `checkpoints/NNNNNNNN.json`           | 输入绑定的续接说明，不表示完成                      |
+| `revisions/*.json`                    | 旧约定及原因、摘要，不回滚代码                      |
+| `.clinx/runs/UUID/receipt.json`       | 本地执行记录，未签名、未独立认证                    |
+| 同目录 stdout/stderr/XML              | 有界的原始执行输出                                  |
+| `.clinx/evidence/ID/UUID/record.json` | 观察者声明与复制附件，不是验收结论                  |
 
 交付记录模型由 `src/schema.ts` 定义，构建生成 JSON Schema。
 CLI 额外检查交叉引用、唯一性和文件系统约束；只做 Schema 校验并不等价。

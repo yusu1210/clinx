@@ -10,4 +10,3 @@ target/
 .env.*
 clinx/tasks/*/checkpoints/
 clinx/tasks/*/revisions/
-clinx/install-backups/

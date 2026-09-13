@@ -68,13 +68,18 @@ clinx skill status
 Codex 模式写入 `.agents/skills/clinx-delivery`；通用模式 `--agent generic`（新安装时的默认值）
 写入 `clinx/skills/clinx-delivery`，明确读取 `SKILL.md` 或按宿主支持的方式注册。
 已有受管安装省略 `--agent` 时，沿用记录中的位置。
-两种模式都生成 `clinx/agent-entry.md` 与 `clinx/installation.json`。
+两种模式都会生成 `clinx/agent-entry.md`，并把本地状态写入 `.clinx/install/state.json`。
 已存在且内容相同的文件仍记录为用户所有，不被安装器接管；不同内容会阻止安装。
 不修改已有 `AGENTS.md`、全局设置或工程工具。
 
 Codex 按其文档规定的 cwd 到仓库根目录范围发现仓库 Skill；在兄弟协调目录安装的 Skill，
 不一定能从源仓库内发现。应从协调目录开始，或明确选择目标 Skill。
 在宿主中核对发现结果；更新未出现时重启宿主。见[官方本地 Skill 发现规则](https://learn.chatgpt.com/docs/build-skills#where-codex-loads-local-skills)。
+
+Skill 被发现与源工程可访问是两件事。开始研发前，确认当前宿主会话能够读取每个必需源，
+只写入目标源和构建输出，并能运行选定的工程工具。在 Codex 中检查 `/status`；需要增加
+精确工作区根目录时，使用 `/permissions` 或获准的自定义权限配置，且仍受托管策略约束。
+不要把无限制访问当成自动兜底。参见[官方权限指南](https://learn.chatgpt.com/docs/permissions)。
 
 这些状态相互独立：
 
@@ -87,9 +92,9 @@ Codex 按其文档规定的 cwd 到仓库根目录范围发现仓库 Skill；在
 | 需求已验证            | 用工程工具观察约定的验收行为，并说明限制            |
 
 `init` 不生成地图、操作指南、任务或配置；需要时使用[可选模板](adoption.md)。
-Agent 应复用既有事实，在确有帮助时补齐记录。使用记录与安装备份时，将 `.clinx/` 和
-`clinx/install-backups/` 加入已有私密输出忽略规则。安装记录是持久的归属信息，
-不要修改其中的哈希来消除冲突。若与 Skill 文件一起共享，应先审查隐私。
+Agent 应复用既有事实，在确有帮助时补齐记录。把 `.clinx/` 加入已有私密输出忽略规则。
+安装记录是本地归属信息，不应提交，也不要修改其中的哈希来消除冲突。
+没有该状态的检出会把已有 Skill 文件视为用户所有，不会静默接管。
 
 ## 不使用 CLI，单独使用 Skill
 
@@ -140,7 +145,7 @@ clinx skill remove
 clinx skill remove --apply
 ```
 
-更新/移除会把被替换文件和原安装记录保留到 `clinx/install-backups/UUID/`，
+更新/移除会把被替换文件和原安装记录保留到 `.clinx/install/backups/UUID/`，
 其中 `operation.json` 描述前后哈希，命令会打印备份位置。任务数据、配置、日志、
 非受管文件及宿主指令都保留，不递归删除目录。备份可能包含私密定制，不自动发布或清理。
 可捕获的写入失败会尝试恢复已完成修改，不覆盖并发编辑；进程崩溃不具备多文件事务保证。

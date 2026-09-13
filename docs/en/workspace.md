@@ -60,8 +60,8 @@ business-work/                        existing local parent; no Git required
       system-map.md                  links capabilities and their owners
     clinx.config.json                when using CLI records, not needed for init
     clinx/agent-entry.md              optional entry supplied by Skill installation
-    clinx/installation.json           installed Skill version, baseline and file ownership
-    clinx/install-backups/            private originals retained by Skill update/removal
+    .clinx/install/state.json         local Skill version, baseline and file ownership
+    .clinx/install/backups/           private originals retained by Skill update/removal
     clinx/tasks/change-123/
       contract.json                  CLI task agreement
       prd.md                         optional local requirement; may be an existing reference
@@ -83,6 +83,12 @@ mechanism. Without a recurring cross-repository need, `knowledge/` is unnecessar
 Domain guides, glossaries, flow maps and operation guides are useful when they answer
 repeated questions; they are not a mandatory first-task scaffold.
 
+Configuration can declare at most 64 sources. Fingerprinting remains bounded per
+source (50,000 entries and 128 MiB) and across one task (200,000 entries and 512 MiB),
+and sources are scanned sequentially. These are safety ceilings, not a recommended
+workspace size. Narrow `inputs` and `exclude` to material files; reuse project-native
+graphs and affected checks instead of listing an entire organization as one task.
+
 If repositories are nested under a versioned coordination workspace, keep their
 checkouts out of its tracked files, or use the team's established repository-management
 mechanism. Do not accidentally vendor source histories or introduce submodules only
@@ -91,9 +97,9 @@ an appropriately private repository; they do not belong in the public clinx chec
 Keep credentials out of both. `.clinx/` is a local record location, not a security
 boundary; control access and retention, and redact before sharing.
 
-When using CLI-managed Skill installation, preserve `clinx/installation.json` with
-the installed files; it enables safe updates and is not task acceptance evidence.
-Keep `clinx/install-backups/` private. Installing the CLI globally does not create
+When using CLI-managed Skill installation, preserve `.clinx/install/state.json`
+locally; it enables safe updates and is not task acceptance evidence. Do not commit it.
+Keep `.clinx/install/backups/` private. Installing the CLI globally does not create
 these files in every source. See [installation and lifecycle](installation.md).
 
 ## Keep task inputs separate from task outputs

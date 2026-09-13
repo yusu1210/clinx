@@ -30,7 +30,7 @@ clinx init --root /path/to/project --agent codex --apply
 
 去掉 `--apply` 可先只读预览。写入 Skill、许可、入口与文件归属记录，不等于业务工程已配置。
 阅读 `clinx/agent-entry.md`，按需与宿主指令整合。将 `.clinx/` 与
-`clinx/install-backups/` 加入既有私密输出忽略规则。init 不生成业务配置。
+把 `.clinx/` 加入既有私密输出忽略规则。init 不生成业务配置。
 
 Agent 调查后用[配置模板](../../templates/workspace/clinx.config.json)起草实际配置：
 选择相关源代码、配置、依赖锁和检查；广泛选择目录时显式排除生成报告与私密记录。

@@ -45,6 +45,7 @@
       "properties": {
         "sources": {
           "minItems": 1,
+          "maxItems": 64,
           "type": "array",
           "items": {
             "type": "object",
@@ -266,6 +267,7 @@
       "additionalProperties": false
     },
     "sources": {
+      "maxItems": 64,
       "type": "array",
       "items": {
         "type": "object",

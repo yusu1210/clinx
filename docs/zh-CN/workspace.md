@@ -50,8 +50,8 @@ business-work/                        现有本地父目录；不要求 Git
       system-map.md                  引用能力与其负责人
     clinx.config.json                使用 CLI 记录时需要；init 不需要
     clinx/agent-entry.md              安装 Skill 时附带的可选入口
-    clinx/installation.json           已安装 Skill 版本、基线与文件归属
-    clinx/install-backups/            Skill 更新/移除保留的私密原文件
+    .clinx/install/state.json         本地 Skill 版本、基线与文件归属
+    .clinx/install/backups/           Skill 更新/移除保留的私密原文件
     clinx/tasks/change-123/
       contract.json                  CLI 任务约定
       prd.md                         可选本地需求，也可引用已有来源
@@ -71,14 +71,19 @@ business-work/                        现有本地父目录；不要求 Git
 通过宿主支持的发现机制使用 Skill。没有反复跨工程查找信息的需要，也不必创建 `knowledge/`。
 领域指南、术语表、链路图、操作指南可以解决重复问题，但不是首次任务的必填骨架。
 
+配置最多声明 64 个源。指纹计算同时限制单源（50,000 个条目、128 MiB）和单任务聚合
+（200,000 个条目、512 MiB），并顺序扫描各源。这些是安全上限，不是推荐规模。
+应把 `inputs` 与 `exclude` 收窄到实质输入，并复用工程原生依赖图和受影响检查，
+不要把整个组织的工程都列进一个任务。
+
 如果工程嵌套在受版本管理的协调工作区内，应把这些工程副本排除在协调仓库的跟踪文件之外，
 或沿用团队已有的仓库管理机制。不要误把源码历史纳入协调仓库，也不必仅为 clinx 引入
 submodule。私有需求、决策和有用知识可以在访问范围合适的私有仓库中版本化，不应放进
 公开的 clinx 源码仓库。两边都不能保存凭据。`.clinx/` 只是本地记录位置，不是安全边界；
 需要控制访问、保留期限，并在分享前脱敏。
 
-通过 CLI 管理 Skill 安装时，与安装文件一起保留 `clinx/installation.json`，用于安全更新，
-不作为任务验收证据。`clinx/install-backups/` 应保持私密。全局安装 CLI 不会在所有源工程创建
+通过 CLI 管理 Skill 安装时，在本地保留 `.clinx/install/state.json`，用于安全更新，
+不作为任务验收证据，也不应提交。`.clinx/install/backups/` 应保持私密。全局安装 CLI 不会在所有源工程创建
 这些文件，见[安装生命周期](installation.md)。
 
 ## 区分任务输入与任务产出

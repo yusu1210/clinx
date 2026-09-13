@@ -14,6 +14,7 @@ import {
   readJson,
   canonical,
   findExecutable,
+  MAX_TASK_ENTRIES,
 } from '../dist/files.js';
 import { openWorkspace } from '../dist/workspace.js';
 import { context } from '../dist/task.js';
@@ -92,6 +93,15 @@ test('empty sources and overbroad exclusions are rejected', async () => {
     }),
     /Explicit input is excluded/,
   );
+});
+test('fingerprinting enforces a shared task budget before scanning another entry', async () => {
+  const dir = await fixture();
+  const budget = { entries: MAX_TASK_ENTRIES, bytes: 0 };
+  await assert.rejects(
+    fingerprint(dir, { id: 'main', path: '.', inputs: ['src'], exclude: [] }, budget),
+    /Task input scope too large/,
+  );
+  assert.deepEqual(budget, { entries: MAX_TASK_ENTRIES, bytes: 0 });
 });
 test('source entry limits count empty directories as well as files', async (t) => {
   const dir = await fixture();

@@ -35,7 +35,7 @@ export const commands: Record<string, Command> = {
     options: ['agent', 'apply'],
     positionals: 1,
     details:
-      'Defaults to a read-only preview and the recorded placement (generic for a new installation). --apply installs without replacing conflicting files. Records file ownership in clinx/installation.json; does not generate configuration, project facts or tasks. Existing identical files remain user-owned. Run skill update for an already managed installation.',
+      'Defaults to a read-only preview and the recorded placement (generic for a new installation). --apply installs without replacing conflicting files. Records local file ownership in .clinx/install/state.json; does not generate configuration, project facts or tasks. Existing identical files remain user-owned. Run skill update for an already managed installation.',
     examples: ['clinx init --agent codex --apply', 'clinx init --root ../delivery --agent generic'],
   },
   'skill status': {
@@ -53,7 +53,7 @@ export const commands: Record<string, Command> = {
     options: ['apply'],
     positionals: 2,
     details:
-      'Uses assets bundled with this CLI, without downloads. --apply updates only managed files whose current bytes match the recorded baseline or the new package. Conflicts abort the write. User-owned files are preserved. Replaced files and the installation record are backed up under clinx/install-backups/.',
+      'Uses assets bundled with this CLI, without downloads. --apply updates only managed files whose current bytes match the recorded baseline or the new package. Conflicts abort the write. User-owned files are preserved. Replaced files and the installation record are backed up under .clinx/install/backups/.',
     examples: ['clinx skill update', 'clinx skill update --apply'],
   },
   'skill remove': {
@@ -62,7 +62,7 @@ export const commands: Record<string, Command> = {
     options: ['apply'],
     positionals: 2,
     details:
-      'Modified managed files block removal. Unmanaged files, configuration, tasks, logs and host instructions are never removed. Backups remain under clinx/install-backups/. Does not uninstall the CLI or remove directories recursively.',
+      'Modified managed files block removal. Unmanaged files, configuration, tasks, logs and host instructions are never removed. Backups remain under .clinx/install/backups/. Does not uninstall the CLI or remove directories recursively.',
     examples: ['clinx skill remove', 'clinx skill remove --apply'],
   },
   resources: {

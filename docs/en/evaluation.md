@@ -2,9 +2,22 @@
 
 [中文](../zh-CN/evaluation.md)
 
-No completed comparison in this repository shows that the Skill improves agent
-outcomes. The protocol below describes how to test that claim; the existing tests
+A one-run-per-arm pilot is recorded below. It checks that the protocol is runnable,
+not whether the Skill improves agent outcomes. The existing deterministic tests
 validate the CLI and evaluation fixtures.
+
+## 2026-09-13 bulk-reset pilot
+
+Three independent agents received separately prepared copies of the same raw project
+and request: baseline, Skill, and Skill + optional CLI. All three passed all 16 withheld
+receiver/fault checks and reported the material integration limits. The optional-CLI
+agent did not create clinx task or evidence records. The sanitized result is retained in
+[`evals/results/2026-09-13-bulk-reset-pilot.json`](../../evals/results/2026-09-13-bulk-reset-pilot.json).
+With one run per arm and a task
+whose PRD already stated detailed failure semantics, the result provides no comparative
+effect estimate. It does show that the fixture, treatment separation and hidden grader
+work end to end, and that CLI value should be evaluated on continuity/evidence-heavy
+tasks rather than assumed from availability alone.
 
 ## Two independent questions
 

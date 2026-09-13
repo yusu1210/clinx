@@ -3,6 +3,7 @@ import {
   boundedPath,
   canonical,
   compareText,
+  createFingerprintBudget,
   fingerprint,
   readJson,
   sha256,
@@ -71,10 +72,14 @@ export function definitionDigest(p: Workspace, task: TaskContract, checks?: Chec
 export async function fingerprintSources(p: Workspace, task: TaskContract) {
   const sources = taskSources(p, task);
   const roots = await sourceRoots(p.root, { ...p.config, sources });
-  return Promise.all(
-    sources.map(async (s) => ({
+  const budget = createFingerprintBudget();
+  const fingerprints = [];
+  // Scan sequentially so a multi-source task cannot multiply open files and memory use.
+  for (const s of sources) {
+    fingerprints.push({
       id: s.id,
-      ...(await fingerprint(roots.get(s.id)!, s)),
-    })),
-  );
+      ...(await fingerprint(roots.get(s.id)!, s, budget)),
+    });
+  }
+  return fingerprints;
 }

@@ -9,7 +9,7 @@ import { sha256 } from '../dist/files.js';
 
 const entry = 'clinx/agent-entry.md';
 const skill = '.agents/skills/clinx-delivery/SKILL.md';
-const record = 'clinx/installation.json';
+const record = '.clinx/install/state.json';
 const fresh = () => mkdtemp(join(tmpdir(), 'clinx-lifecycle-'));
 const saved = async (dir) => JSON.parse(await readFile(join(dir, record), 'utf8'));
 // Use current runtime with earlier assets/version; this is not a historical release replay.
@@ -168,6 +168,17 @@ test('unmanaged, corrupt, escaping, duplicate and symlinked installation records
   await unlink(join(dir, skill));
   await symlink(join(root, 'skills/clinx-delivery/SKILL.md'), join(dir, skill));
   assert.equal(cli(dir, 'skill', 'update', '--apply').status, 3);
+});
+test('an earlier preview layout is not silently migrated or claimed', async () => {
+  const dir = await fresh();
+  await json(join(dir, 'clinx/installation.json'), { private: 'earlier-layout' });
+  const result = cli(dir, 'init', '--agent', 'codex', '--apply');
+  assert.equal(result.status, 3);
+  assert.deepEqual(await readdir(join(dir, 'clinx')), ['installation.json']);
+  assert.equal(
+    await readFile(join(dir, 'clinx/installation.json'), 'utf8'),
+    '{\n  "private": "earlier-layout"\n}',
+  );
 });
 test('write failures roll back completed changes without discarding original backups', async () => {
   const old = await simulatedPriorPackage();

@@ -61,6 +61,7 @@
     },
     "sources": {
       "minItems": 1,
+      "maxItems": 64,
       "type": "array",
       "items": {
         "type": "object",

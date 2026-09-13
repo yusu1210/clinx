@@ -22,5 +22,5 @@ Reuse existing maps and guides, or create useful ones from verified findings. Fo
 records, declare actual inputs, exclusions and checks in clinx.config.json; no path
 names are implicitly excluded. Add `.clinx/` to the project's existing ignore policy
 when using records: it contains private logs, attachments and a local lock. Keep
-`clinx/install-backups/` private too. Preserve the durable `clinx/installation.json`
+`.clinx/install/backups/` private too. Preserve the local `.clinx/install/state.json`
 ownership record; never edit its hashes to bypass an upgrade conflict.

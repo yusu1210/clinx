@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "date": "2026-09-13",
+  "scenario": "bulk-reset",
+  "runsPerArm": 1,
+  "protocol": {
+    "arms": ["baseline", "skill", "recorded"],
+    "independentAgentContexts": true,
+    "sameRawProject": true,
+    "hiddenEvaluator": "evals/grade-bulk-reset.mjs",
+    "withheldChecks": 16,
+    "productionOrPrivateInputs": false
+  },
+  "results": [
+    {
+      "arm": "baseline",
+      "passedChecks": 16,
+      "totalChecks": 16,
+      "reportedMaterialBoundaries": true,
+      "usedClinxRecords": false,
+      "applicationSha256": "c2db79ce29ea261489afba4f0b0008bb02503c8124a9bd31c5bbb8d435ef9351"
+    },
+    {
+      "arm": "skill",
+      "passedChecks": 16,
+      "totalChecks": 16,
+      "reportedMaterialBoundaries": true,
+      "usedClinxRecords": false,
+      "applicationSha256": "d3442d0cc30f6d1819209963d1973ab70fa991f438b0bbe9a3c18775bfe67f24"
+    },
+    {
+      "arm": "recorded",
+      "passedChecks": 16,
+      "totalChecks": 16,
+      "reportedMaterialBoundaries": true,
+      "usedClinxRecords": false,
+      "applicationSha256": "f153869cf1c1b5e05440dcbd9ad7ffa5fa3d00c1ab12a2b73b52f5b6da1dcb62"
+    }
+  ],
+  "measurementLimits": [
+    "One run per arm cannot estimate variance or comparative effect.",
+    "The PRD already specified detailed failure and recovery semantics.",
+    "Model identity, token usage, elapsed effort and tool-call counts were not captured.",
+    "The evaluator uses a local in-process receiver, not production integration.",
+    "CLI availability did not cause the recorded arm to create task or evidence records."
+  ],
+  "conclusion": "Protocol smoke test only; no agent-effectiveness or performance claim."
+}

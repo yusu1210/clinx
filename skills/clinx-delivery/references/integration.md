@@ -12,6 +12,31 @@ repository. Creating an `AGENTS.md`, `docs/` directory or system map in each sou
 is optional. Read existing applicable instructions before acting, checking the host's
 discovery rules rather than assuming sibling instructions load automatically.
 
+## Establish effective host access before building
+
+A declared source is a task boundary, not a filesystem grant. Before depending on a
+source, map the required reads, edits, generated outputs, local commands, network use
+and external operations to the capabilities of the actual agent session. Confirm the
+effective workspace roots and permission mode through the host's supported status or
+permission view. A successful `clinx validate`, `inspect` or `skill status` does not
+show that the host can edit a sibling source or execute its checks.
+
+Grant only the roots and capabilities the task needs through existing host or
+enterprise controls. Read-only dependencies need not become writable merely because
+they are listed as sources. If a build writes beside its inputs, that output location
+must also be writable. Browser, connector and remote-service permissions can be
+separate from terminal filesystem permissions; check the capability actually used.
+Do not automatically switch to unrestricted access, edit global host configuration,
+or treat a permission preference as business approval.
+
+For Codex, `/status` exposes the effective workspace and `/permissions` selects an
+available permission preset; custom permission profiles can add exact workspace roots.
+Managed policy and protected paths still apply. Follow the current
+[official permissions guide](https://learn.chatgpt.com/docs/permissions) rather than
+assuming a particular profile exists. Other hosts should use their native equivalent.
+If required access is unavailable, continue independent read-only work and report the
+specific missing root or capability; do not simulate a successful build or operation.
+
 Keep durable source-local facts with their owner and normal review process. Existing
 team documentation can remain canonical. For read-only or separately owned sources,
 retain source/revision-qualified observations in the workspace when useful; do not
@@ -97,3 +122,7 @@ Keep private procedures, endpoints, identifiers, data and credentials outside th
 public method. Use existing credential flows, not copied secrets. Public examples
 must be independently authored and synthetic; their language and domain do not
 prescribe how another project is structured.
+
+For large repositories, reuse native project graphs, affected-test selection and
+cache semantics when the project already provides them. clinx records the reviewed
+commands and observations; it does not rebuild a generic dependency graph or cache.

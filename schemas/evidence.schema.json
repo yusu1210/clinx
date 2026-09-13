@@ -36,6 +36,7 @@
           "pattern": "^[a-f0-9]{64}$"
         },
         "sources": {
+          "maxItems": 64,
           "type": "array",
           "items": {
             "type": "object",

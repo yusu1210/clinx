@@ -30,7 +30,6 @@
         "node_modules",
         "dist",
         "artifacts",
-        "clinx/install-backups",
         "clinx/tasks",
         "coverage",
         "examples/maven-reactor/policy/target",

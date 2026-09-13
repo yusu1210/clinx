@@ -15,7 +15,8 @@ import { CliError } from './output.js';
 import { version } from './version.js';
 
 const packageAsset = (...parts: string[]) => join(import.meta.dirname, '..', ...parts);
-const recordPath = 'clinx/installation.json';
+const recordPath = '.clinx/install/state.json';
+const legacyRecordPath = 'clinx/installation.json';
 const entryPath = 'clinx/agent-entry.md';
 type Agent = 'codex' | 'generic';
 const skillPath = (agent: Agent) =>
@@ -50,7 +51,15 @@ async function optionalFile(root: string, path: string): Promise<Buffer | null> 
 }
 async function installation(root: string) {
   const bytes = await optionalFile(root, recordPath);
-  if (!bytes) return { bytes, record: null };
+  if (!bytes) {
+    if (await optionalFile(root, legacyRecordPath))
+      throw new CliError(
+        'INSTALLATION_LAYOUT_UNSUPPORTED',
+        'An earlier preview installation record exists at ' + legacyRecordPath,
+        'Use the matching earlier CLI to inspect or remove that installation, then review a fresh clinx init. The current CLI will not migrate or claim those files automatically.',
+      );
+    return { bytes, record: null };
+  }
   let input: unknown;
   try {
     input = JSON.parse(bytes.toString('utf8'));
@@ -58,7 +67,7 @@ async function installation(root: string) {
     throw new CliError(
       'INSTALLATION_INVALID',
       'Invalid installation record',
-      'Inspect clinx/installation.json locally; do not delete it to bypass ownership checks.',
+      'Inspect .clinx/install/state.json locally; do not delete it to bypass ownership checks.',
     );
   }
   const record = installationSchema.parse(input);
@@ -230,7 +239,7 @@ async function applyPlan(root: string, action: 'init' | 'update' | 'remove', age
       ...p.changes.filter((c) => !equal(c.before, c.after)),
       { path: recordPath, before: p.saved.bytes, after: afterRecord },
     ].filter((c) => !equal(c.before, c.after));
-    const backup = changes.some((c) => c.before) ? 'clinx/install-backups/' + randomUUID() : null;
+    const backup = changes.some((c) => c.before) ? '.clinx/install/backups/' + randomUUID() : null;
     if (backup) {
       for (const change of changes.filter((c) => c.before)) {
         await makePrivateDir(root, backup + '/' + dirname(change.path));
@@ -309,7 +318,7 @@ async function operate(
     next:
       action === 'remove'
         ? 'Only unchanged managed files are removed on apply. Backups, unmanaged files, task records, configuration and host instructions remain. The CLI itself stays installed.'
-        : 'Use clinx-delivery with the PRD and project paths. Skill files are not proof of host discovery or project readiness. No configuration, map, guide or task was generated. Use existing tools; let the agent prepare reviewed inputs and checks only when CLI records help. Add .clinx/ and clinx/install-backups/ to your existing private-output ignore policy.',
+        : 'Use clinx-delivery with the PRD and project paths. Skill files are not proof of host discovery, host access or project readiness. No configuration, map, guide or task was generated. Use existing tools; let the agent prepare reviewed inputs and checks only when CLI records help. Keep .clinx/ in your existing private-output ignore policy.',
   };
 }
 export const init = (root: string, agent: Agent | undefined, apply: boolean) =>

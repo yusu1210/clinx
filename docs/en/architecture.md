@@ -75,8 +75,8 @@ directories without executing them. None plans or schedules agents.
 
 | Artifact                              | Owner and meaning                                                                    |
 | ------------------------------------- | ------------------------------------------------------------------------------------ |
-| `clinx/installation.json`             | Skill placement, version, baseline hashes and file ownership; not an attestation     |
-| `clinx/install-backups/UUID/`         | Original files and installation record retained before managed replacement/removal   |
+| `.clinx/install/state.json`           | Local Skill placement, version, baseline hashes and ownership; not an attestation    |
+| `.clinx/install/backups/UUID/`        | Original files and installation state retained before managed replacement/removal    |
 | `clinx.config.json`                   | Workspace: explicit source roots/inputs, context routing, reviewed check definitions |
 | Existing maps and guides              | Maintained by their owners: source facts, navigation and operating procedures        |
 | Optional workspace map or guide       | Cross-source navigation and coordination procedures; links to existing owners        |

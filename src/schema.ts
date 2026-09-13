@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export const MAX_SOURCES = 64;
+
 const id = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$/);
 const text = z
   .string()
@@ -50,7 +52,7 @@ export const checkSchema = z.strictObject({
   result: resultSchema,
 });
 export const verificationDefinitionSchema = z.strictObject({
-  sources: z.array(sourceSchema).min(1),
+  sources: z.array(sourceSchema).min(1).max(MAX_SOURCES),
   checks: z.array(checkSchema),
 });
 export type VerificationDefinition = z.infer<typeof verificationDefinitionSchema>;
@@ -70,7 +72,7 @@ export const configSchema = z.strictObject({
       }),
     )
     .default([]),
-  sources: z.array(sourceSchema).min(1),
+  sources: z.array(sourceSchema).min(1).max(MAX_SOURCES),
   checks: z.array(checkSchema).default([]),
 });
 const obligationBase = { id, description: text, claims: z.array(id).min(1) };
@@ -80,7 +82,7 @@ export const taskSchema = z.strictObject({
   id,
   title: text,
   outcome: text,
-  sources: z.array(id).min(1).optional(),
+  sources: z.array(id).min(1).max(MAX_SOURCES).optional(),
   scope: z.array(text).min(1),
   invariants: z.array(text).default([]),
   authority: z.array(text).default([]),
@@ -113,7 +115,7 @@ export const checkpointSchema = z.strictObject({
   taskId: id,
   definitionDigest: digest,
   taskDigest: digest,
-  sources: z.array(z.strictObject({ id, digest })),
+  sources: z.array(z.strictObject({ id, digest })).max(MAX_SOURCES),
   note: checkpointInputSchema,
 });
 export const evidenceInputSchema = z.strictObject({
@@ -139,7 +141,7 @@ export const evidenceSchema = z.strictObject({
   capturedInputs: z.strictObject({
     definitionDigest: digest,
     taskDigest: digest,
-    sources: z.array(z.strictObject({ id, digest })),
+    sources: z.array(z.strictObject({ id, digest })).max(MAX_SOURCES),
   }),
   observation: evidenceInputSchema.omit({ artifacts: true }),
   artifacts: z
@@ -180,14 +182,16 @@ export const receiptSchema = z.strictObject({
   taskDigest: digest.nullable(),
   claim: text,
   runtime: z.strictObject({ node: text, platform: text, arch: text }),
-  sources: z.array(
-    z.strictObject({
-      id,
-      before: digest,
-      after: digest.nullable(),
-      files: z.number().int().nonnegative(),
-    }),
-  ),
+  sources: z
+    .array(
+      z.strictObject({
+        id,
+        before: digest,
+        after: digest.nullable(),
+        files: z.number().int().nonnegative(),
+      }),
+    )
+    .max(MAX_SOURCES),
   checks: z.array(
     z.strictObject({
       id,

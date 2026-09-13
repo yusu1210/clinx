@@ -68,7 +68,7 @@ See [evaluation](evaluation.md) for outcome measurement and collection boundarie
 `init --agent codex --apply` installs under `.agents/skills/clinx-delivery`.
 Generic mode uses `clinx/skills/clinx-delivery`; explicitly read its SKILL.md or follow
 the host's registration mechanism. Both include the license and a small
-`clinx/agent-entry.md` and an ownership record at `clinx/installation.json`.
+`clinx/agent-entry.md` and local ownership state at `.clinx/install/state.json`.
 Omit `--apply` for an optional preview; differing existing files abort without overwrite.
 
 No map, guide, task or config is automatically written. The existing project can

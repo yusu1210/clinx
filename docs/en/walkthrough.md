@@ -42,7 +42,7 @@ clinx init --root /path/to/project --agent codex --apply
 
 Omit `--apply` if you want a read-only preview first. Read `clinx/agent-entry.md`;
 decide whether an entry belongs in existing host instructions. Add `.clinx/` and
-`clinx/install-backups/` to existing private-output ignore rules.
+`.clinx/` to existing private-output ignore rules.
 init installed the Skill and entry with a file-ownership record, not a configured
 project. The agent now prepares configuration if
 records are useful; it does not ask the user to fill a technical form. Configure

@@ -6,13 +6,13 @@ import {
   lstat,
   mkdir,
   open,
-  readdir,
+  opendir,
   realpath,
   stat,
   unlink,
 } from 'node:fs/promises';
 import { delimiter, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
-import type { WorkspaceConfig, Source } from './schema.js';
+import { MAX_SOURCES, type WorkspaceConfig, type Source } from './schema.js';
 
 export const MAX_FILE_BYTES = 8 * 1024 * 1024;
 export const sha256 = (value: string | Uint8Array): string =>
@@ -108,6 +108,8 @@ export async function sourceRoots(
   root: string,
   config: WorkspaceConfig,
 ): Promise<Map<string, string>> {
+  if (config.sources.length > MAX_SOURCES)
+    throw new Error(`At most ${MAX_SOURCES} sources may be selected`);
   const roots = new Map<string, string>();
   for (const source of config.sources) {
     // Explicit source paths may name sibling repositories. Paths within them may not escape.
@@ -120,9 +122,18 @@ export async function sourceRoots(
     throw new Error('Sources must not alias the same directory');
   return roots;
 }
+export type FingerprintBudget = { entries: number; bytes: number };
+export const MAX_SOURCE_ENTRIES = 50_000;
+export const MAX_SOURCE_BYTES = 128 * 1024 * 1024;
+export const MAX_TASK_ENTRIES = 200_000;
+export const MAX_TASK_BYTES = 512 * 1024 * 1024;
+export function createFingerprintBudget(): FingerprintBudget {
+  return { entries: 0, bytes: 0 };
+}
 export async function fingerprint(
   root: string,
   source: Source,
+  taskBudget?: FingerprintBudget,
 ): Promise<{ digest: string; files: number }> {
   root = await realpath(root);
   const entries = new Map<string, string>();
@@ -134,24 +145,32 @@ export async function fingerprint(
   const visit = async (file: string): Promise<void> => {
     if (excluded.some((p) => inside(p, file))) return;
     if (visited.has(file)) return;
-    visited.add(file);
-    if (visited.size > 50000)
+    if (visited.size >= MAX_SOURCE_ENTRIES)
       throw new Error('Input scope too large; declare focused source inputs');
+    if (taskBudget && taskBudget.entries >= MAX_TASK_ENTRIES)
+      throw new Error('Task input scope too large; select fewer or more focused sources');
+    visited.add(file);
+    if (taskBudget) taskBudget.entries += 1;
     const rel = relative(root, file).split(sep).join('/');
     const info = await lstat(file, { bigint: true });
     if (info.isSymbolicLink()) throw new Error(`Cannot fingerprint symlink input: ${rel}`);
     if (info.isDirectory()) {
       entries.set(`${rel}/`, 'directory');
-      for (const child of (await readdir(file)).sort()) await visit(join(file, child));
+      const directory = await opendir(file);
+      for await (const child of directory) await visit(join(file, child.name));
     } else if (info.isFile()) {
       if (entries.has(rel)) return;
+      const size = Number(info.size);
+      if (total + size > MAX_SOURCE_BYTES)
+        throw new Error('Input scope too large; declare focused source inputs');
+      if (taskBudget && taskBudget.bytes + size > MAX_TASK_BYTES)
+        throw new Error('Task input scope too large; select fewer or more focused sources');
       const content = await readBounded(file);
       const after = await lstat(file, { bigint: true });
       if (info.mtimeNs !== after.mtimeNs || info.size !== after.size || info.ino !== after.ino)
         throw new Error(`Input changed while reading: ${rel}`);
       total += content.length;
-      if (total > 128 * 1024 * 1024)
-        throw new Error('Input scope too large; declare focused source inputs');
+      if (taskBudget) taskBudget.bytes += content.length;
       entries.set(rel, `${info.mode & 0o111n}:${sha256(content)}`);
     } else throw new Error(`Unsupported input type: ${rel}`);
   };
