@@ -24,17 +24,16 @@ multi-source/
 
 只有服务拥有契约文档；客户端与策略无需新建地图或 `AGENTS.md`，已有代码和测试就是入口。
 这些目录代表独立维护的仓库，示例不创建 Git 仓库。工作区引用源拥有的事实，保存跨源导航
-和任务决策，不必逐工程初始化。只读源、已有文档系统及并行副本见[工作区归属](../../docs/zh-CN/workspace.md)。
+和任务决策，不必逐工程初始化。只读源、已有文档系统及并行副本见[工作区归属](https://github.com/yusu1210/clinx/blob/main/docs/zh-CN/workspace.md)。
 
-在 clinx 源码目录构建 CLI，使用隔离副本：
+安装 CLI 后创建隔离副本，不需要源码检出目录：
 
 ```sh
-npm run build
 clinx_demo=$(mktemp -d)
-cp -R examples/multi-source "$clinx_demo/"
-node bin/clinx.mjs context visible-notices --root "$clinx_demo/multi-source/workspace"
-node bin/clinx.mjs verify visible-notices --root "$clinx_demo/multi-source/workspace"
-node bin/clinx.mjs verify visible-notices --root "$clinx_demo/multi-source/workspace" --run
+clinx example copy multi-source --to "$clinx_demo/multi-source"
+clinx context visible-notices --root "$clinx_demo/multi-source/workspace"
+clinx verify visible-notices --root "$clinx_demo/multi-source/workspace"
+clinx verify visible-notices --root "$clinx_demo/multi-source/workspace" --run
 ```
 
 上下文直接引用原来的 `service/docs/contract.md`，不复制文档，在调查与设计焦点选择共享地图。
@@ -43,8 +42,9 @@ node bin/clinx.mjs verify visible-notices --root "$clinx_demo/multi-source/works
 调用实际消费者，断言可见条目及其数量，然后关闭服务。退出零只支持声明的本地观察。
 
 续接时，把返回的回执路径传给
-`reconcile visible-notices --root WORKSPACE --receipt PATH`。
-需要检查点时使用[普通交接命令](../../docs/zh-CN/walkthrough.md)。
+`clinx reconcile visible-notices --root WORKSPACE --receipt PATH`。
+需要检查点时使用[普通交接命令](https://github.com/yusu1210/clinx/blob/main/docs/zh-CN/walkthrough.md)。
+通过 `clinx resources` 可找到与已安装版本一致的指南。
 
 源码目录的 `test/multi-source.test.mjs` 回归覆盖：
 

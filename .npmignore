@@ -5,3 +5,10 @@ coverage/
 .env
 .env.*
 *.tgz
+artifacts/
+**/clinx/install-backups/
+**/clinx/installation.json
+**/clinx/skills/
+**/.agents/
+**/clinx/tasks/*/checkpoints/
+**/clinx/tasks/*/revisions/

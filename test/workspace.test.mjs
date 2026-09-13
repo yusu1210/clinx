@@ -83,7 +83,10 @@ test('init preview does not mutate, apply is idempotent and preserves host instr
     /name: clinx-delivery/,
   );
   assert.ok(!(await readdir(dir)).includes('clinx.config.json'));
-  assert.deepEqual(await readdir(join(dir, 'clinx')), ['agent-entry.md']);
+  assert.deepEqual((await readdir(join(dir, 'clinx'))).sort(), [
+    'agent-entry.md',
+    'installation.json',
+  ]);
   assert.match(
     await readFile(join(dir, '.agents/skills/clinx-delivery/LICENSE'), 'utf8'),
     /MIT License/,

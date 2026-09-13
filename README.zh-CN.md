@@ -18,9 +18,9 @@ CLI 按需在本地保存任务约定和检查结果；方法与 Skill 不依赖
 
 ## 用在你的需求上
 
-让 Agent 访问已审阅的 clinx 本地目录，然后给出请求：
+按[安装与接入](docs/zh-CN/installation.md)接入 Skill 后，给 Agent 请求：
 
-> 读取 /path/to/clinx/skills/clinx-delivery/SKILL.md。
+> 使用 clinx-delivery 及相关引用。
 > 需求：[PRD 或描述]。工程：[仓库 URL 或本地目录]。
 > 实现所需行为。先检查已有能力，再运行相关测试和实际使用链路。
 > 说明如何使用和停止、哪些检查通过、哪些结果尚未验证。
@@ -49,44 +49,48 @@ CLI 按需在本地保存任务约定和检查结果；方法与 Skill 不依赖
 详见[项目接入](docs/zh-CN/adoption.md)与[工作区布局与知识归属](docs/zh-CN/workspace.md)。
 各源工程不必补齐统一文档骨架，也不必分别初始化。
 
-## 需要记录时构建 CLI
+## 一次安装与接入
 
-需 Node.js 22.16+ 与 npm。命令执行支持 macOS/Linux；
-这是 CLI 自身的运行依赖，不限制目标工程的语言。
-
-```sh
-git clone https://github.com/yusu1210/clinx.git
-cd clinx
-npm ci
-npm run build
-node bin/clinx.mjs --help
-node bin/clinx.mjs inspect --root /path/to/project
-```
-
-运行前审阅源码与脚本；需要可复现性时固定提交。
-`inspect` 从本地文件列出命令候选，不执行命令，也不判断运行环境是否就绪。
-
-需要在工作目录安装 Skill 时，先预览再写入：
+可选 CLI 需要 macOS/Linux、Node.js 22.16+ 与 npm；不限制目标工程的语言，
+也不要求向业务仓库添加 npm 文件。当前预览版通过已审阅源码或本地包分发，
+**尚未发布 npm 包**。按[安装指南](docs/zh-CN/installation.md)获得标准 `clinx` 命令；
+源码构建是单独的贡献者路径。
 
 ```sh
-node bin/clinx.mjs init --root /path/to/project --agent codex
-node bin/clinx.mjs init --root /path/to/project --agent codex --apply
+clinx --version
+cd /path/to/project
+clinx init --agent codex --apply
 ```
 
-这会添加 Skill、许可与 `clinx/agent-entry.md`；文件冲突时停止，不修改宿主指令。
-省略 `--agent codex` 使用通用目录。只有实际任务需要时，才根据已核实的工程事实补充配置、地图或指南。
-详见[CLI 操作流程](docs/zh-CN/walkthrough.md)。
+这会安装工作区内的 Skill 和入口，并记录文件归属；保留已有宿主指令，文件冲突时停止。
+去掉 `--apply` 可只预览，预览和应用不是两个必经步骤。在其他目录调用时用
+`--root /path/to/workspace`。通用宿主可用 `--agent generic`，明确读取安装后的 Skill。
+
+然后给 Agent PRD 和工程路径即可。地图、配置和任务 JSON 都不是前置条件；
+需要记录时，由 Agent 从核实后的事实准备。Skill 安装、宿主发现、工作区配置与交付验证
+是不同状态，见[接入说明](docs/zh-CN/adoption.md)。
+
+```sh
+clinx inspect
+clinx task add --help
+clinx skill status
+```
+
+默认输出可读文本；Agent 和脚本用 `--json` 获取结构化结果。
+[仅使用 Skill、升级、移除与排障](docs/zh-CN/installation.md)都不需要另一套开发环境。
 
 ## 运行示例
 
-在已构建的 clinx 目录执行：
+安装 CLI 后，无需源码目录：
 
 ```sh
-node bin/clinx.mjs verify eligible-picker --root examples/node-picker
-node bin/clinx.mjs verify eligible-picker --root examples/node-picker --run
+clinx example copy node-picker --to ./picker-demo
+cd picker-demo
+clinx verify eligible-picker
+clinx verify eligible-picker --run
 ```
 
-前者预览检查，后者运行领域和回环 HTTP 测试并保存本地执行记录。
+复制命令只创建新目录，不执行工程命令。`verify` 预览检查，带 `--run` 才运行领域与回环 HTTP 测试并保存本地执行记录。
 示例的 `release-ready` 声明仍为未决：本地测试不能证明发布条件已满足。
 
 其他示例覆盖[页面/API/持久化](examples/reading-list/README.zh-CN.md)

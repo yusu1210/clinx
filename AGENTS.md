@@ -8,7 +8,9 @@ requirements are complete.
 - `src/schema.ts` owns the public models; `npm run build` generates JSON Schemas.
 - `src/runner.ts` owns bounded execution; `src/verify.ts` owns evidence and verdicts.
 - `src/workspace.ts` owns source resolution and binding; `src/task.ts` owns task continuity.
-- `src/install.ts` installs the Skill and entry without generating project facts.
+- `src/install.ts` owns Skill file installation, ownership, upgrades and recovery.
+- `src/commands.ts` owns command help; `src/output.ts` owns text/JSON presentation and errors.
+- `src/resources.ts` locates packaged assets and copies original examples, never project scaffolds.
 - `src/inspect.ts` owns bounded static command discovery, not runtime readiness.
 - `src/evidence.ts` owns local observation attachments, never claim promotion or remote truth.
 - `skills/clinx-delivery` owns portable agent procedures; disclose detail progressively.
@@ -17,7 +19,11 @@ requirements are complete.
   `docs/translations.json`; a matching hash is not proof of translation accuracy.
 - `npm run test:maven` runs the real multi-module Java example (requires Maven/JDK).
 - `npm run test:package` tests the tarball from a separate temporary installation.
+- `npm-shrinkwrap.json` is the single development/distribution lock; installed runtime dependencies must match it.
 - Keep execution, observation, applicability, and claim decisions distinct.
+- Test installed commands from outside the source checkout, not only source entrypoints.
+- Machine callers request `--json`; default output is text. Keep both truthful and escape terminal controls.
+- Preserve local Skill changes and user ownership; never add a force-overwrite or automatic upgrade path.
 - Never execute repository commands during static discovery or initialization.
 - Keep new commands opt-in; preserve user files, existing tools, and permissions.
 - Do not copy private source code, internal documents, company names, paths, credentials,

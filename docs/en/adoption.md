@@ -68,12 +68,18 @@ See [evaluation](evaluation.md) for outcome measurement and collection boundarie
 `init --agent codex --apply` installs under `.agents/skills/clinx-delivery`.
 Generic mode uses `clinx/skills/clinx-delivery`; explicitly read its SKILL.md or follow
 the host's registration mechanism. Both include the license and a small
-`clinx/agent-entry.md`. Preview first; differing existing files abort without overwrite.
+`clinx/agent-entry.md` and an ownership record at `clinx/installation.json`.
+Omit `--apply` for an optional preview; differing existing files abort without overwrite.
 
 No map, guide, task or config is automatically written. The existing project can
 continue using the Skill without the CLI. Merge an entry into existing instructions
 only if useful; clinx does not edit global settings or hot-register a running host.
 Check discovery in the selected host after installation.
+
+CLI installation, Skill file installation, host discovery and project readiness are
+separate states. See [installation and lifecycle](installation.md) for source-free
+command usage, safe Skill updates, removal and recovery. Use `--json` for automation;
+the human-readable result and JSON describe the same outcome.
 
 ## Add records from engineering facts
 

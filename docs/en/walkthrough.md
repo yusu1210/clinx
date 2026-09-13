@@ -2,17 +2,16 @@
 
 [中文](../zh-CN/walkthrough.md)
 
-This walkthrough uses an existing project. From a reviewed clinx checkout, build
-the CLI, then define this function in the same shell (replace the path):
+This walkthrough uses an existing project and an [installed CLI](installation.md).
+Run from the selected workspace, or pass its explicit `--root` from elsewhere:
 
 ```sh
-cd /path/to/clinx
-npm ci
-npm run build
-clinx() { node /path/to/clinx/bin/clinx.mjs "$@"; }
+clinx --version
+cd /path/to/project
 ```
 
-The commands below call that local checkout; no registry installation is needed.
+No source checkout or shell wrapper is needed. Results are readable text; use
+`--json` when consuming them programmatically and `clinx COMMAND --help` for details.
 
 Only have a requirement and repository URLs? Begin with [cold start](cold-start.md), without
 initialization. The agent discovers facts and writes useful configuration; the user
@@ -35,16 +34,17 @@ Read candidate origins and existing guides. This reads local files but does not
 execute commands, check readiness, create task directories or change the project.
 
 For a typo or a local low-risk fix, use the Skill and ordinary tools. No init or JSON
-contract is necessary. For a multi-turn change, preview project-local onboarding:
+contract is necessary. To install the workspace-local Skill:
 
 ```sh
-clinx init --root /path/to/project --agent codex
 clinx init --root /path/to/project --agent codex --apply
 ```
 
-Read `clinx/agent-entry.md`; decide how to merge it with existing host instructions.
-Add `.clinx/` to the existing ignore rules before running commands that retain logs.
-init installed only the Skill and entry. The agent now prepares configuration if
+Omit `--apply` if you want a read-only preview first. Read `clinx/agent-entry.md`;
+decide whether an entry belongs in existing host instructions. Add `.clinx/` and
+`clinx/install-backups/` to existing private-output ignore rules.
+init installed the Skill and entry with a file-ownership record, not a configured
+project. The agent now prepares configuration if
 records are useful; it does not ask the user to fill a technical form. Configure
 source inputs and existing tests. Keep relevant dependency manifests and
 lockfiles in the fingerprint scope. Broad source scopes are conservative but may
@@ -63,9 +63,10 @@ Example request:
 > reuse the existing capability where compatible. Implement the requested outcome;
 > no pricing, new data store or release is implied.
 
-This is a discovery prompt, not a prescription of the real project's architecture.
+This request sets an investigation direction, not the real project's architecture.
 The agent reads code and tests before claiming the server already owns the policy.
 If the task is only diagnosis, it explains the chain and stops short of implementation.
+When design confirmation is required, wait before implementing the feature or its tests.
 
 For persisted work, prepare a real contract using the optional
 [contract template](../../templates/workspace/clinx/contract.example.json) as a shape example.

@@ -2,29 +2,41 @@
 
 [中文](../zh-CN/cli.md)
 
-Run `clinx --help` (or `node bin/clinx.mjs --help` from a built checkout). CLI output is
-JSON except help/version. Errors are JSON on stderr. Unknown/misapplied options are
-errors. `--root` selects an existing workspace directory; no parent-directory discovery.
+Use an [installed CLI](installation.md). `clinx --help` lists commands;
+`clinx task add --help` (or `clinx help task add`) explains that command and its inputs.
+Output is readable text by default, consistently in terminals and pipes. Use `--json`
+for machine results, including structured help and version. Errors go to stderr with
+`error`, `code` and `hint` in JSON mode; schema errors also include field-level `issues`.
+Unknown/misapplied options are errors. No interactive prompts, ANSI colors or telemetry.
+`--root` selects an existing directory (default: invoking cwd); no parent discovery.
 
-| Command                                                         | Effect                                                                                   |
-| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `inspect`                                                       | Read bounded local manifest/docs candidates, without initialization, writes or execution |
-| `init [--agent generic\|codex]`                                 | Preview additions, no writes                                                             |
-| `init ... --apply`                                              | Add Skill/license and entry only; differing files abort before writes                    |
-| `task add --file PATH`                                          | Validate explicit JSON contract, exclusive-create task                                   |
-| `task list`                                                     | List contracts and latest handoffs; no automatic task selection                          |
-| `task revise ID --file PATH --reason TEXT`                      | Preserve previous contract and apply this explicit replacement                           |
-| `task checkpoint ID --file PATH`                                | Append a validated, input-bound continuity note                                          |
-| `evidence attach ID --file PATH`                                | Copy reviewed observation artifacts; does not approve any claim                          |
-| `evidence list ID [--record UUID]`                              | Check attachment bytes/local binding; no remote observation                              |
-| `context ID [--focus discover\|contract\|build\|verify\|learn]` | Return contract, latest handoff, drift and relevant reference index                      |
-| `validate [ID]`                                                 | Validate config/source roots and optional task/reference binding; no project commands    |
-| `verify ID [--claim NAME]`                                      | Preview exactly the selected commands and external obligations                           |
-| `verify ID --run [--allow-external]`                            | Execute selected reviewed checks and write a local receipt                               |
-| `reconcile ID --receipt PATH [--claim NAME]`                    | Reconcile existing evidence against current declared inputs; no execution                |
+| Command                                                         | Effect                                                                                    |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `resources`                                                     | Locate installed Skill, templates, schemas, guides and examples; no writes                |
+| `example list`                                                  | List public practice cases and required tools                                             |
+| `example copy NAME --to DIRECTORY`                              | Copy into a new directory, without executing or installing anything                       |
+| `inspect`                                                       | Read bounded local manifest/docs candidates, without initialization, writes or execution  |
+| `init [--agent generic\|codex]`                                 | Preview additions, no writes                                                              |
+| `init ... --apply`                                              | Install Skill/license and entry, retaining a file-ownership record; conflicts stop writes |
+| `skill status`                                                  | Compare recorded, current and bundled Skill files; no registry or host query              |
+| `skill update [--apply]`                                        | Preview/update managed files, preserving user files and backing up replacements           |
+| `skill remove [--apply]`                                        | Preview/remove unchanged managed files with backups; leave task data and unmanaged files  |
+| `task add --file PATH`                                          | Validate explicit JSON contract, exclusive-create task                                    |
+| `task list`                                                     | List contracts and latest handoffs; no automatic task selection                           |
+| `task revise ID --file PATH --reason TEXT`                      | Preserve previous contract and apply this explicit replacement                            |
+| `task checkpoint ID --file PATH`                                | Append a validated, input-bound continuity note                                           |
+| `evidence attach ID --file PATH`                                | Copy reviewed observation artifacts; does not approve any claim                           |
+| `evidence list ID [--record UUID]`                              | Check attachment bytes/local binding; no remote observation                               |
+| `context ID [--focus discover\|contract\|build\|verify\|learn]` | Return contract, latest handoff, drift and relevant reference index                       |
+| `validate [ID]`                                                 | Validate config/source roots and optional task/reference binding; no project commands     |
+| `verify ID [--claim NAME]`                                      | Preview exactly the selected commands and external obligations                            |
+| `verify ID --run [--allow-external]`                            | Execute selected reviewed checks and write a local receipt                                |
+| `reconcile ID --receipt PATH [--claim NAME]`                    | Reconcile existing evidence against current declared inputs; no execution                 |
 
 `--file` paths are relative to the invoking shell's cwd, not `--root`, because they
-are explicit import inputs and may live outside the project. Receipt paths are
+are explicit import inputs and may live outside the project. `--file -` reads one
+complete piped JSON document, limited to 8 MiB; an interactive terminal is rejected.
+`--to` is also relative to invoking cwd and its parent must already exist. Receipt paths are
 resolved within `--root`. Source roots may be absolute or relative to `--root`,
 including explicit sibling paths. Check cwd is confined to its source; report paths are confined to
 that cwd. No template expansion or shell interpolation is performed.
@@ -36,7 +48,10 @@ be nonblank. Commands allow 1–128 strings, each at most 16,384 characters and 
 init does not write a configuration, map, guide or task. Use the Skill directly,
 or prepare a reviewed configuration when records are useful; optional
 [workspace templates](../../templates/workspace) remain available. Existing project files
-are not replaced. A missing config error is not a reason to block normal engineering.
+are not replaced by initialization. Skill updates replace only reviewed managed
+files against their recorded baseline. [Installation and recovery](installation.md)
+describes ownership, conflicts and backups. A missing config error is not a reason
+to block normal engineering.
 
 Every source requires a nonempty `inputs` list of literal paths. `exclude` removes
 declared subtrees; explicitly naming an input that is itself excluded is an error.
@@ -45,6 +60,8 @@ source selectors alongside checks. Declare meaningful locks/configuration and ex
 generated/private records when using broad scopes. Symlink inputs are rejected;
 executable symlinks preserve their invocation identity and are not source inputs
 merely because a command uses them. Scope validation does not infer omitted inputs.
+Each source is bounded to 50,000 entries (including directories), 128 MiB total,
+and 8 MiB per file.
 
 `--root` selects a workspace coordination directory, not necessarily a Git repository.
 Task `sources` is an optional nonempty list of relevant source IDs; omitting it binds
@@ -159,7 +176,9 @@ existing tool emits a supported report and structured test identities are useful
 `expectedTests` defaults empty, so configure it when test selection matters. IDs use
 `classname#name`, with the suite name as fallback when classname is absent. Failed
 tests fail a check, skips or missing expected identities make it inconclusive.
-Malformed, absent or unchanged old reports never pass. A nonzero command fails;
+Malformed, absent or unchanged old reports never pass. DTDs/entities, duplicate
+identities, inconsistent counts and unsupported suite-level failures/skips cannot pass.
+A nonzero command fails;
 failure to start, timeout, interruption or unknown execution is inconclusive. Each check has a default
 120-second timeout (configurable 50 ms–1 hour).
 

@@ -1,8 +1,9 @@
 node_modules/
 dist/
 schemas/
-package-lock.json
+npm-shrinkwrap.json
 **/.clinx/
 **/target/
 coverage/
 *.tgz
+artifacts/

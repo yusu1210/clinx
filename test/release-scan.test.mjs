@@ -15,6 +15,12 @@ test('public-file checks reject credential paths, private endpoints and task his
     '.DS_Store',
     'examples/.DS_Store',
     'clinx/tasks/task/checkpoints/00000001.json',
+    'examples/demo/clinx/install-backups/id/clinx/installation.json',
+    'examples/demo/workspace/clinx/installation.json',
+    'examples/demo/workspace/clinx/agent-entry.md',
+    'examples/demo/.agents/skills/clinx-delivery/SKILL.md',
+    'examples/demo/workspace/clinx/skills/clinx-delivery/SKILL.md',
+    'artifacts/candidate/SHA256SUMS',
   ])
     assert.ok(releaseFindings(path, '').length > 0, path);
   const cases = [
@@ -27,6 +33,10 @@ test('public-file checks reject credential paths, private endpoints and task his
   ];
   for (const [value, id] of cases) assert.ok(releaseFindings('source.txt', value).includes(id));
   assert.deepEqual(releaseFindings('LICENSE', 'MIT License'), []);
+  assert.deepEqual(
+    releaseFindings('templates/workspace/clinx/agent-entry.md', 'Original entry'),
+    [],
+  );
   assert.deepEqual(releaseFindings('.npmrc', 'registry=https://registry.npmjs.org\n'), []);
   assert.deepEqual(releaseFindings('docs/example.md', '/path/to/project'), []);
 });

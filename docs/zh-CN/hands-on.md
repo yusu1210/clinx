@@ -20,18 +20,21 @@ Skill 不是可执行程序；CLI 不调用模型、不会自己开发或部署�
 
 ## 1. 准备本地案例
 
-需要已有 Node.js 22.16+ 与 macOS/Linux shell；案例没有第三方依赖。
-先取得并审阅 [clinx 源码](https://github.com/yusu1210/clinx)，在源码根目录运行：
+需要已有 Node.js 22.16+、macOS/Linux shell 和[已安装 CLI](installation.md)。
+案例没有第三方依赖，从安装包复制原始输入：
 
 ```sh
-clinx_repo="$PWD"
 clinx_demo=$(mktemp -d)
-cp -R "$clinx_repo/evals/fixtures/noticeboard" "$clinx_demo/noticeboard"
-printf '%s\n' "$clinx_repo/skills/clinx-delivery/SKILL.md" "$clinx_demo/noticeboard"
+clinx example copy noticeboard --to "$clinx_demo/noticeboard"
+clinx init --root "$clinx_demo/noticeboard" --agent codex --apply
+printf '%s\n' "$clinx_demo/noticeboard"
 ```
 
-记住打印的两个绝对路径。这里使用 `evals/fixtures` 中的原始工程；不需要运行评测器。
+记住打印的工作区绝对路径，让 Agent 从这里开始。只复制原始工程，不包含评测器或完成后的答案。
 临时目录用于隔离体验，不适合保存长期工作。你的真实需求应使用自己的受控工作目录。
+
+若只体验 Skill，可改为从已审阅源码把 `evals/fixtures/noticeboard` 复制到新目录，
+向 Agent 提供源码内 `skills/clinx-delivery/SKILL.md` 的绝对路径，无需构建 CLI 或运行评测器。
 
 ```text
 noticeboard/
@@ -58,11 +61,12 @@ node "$clinx_demo/noticeboard/service/src/main.mjs"
 
 ## 2. 把需求交给 Agent
 
-在能读取本地文件、编辑并执行命令的 Agent 中发送下面的请求，将路径换成上一步打印的实际值。
-不依赖宿主自动发现 Skill；直接要求读取文件即可。
+从复制的工作区打开能读取本地文件、编辑并执行命令的 Agent，核对 clinx-delivery 可用，
+再发送下面的请求，将 PRD 路径换成上一步打印的实际值。宿主不能发现 Skill 时，明确要求
+读取安装后 SKILL.md 的绝对路径。
 
 ```text
-读取 <clinx绝对路径>/skills/clinx-delivery/SKILL.md，并按相关引用执行。
+使用 clinx-delivery，并按相关引用执行。
 PRD：<案例绝对路径>/PRD.md。
 工程：同目录的 service 和 viewer。
 目标：实现 PRD，并在本地运行 API 和实际页面完成验证，交付使用与停止说明。
@@ -123,22 +127,17 @@ Agent 应运行最终代码，并给出实际 URL、测试命令与结果。你�
 如果一次对话已经交付，跳过这节即可。长任务、多人交接、跨工程改动或需要检查记录时，
 让 Agent 准备并解释配置；下面提供可直接核对的完整起点。
 
-在步骤 1 的同一个 shell 中构建已审阅的 CLI：
+沿用步骤 1 安装的 CLI 和同一个 shell 中的变量：
 
 ```sh
-cd "$clinx_repo"
-npm ci
-npm run build
-clinx() { node "$clinx_repo/bin/clinx.mjs" "$@"; }
 clinx inspect --root "$clinx_demo/noticeboard/service"
-clinx init --root "$clinx_demo/noticeboard" --agent codex
-clinx init --root "$clinx_demo/noticeboard" --agent codex --apply
+clinx skill status --root "$clinx_demo/noticeboard"
 ```
 
-`inspect` 只读候选命令，不执行。两次 `init` 分别预览与写入；写入
-`.agents/skills/clinx-delivery/` 和 `clinx/agent-entry.md`，不改宿主指令，不自动生成工程事实。
-已有文件冲突时先人工合并，不覆盖。不能自动发现 Skill 的宿主继续使用步骤 2 的明确路径请求。
-让 Agent 在案例根目录的忽略规则中加入 `.clinx/`，避免把本地执行日志、路径等提交出去。
+`inspect` 只读候选命令，不执行。`skill status` 检查步骤 1 安装的文件，不判断工程就绪或宿主发现。
+前面仅使用 Skill、此时才加入 CLI 的用户，可用 `clinx init --agent codex --apply --root WORKSPACE` 接入。
+让 Agent 把 `.clinx/` 和 `clinx/install-backups/` 加入项目私密输出忽略规则。
+程序消费命令结果时显式加 `--json`。
 
 让 Agent 创建并审阅 `noticeboard/clinx.config.json`：
 

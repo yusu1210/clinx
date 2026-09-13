@@ -12,8 +12,11 @@ for the actions the task requires.
 
 ## One request
 
+First [connect the Skill](installation.md), or give the agent the absolute path of
+a complete reviewed Skill folder. No CLI configuration is needed to start.
+
 ```text
-Read skills/clinx-delivery/SKILL.md from my reviewed clinx checkout.
+Use the installed clinx-delivery Skill and its relevant references.
 Requirement: <description, file, or URL>
 Repositories: <URLs or local paths>
 Implement the requirement and verify actual behavior. Check current code, tests,

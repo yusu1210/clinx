@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+- Installed-command onboarding, command-specific help, readable default output and
+  explicit `--json` for automation; bounded piped JSON inputs and actionable errors.
+- Recorded Skill ownership with safe updates, recoverable removal and conflict protection.
+- Bundled example copying without a checkout, installed resource discovery, and local
+  CLI/Skill release bundles with checksums. No registry or release publication is implied.
+- Publishable dependency locking; example copying preserves executable wrappers and
+  excludes nested local state, with bounded traversal and private-file package checks.
 - Multi-source coordination: task-scoped inputs, source-owned references, scoped
   navigation and a runnable cross-repository HTTP example.
 - Workspace ownership guide and hands-on PRD-to-delivery tutorial with executable

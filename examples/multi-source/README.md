@@ -27,18 +27,17 @@ Only the service has a contract document; the client and policy need no new maps
 `AGENTS.md`. Their existing code and tests are the entry points. These directories
 stand in for independently owned repositories; the fixture does not create Git repos.
 The workspace links source-owned facts and holds cross-source navigation and task
-decisions. No per-source initialization is needed. See [workspace ownership](../../docs/en/workspace.md)
+decisions. No per-source initialization is needed. See [workspace ownership](https://github.com/yusu1210/clinx/blob/main/docs/en/workspace.md)
 for read-only sources, existing documentation systems and parallel checkouts.
 
-From the clinx checkout, build the CLI and use an isolated copy:
+With an installed CLI, create an isolated copy without a source checkout:
 
 ```sh
-npm run build
 clinx_demo=$(mktemp -d)
-cp -R examples/multi-source "$clinx_demo/"
-node bin/clinx.mjs context visible-notices --root "$clinx_demo/multi-source/workspace"
-node bin/clinx.mjs verify visible-notices --root "$clinx_demo/multi-source/workspace"
-node bin/clinx.mjs verify visible-notices --root "$clinx_demo/multi-source/workspace" --run
+clinx example copy multi-source --to "$clinx_demo/multi-source"
+clinx context visible-notices --root "$clinx_demo/multi-source/workspace"
+clinx verify visible-notices --root "$clinx_demo/multi-source/workspace"
+clinx verify visible-notices --root "$clinx_demo/multi-source/workspace" --run
 ```
 
 Context links the original `service/docs/contract.md` without copying it, and selects
@@ -49,8 +48,9 @@ server, calls the actual consumer, asserts the visible items and total, and clos
 the server. Exit 0 supports the declared local observation only.
 
 To resume, pass the returned receipt path to
-`reconcile visible-notices --root WORKSPACE --receipt PATH`. A checkpoint can be
-recorded using the [ordinary handoff command](../../docs/en/walkthrough.md).
+`clinx reconcile visible-notices --root WORKSPACE --receipt PATH`. A checkpoint can be
+recorded using the [ordinary handoff command](https://github.com/yusu1210/clinx/blob/main/docs/en/walkthrough.md).
+For the guides matching your installed version, use `clinx resources`.
 
 The checkout's `test/multi-source.test.mjs` regression demonstrates:
 

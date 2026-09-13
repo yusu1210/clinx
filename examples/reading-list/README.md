@@ -9,7 +9,15 @@ Uses Node built-ins with no external services or third-party dependencies.
 
 ## Start, use and stop
 
-Use an existing Node.js 22.16+ on macOS/Linux. From this directory:
+Use an existing Node.js 22.16+ on macOS/Linux. If you do not yet have a copy, an
+installed CLI can create one without a source checkout:
+
+```sh
+clinx example copy reading-list --to ./reading-list-demo
+cd reading-list-demo
+```
+
+From the example directory:
 
 ```sh
 node server.mjs
@@ -37,12 +45,12 @@ Temporary data survives process restart, not guaranteed OS cleanup or power loss
 
 ```sh
 node --test test/http.test.mjs
-node ../../bin/clinx.mjs inspect
-node ../../bin/clinx.mjs verify reading-list --run
-node ../../bin/clinx.mjs verify reading-list --claim local-product --run
+clinx inspect
+clinx verify reading-list --run
+clinx verify reading-list --claim local-product --run
 ```
 
-The clinx commands require the parent checkout to have been built. The first verify
+The clinx commands use the installed CLI. The first verify
 supports `local-http`: real child processes, HTTP requests, role checks, invalid
 inputs, concurrent saves, write failure and process restart. The JUnit reporter
 contains **10 named testcases**; Node's summary also counts their parent (11).

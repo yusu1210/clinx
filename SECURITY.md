@@ -29,6 +29,14 @@ Do not run untrusted project checks with credentials or privileges they should n
 - Local hashes detect changes in declared inputs and artifacts. A malicious writer
   can fabricate or rewrite both records and hashes. No cryptographic provenance or
   tamper-proof audit log is claimed.
+- Skill installation ownership and baseline hashes are local metadata, not trusted
+  authorization. Upgrade/removal checks known paths and preserves originals under
+  `clinx/install-backups/`; keep these backups private. Modified managed files block
+  writes, and unowned files are preserved. No multi-file crash atomicity or protection
+  against a hostile concurrent writer is claimed. CLI upgrades never update Skills automatically.
+- Human output escapes terminal control characters; JSON is available explicitly
+  with `--json`. Neither format redacts secrets in user-provided metadata. Example
+  copying only targets a new directory and never executes the copied code.
 - Local path checks reject traversal and symlink descendants. Explicit source roots
   can name sibling repositories. Filesystem race attacks are not fully preventable
   without isolation; a hostile concurrent writer is outside this tool's security model.

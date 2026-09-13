@@ -6,10 +6,14 @@ Requires an existing Maven and JDK 17+. clinx does not install them. Maven resol
 pinned public build/test dependencies into this fixture's `.clinx/m2` cache.
 
 ```sh
-node bin/clinx.mjs verify shared-policy --root examples/maven-reactor --run
+clinx example copy maven-reactor --to ./maven-demo
+cd maven-demo
+clinx verify shared-policy --run
 ```
 
-Run from the clinx repository after building. Two modules produce separate Surefire
+Use an installed CLI; no clinx checkout is needed. Two modules produce separate Surefire
 reports and three named tests. Checking only the root POM or using old reports must
-not satisfy the claim. `npm run test:maven` also exercises a zero-exit no-op against
+not satisfy the claim. From the clinx source checkout, `npm run test:maven` also exercises a zero-exit no-op against
 the old reports as a negative control in an isolated copy.
+The CLI uses the project's existing tools; its implementation language does not
+constrain the business project.

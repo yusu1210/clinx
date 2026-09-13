@@ -19,13 +19,21 @@ CLI modules and the entrypoint, not Skill effectiveness or browser acceptance.
 
 `test:package` creates a local tarball, inspects its paths and extracted contents,
 installs it in a separate temporary directory, and exercises the installed binary,
-examples, evaluation CLI preparation and execution, and Skill onboarding. It does
-not publish or install globally.
+examples, evaluation CLI preparation and execution, and Skill lifecycle. It also
+installs under an isolated npm global prefix and invokes `clinx` through PATH from
+another cwd, testing help, text/JSON, example copying and actual verification.
+It does not publish or change the user's global installation.
 The separate installation resolves the package's pinned public dependencies from
 the npm registry unless they are cached.
 `test:maven` requires an existing JDK 17+ and Maven; it runs both modules with named
 tests and a no-op control that must reject unchanged reports. It can download public
 dependencies into an isolated cache. Temporary test workspaces may be retained for diagnosis.
+
+`npm run bundle` prepares a new local CLI tarball, standalone Skill archive and
+checksums without uploading. Use a fresh `--output` directory for another candidate;
+see [installation](installation.md). A generated bundle is not itself a release approval.
+Pass `-- --tarball PATH` to `npm run test:package` to test that exact package instead
+of creating another one; the test prints its SHA-256 and verifies the bytes did not change.
 
 ## Interpretable local records
 

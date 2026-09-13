@@ -1,6 +1,11 @@
 # Optional CLI support
 
-Use a reviewed local binary or checkout, not an unverified package fetched by name.
+Use the installed `clinx` command from a reviewed version, not an unverified package
+fetched by name. `clinx --version` identifies this CLI, not any installed Skill copy.
+Use `clinx COMMAND --help` for command-specific inputs and `clinx resources` for
+installed schemas, templates and guides; do not require a source checkout or shell
+wrapper. Request `--json` for structured results and errors. Default output is readable
+text; neither representation grants approval or changes the underlying verdict.
 The CLI records engineering work; the agent still makes decisions and uses existing
 tools. `--root` selects the workspace coordination directory, which need not be a Git
 repository; `--file` is relative to the caller's working directory. Other recorded
@@ -9,10 +14,21 @@ paths are workspace-relative unless specified.
 ## Adopt only the support needed
 
 `clinx init --root PROJECT --agent codex` previews Skill and entry files; `--apply`
-writes without overwriting conflicts. Generic mode uses `clinx/skills/clinx-delivery`.
+writes without overwriting conflicts. A separate preview invocation is optional.
+Generic mode uses `clinx/skills/clinx-delivery`; an existing installation retains its
+recorded placement when `--agent` is omitted.
 Read `clinx/agent-entry.md`; existing host instructions are not edited. No project
 configuration, map, guide or task is generated. Their optional templates remain
-available in the clinx checkout; create useful content only after discovering facts.
+available through `clinx resources`; create useful content only after discovering facts.
+
+`clinx/installation.json` records installed versions, baseline hashes and file
+ownership. `skill status` compares these with local and bundled files, not host
+discovery. `skill update` and `skill remove` preview; `--apply` writes only within
+the managed file boundary, preserving user files and backing up replacements under
+`clinx/install-backups/`. Modified managed files block writes; never change hashes
+or remove the record to bypass a conflict. CLI upgrades do not update Skill copies.
+Do not upgrade a shared Skill as an incidental step of an unrelated delivery.
+Keep customizations with project-owned guidance and use existing host discovery rules.
 
 For records, write `clinx.config.json` from actual project facts: explicit source
 roots and `inputs`, project-owned `exclude` paths, useful context references and
@@ -46,8 +62,10 @@ Unsupported discovery does not block normal investigation or execution.
 
 ## Record and verify
 
-- `clinx task add --file CONTRACT.json` validates and persists the actual agreement.
+- `clinx task add --file CONTRACT.json --json` validates and persists the actual agreement.
   A structurally valid agreement can still omit required behavior.
+  All `--file` commands also accept `-` for piped JSON (8 MiB maximum); never ask the
+  user to prepare a technical form when you can derive the agreement from current facts.
 - `clinx validate ID` checks structure and references, not command readiness.
 - `clinx context ID --focus build` restores the task, latest handoff and focused index.
 - `clinx verify ID` previews checks, source selections and obligations.

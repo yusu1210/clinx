@@ -1,6 +1,6 @@
 import { parseArgs } from 'node:util';
 import { isAbsolute, relative, resolve } from 'node:path';
-import { inside, readJson, sourceRoots } from './files.js';
+import { inside, MAX_FILE_BYTES, readJson, sourceRoots } from './files.js';
 import { inspect } from './inspect.js';
 import { addEvidence, listEvidence } from './evidence.js';
 import { openWorkspace, taskSources } from './workspace.js';
@@ -8,30 +8,44 @@ import { addTask, checkpoint, context, listTasks, readTask, reviseTask } from '.
 import { focusSchema } from './schema.js';
 import { previewChecks, reconcile, verify } from './verify.js';
 import { version } from './version.js';
-import { init } from './install.js';
+import { init, manageSkill } from './install.js';
+import { commands, commandHelp, renderHelp } from './commands.js';
+import { CliError, errorResult, renderError, renderResult } from './output.js';
+import { resources, exampleCatalog, copyExample } from './resources.js';
 
-export const help = `clinx — CLI support for AI-native full-stack engineering
+export const help = renderHelp()!;
 
-  inspect                               Find local command/docs candidates; no init or execution
-  init [--agent codex|generic] [--apply]   Preview / add Skill and entry; no workspace configuration
-  task add --file contract.json          Validate and persist an explicit task contract
-  task list                             List tasks; never silently select one
-  task revise ID --file JSON --reason TEXT  Preserve previous contract, apply revision
-  task checkpoint ID --file note.json    Save an input-bound handoff note (not proof)
-  evidence attach ID --file JSON         Attach reviewed local artifacts; never approves a claim
-  evidence list ID [--record UUID]       Check attachment bytes/local drift; no remote validation
-  context ID [--focus discover|contract|build|verify|learn]  Read task + relevant index
-  validate [ID]                         Validate workspace or task scope; no commands run
-  verify ID [--claim NAME]               Preview selected checks and external obligations
-  verify ID [--claim NAME] --run [--allow-external]  Run authorized checks; save receipt
-  reconcile ID --receipt PATH [--claim NAME]  Reconcile evidence; no commands run
+async function readInput(file: string): Promise<unknown> {
+  if (file !== '-') return readJson(resolve(file));
+  if (process.stdin.isTTY)
+    throw new CliError(
+      'USAGE',
+      '--file - requires piped JSON',
+      'Pipe a complete JSON document or pass --file PATH; clinx does not prompt for input.',
+    );
+  const chunks: Buffer[] = [];
+  let size = 0;
+  for await (const chunk of process.stdin) {
+    const bytes = Buffer.from(chunk);
+    size += bytes.length;
+    if (size > MAX_FILE_BYTES)
+      throw new CliError(
+        'INVALID_INPUT',
+        'Standard input exceeds 8 MiB',
+        'Pass a bounded JSON document; reference large artifacts by path.',
+      );
+    chunks.push(bytes);
+  }
+  try {
+    return JSON.parse(Buffer.concat(chunks, size).toString('utf8'));
+  } catch {
+    throw new SyntaxError('Invalid JSON on standard input; inspect the input locally');
+  }
+}
 
-Common: --root DIRECTORY (default cwd), --help, --version. Results are JSON.
-Exit codes: 0 valid/preview/supported, 1 failed claim, 2 unresolved claim, 3 error.
-init defaults to generic; --agent codex installs in workspace-local .agents/skills.
-No model calls, environment setup, automatic deploy, telemetry, or publication.
-`;
 export async function main(argv: string[]): Promise<number> {
+  let json = argv.includes('--json');
+  let key = '';
   try {
     const { values, positionals } = parseArgs({
       args: argv,
@@ -46,64 +60,116 @@ export async function main(argv: string[]): Promise<number> {
         claim: { type: 'string' },
         receipt: { type: 'string' },
         record: { type: 'string' },
+        to: { type: 'string' },
         apply: { type: 'boolean' },
         run: { type: 'boolean' },
         'allow-external': { type: 'boolean' },
-        help: { type: 'boolean' },
-        version: { type: 'boolean' },
+        json: { type: 'boolean' },
+        help: { type: 'boolean', short: 'h' },
+        version: { type: 'boolean', short: 'v' },
       },
     });
-    if (values.help || argv.length === 0) {
-      process.stdout.write(help);
-      return 0;
+    json = values.json ?? false;
+    const [command, sub, extra] = positionals;
+    key = ['task', 'evidence', 'skill', 'example'].includes(command ?? '')
+      ? [command, sub].filter(Boolean).join(' ')
+      : (command ?? '');
+    if (values.help || !command || command === 'help') {
+      const topic = command === 'help' ? positionals.slice(1).join(' ') : key;
+      const content = json ? commandHelp(topic) : renderHelp(topic);
+      if (!content)
+        throw new CliError(
+          'USAGE',
+          `Unknown help topic: ${topic}`,
+          'Run clinx --help for available commands.',
+        );
+      if (!values.version) {
+        process.stdout.write(json ? `${JSON.stringify(content, null, 2)}\n` : (content as string));
+        return 0;
+      }
     }
     if (values.version) {
-      process.stdout.write(`${version}\n`);
+      if (command)
+        throw new CliError('USAGE', '--version is a top-level option', 'Run clinx --version.');
+      process.stdout.write(
+        json ? `${JSON.stringify({ name: 'clinx', version })}\n` : `${version}\n`,
+      );
       return 0;
     }
-    const [command, sub, extra] = positionals;
     const root = resolve(values.root ?? process.cwd());
     const required = (value: string | undefined, label: string) => {
-      if (!value) throw new Error(`Missing ${label}`);
+      if (!value)
+        throw new CliError(
+          'USAGE',
+          `Missing ${label}`,
+          `Run clinx ${key} --help for an input example.`,
+        );
       return value;
     };
-    const allowed: Record<string, string[]> = {
-      init: ['agent', 'apply'],
-      inspect: [],
-      validate: [],
-      context: ['focus'],
-      verify: ['claim', 'run', 'allow-external'],
-      reconcile: ['claim', 'receipt'],
-      'task add': ['file'],
-      'task list': [],
-      'task revise': ['file', 'reason'],
-      'task checkpoint': ['file'],
-      'evidence attach': ['file'],
-      'evidence list': ['record'],
-    };
-    const key = command === 'task' || command === 'evidence' ? `${command} ${sub}` : command!;
-    if (!Object.hasOwn(allowed, key)) throw new Error('Unknown command; run clinx --help');
+    if (!Object.hasOwn(commands, key))
+      throw new CliError(
+        'USAGE',
+        `Unknown command: ${key}`,
+        'Run clinx --help for available commands.',
+      );
+    const definition = commands[key]!;
     for (const option of Object.keys(values))
-      if (option !== 'root' && !allowed[key]!.includes(option))
-        throw new Error(`--${option} is not valid for ${key}`);
-    const limit =
-      key === 'task revise' || key === 'task checkpoint' || command === 'evidence'
-        ? 3
-        : key.startsWith('task ')
-          ? 2
-          : command === 'init' || command === 'inspect'
-            ? 1
-            : 2;
-    if (positionals.length > limit) throw new Error('Unexpected positional arguments');
+      if (!['root', 'json'].includes(option) && !definition.options.includes(option))
+        throw new CliError(
+          'USAGE',
+          `--${option} is not valid for ${key}`,
+          `Run clinx ${key} --help.`,
+        );
+    if (positionals.length > definition.positionals)
+      throw new CliError(
+        'USAGE',
+        'Unexpected positional arguments',
+        `Usage: clinx ${definition.usage}`,
+      );
+    if (values.root !== undefined && !values.root.trim())
+      throw new CliError(
+        'USAGE',
+        '--root must name a directory',
+        'Omit --root to use the invoking cwd.',
+      );
+    if (definition.options.includes('file')) required(values.file, '--file');
+    if (key === 'task revise') required(values.reason, '--reason');
+    if (['context', 'verify', 'reconcile'].includes(key)) required(sub, 'task ID');
+    if (['task revise', 'task checkpoint', 'evidence attach', 'evidence list'].includes(key))
+      required(extra, 'task ID');
+    if (key === 'reconcile') required(values.receipt, '--receipt');
+    if (values['allow-external'] && !values.run)
+      throw new CliError(
+        'USAGE',
+        '--allow-external requires --run',
+        'Review clinx verify --help; the flag is not an approval credential.',
+      );
     let result: unknown;
     let exit = 0;
     if (command === 'inspect') {
       result = await inspect(root);
     } else if (command === 'init') {
-      const agent = values.agent ?? 'generic';
-      if (agent !== 'codex' && agent !== 'generic')
-        throw new Error('agent must be codex or generic');
+      const agent = values.agent;
+      if (agent !== undefined && agent !== 'codex' && agent !== 'generic')
+        throw new CliError(
+          'USAGE',
+          '--agent must be codex or generic',
+          'Run clinx init --help for placement and discovery details.',
+        );
       result = await init(root, agent, values.apply ?? false);
+    } else if (command === 'skill') {
+      result = await manageSkill(
+        root,
+        sub as 'status' | 'update' | 'remove',
+        values.apply ?? false,
+      );
+    } else if (command === 'resources') {
+      result = resources();
+    } else if (command === 'example') {
+      result =
+        sub === 'list'
+          ? exampleCatalog.map(({ path: _path, ...example }) => example)
+          : await copyExample(required(extra, 'example name'), required(values.to, '--to'));
     } else if (key === 'task list') {
       result = await listTasks(root);
     } else {
@@ -131,9 +197,9 @@ export async function main(argv: string[]): Promise<number> {
         result =
           sub === 'list'
             ? await listEvidence(p, id, values.record)
-            : await addEvidence(p, id, await readJson(resolve(required(values.file, '--file'))));
+            : await addEvidence(p, id, await readInput(required(values.file, '--file')));
       } else if (command === 'task') {
-        const input = await readJson(resolve(required(values.file, '--file')));
+        const input = await readInput(required(values.file, '--file'));
         if (sub === 'add') result = await addTask(p, input);
         else if (sub === 'revise')
           result = await reviseTask(
@@ -145,8 +211,6 @@ export async function main(argv: string[]): Promise<number> {
         else result = await checkpoint(p, required(extra, 'task ID'), input);
       } else if (command === 'verify' || command === 'reconcile') {
         const id = required(sub, 'task ID');
-        if (values['allow-external'] && !values.run)
-          throw new Error('--allow-external requires --run');
         if (command === 'reconcile') {
           const receipt = required(values.receipt, '--receipt');
           // An explicitly selected workspace may itself be a filesystem alias.
@@ -167,12 +231,13 @@ export async function main(argv: string[]): Promise<number> {
         } else result = await previewChecks(p, id, values.claim);
       }
     }
-    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+    process.stdout.write(
+      json ? `${JSON.stringify(result, null, 2)}\n` : renderResult(key, root, result),
+    );
     return exit;
   } catch (error) {
-    process.stderr.write(
-      `${JSON.stringify({ error: error instanceof Error ? error.message : String(error) })}\n`,
-    );
+    const detail = errorResult(error, Object.hasOwn(commands, key) ? key : '');
+    process.stderr.write(json ? `${JSON.stringify(detail)}\n` : renderError(detail));
     return 3;
   }
 }

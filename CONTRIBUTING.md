@@ -3,7 +3,7 @@
 [中文](CONTRIBUTING.zh-CN.md)
 
 clinx provides an AI-native full-stack engineering methodology and portable agent
-Skill. Add CLI features only for demonstrated problems with task records or checks.
+Skill. Add CLI features for demonstrated onboarding, continuity or verification needs.
 The CLI is not an environment installer or autonomous workflow engine.
 
 ## Development
@@ -17,10 +17,11 @@ npm run check
 npm run test:coverage
 npm run test:package
 npm run test:maven
+npm run bundle
 ```
 
 Maven validation requires an existing JDK 17+ and Maven. Package tests use a local
-tarball and temporary installation; nothing is installed globally or published.
+tarball and temporary installation; the user's global tools are not changed and nothing is published.
 Tests may retain temporary workspaces for diagnosis; remove only exact directories
 you have identified as test-owned.
 
@@ -28,6 +29,9 @@ you have identified as test-owned.
   Cover negative and unresolved cases, not only successful scaffolding.
 - Keep models in `src/schema.ts`; build regenerates schemas. Treat commands, fields,
   exit codes and packaged assets as public interfaces; keep help and docs aligned.
+- Keep command help in `src/commands.ts`. Test default text and explicit `--json`,
+  input/error semantics, installation from another cwd, and safe Skill lifecycle.
+  User guides use installed commands; source entrypoints belong in development instructions.
 - Version record shape changes in the schema. When saved evidence requires different
   interpretation, update `evidenceProtocolVersion` in `src/version.ts` and test that
   unsupported protocols remain unresolved. Product version alone is not that boundary.
@@ -92,7 +96,8 @@ Before a release, the owner must:
 
 1. Review the exact candidate's source provenance, dependency licenses, docs and
    public-file scan. Heuristics cannot establish absence of confidential material.
-2. Run the commands above, inspect the local tarball and test a separate installation.
+2. Run the commands above, inspect the local tarball and test a separate installation,
+   including the normal command on PATH, example copying, upgrades and recovery.
    Check dependency advisories at release time with `npm audit --registry=https://registry.npmjs.org`.
 3. Run hosted CI on the supported matrix and review actual results. Local macOS
    execution does not certify Linux; a workflow file is not a completed run.
@@ -106,3 +111,20 @@ Before a release, the owner must:
    approved process; never infer permission from passing tests.
 
 No automatic publication or deployment workflow is included.
+Maintain `npm-shrinkwrap.json` as the single dependency lock for both source builds
+and installed CLI packages. Review dependency changes and their advisories; package
+tests compare installed runtime dependencies with this lock. Do not add a competing
+`package-lock.json` or change the lock solely to bypass a failed installation.
+
+`npm run bundle` creates a new ignored `artifacts/clinx-VERSION/` directory with the
+CLI tarball, standalone Skill archive and checksums; it does not upload them. Use
+`npm run bundle -- --output NEW_DIRECTORY` for another candidate. Never overwrite a
+reviewed candidate. Test that exact tarball without repacking:
+
+```sh
+npm run test:package -- --tarball ./artifacts/clinx-0.2.0-dev.0/clinx-0.2.0-dev.0.tgz
+```
+
+The test prints the candidate path and SHA-256. Match it to `SHA256SUMS`.
+The release owner distributes exactly the tested bytes and
+updates installation instructions only when the chosen distribution actually exists.

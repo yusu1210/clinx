@@ -9,6 +9,7 @@ guides the agent without requiring the CLI.
 
 | Goal                                         | Guide                              |
 | -------------------------------------------- | ---------------------------------- |
+| Install, connect, upgrade or remove          | [Installation](installation.md)    |
 | Understand the engineering method            | [Method](method.md)                |
 | Agree on scope and confirmation points       | [Collaboration](collaboration.md)  |
 | Choose workspace layout and knowledge owners | [Workspace](workspace.md)          |

@@ -54,10 +54,15 @@
 
 `init --agent codex --apply` 写入 `.agents/skills/clinx-delivery`；
 通用模式写入 `clinx/skills/clinx-delivery`，由用户明确读取或按宿主机制注册。
-两者都包含许可和 `clinx/agent-entry.md`。先预览；存在不同文件则停止，不覆盖。
+两者都包含许可、`clinx/agent-entry.md` 和文件归属记录 `clinx/installation.json`。
+去掉 `--apply` 可先预览；存在不同文件则停止，不覆盖。
 
 不自动生成地图、指南、任务或配置，不编辑全局设置或宿主指令，不热注册正在运行的宿主。
 需要时把简短入口整合进已有指令。安装后应在选定宿主中核对发现结果。
+
+CLI 安装、Skill 文件安装、宿主发现与工程就绪是不同状态。
+标准命令、安全升级、移除与恢复见[安装指南](installation.md)。自动化显式使用 `--json`；
+可读文本与 JSON 描述同一结果。
 
 ## 用工程事实建立 CLI 记录
 

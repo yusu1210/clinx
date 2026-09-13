@@ -20,8 +20,16 @@ const documents = [
   'clinx/local-guide.md',
   'clinx/system-map.md',
 ];
-const locks = ['package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lock', 'bun.lockb'];
+const locks = [
+  'npm-shrinkwrap.json',
+  'package-lock.json',
+  'pnpm-lock.yaml',
+  'yarn.lock',
+  'bun.lock',
+  'bun.lockb',
+];
 const managers: Record<string, string> = {
+  'npm-shrinkwrap.json': 'npm',
   'package-lock.json': 'npm',
   'pnpm-lock.yaml': 'pnpm',
   'yarn.lock': 'yarn',

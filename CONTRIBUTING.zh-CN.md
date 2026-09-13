@@ -2,7 +2,7 @@
 
 [English](CONTRIBUTING.md)
 
-clinx 提供 AI-native 全栈研发方法论与可移植 Agent Skill。只有在解决实际任务记录或检查问题时，
+clinx 提供 AI-native 全栈研发方法论与可移植 Agent Skill。只有在解决实际接入、续接或验证问题时，
 才增加 CLI 功能；不把它扩成环境安装器或自主工作流引擎。
 
 ## 本地开发
@@ -16,13 +16,16 @@ npm run check
 npm run test:coverage
 npm run test:package
 npm run test:maven
+npm run bundle
 ```
 
 Maven 验证要求已有 JDK 17+ 与 Maven。包测试使用本地包和临时安装，
-不全局安装、不发布。测试可能保留临时工程供诊断；清理前确定精确目录确实由测试创建。
+不修改用户的全局工具、不发布。测试可能保留临时工程供诊断；清理前确定精确目录确实由测试创建。
 
 - 修缺陷时尽量先补失败的行为回归；验证失败与未决路径，不只验证成功脚手架。
 - 模型维护在 `src/schema.ts`，构建生成 Schema。命令、字段、退出码与包内资源视为公开接口。
+- 命令帮助维护在 `src/commands.ts`；验证默认文本、显式 `--json`、输入与错误语义、
+  从其他目录安装调用以及安全的 Skill 生命周期。用户指南使用安装后命令，源码入口留在开发说明。
 - 记录结构变化更新 Schema 版本；历史证据需要不同解释时，更新 `src/version.ts` 的
   `evidenceProtocolVersion`，并验证不支持的协议保持未决。产品版本本身不是此边界。
 - Skill 修改要改善具体决策，入口简短、细节按需读取，遵守用户范围和授权，不强制小任务走重流程。
@@ -71,7 +74,7 @@ npm 发布明确获准前保留 `private: true`。
 维护者需完成：
 
 1. 审阅精确候选的来源、依赖许可、文档与公开文件扫描。启发式检查不能证明绝无机密内容。
-2. 运行上述命令、检查包内文件并独立安装。
+2. 运行上述命令、检查包内文件并独立安装，包括 PATH 中的普通命令、案例复制、升级与恢复。
    发布时运行 `npm audit --registry=https://registry.npmjs.org` 检查当时的依赖公告。
 3. 在支持矩阵上运行托管 CI，核对实际结果。本机 macOS 通过不证明 Linux 通过，工作流存在不算执行。
 4. 检查私密漏洞反馈或文档中的联系路径，核对符合维护者发布流程的仓库权限与分支保护。
@@ -81,3 +84,17 @@ npm 发布明确获准前保留 `private: true`。
    按选定平台的批准流程发布，测试通过不自动授予权限。
 
 项目不包含自动发布或部署工作流。
+`npm-shrinkwrap.json` 是源码构建与 CLI 安装包共用的唯一依赖锁。
+依赖变更需审查版本和安全公告；包测试会核对安装后的运行时依赖与锁文件一致。
+不要另建竞争的 `package-lock.json`，也不要只为绕过安装失败而修改锁文件。
+
+`npm run bundle` 在新的、已忽略的 `artifacts/clinx-VERSION/` 目录生成 CLI 包、独立 Skill 包
+和校验和，不上传。需要另一份候选时用 `npm run bundle -- --output NEW_DIRECTORY`，
+不覆盖已审阅候选。直接验收该 tarball，不重新打包：
+
+```sh
+npm run test:package -- --tarball ./artifacts/clinx-0.2.0-dev.0/clinx-0.2.0-dev.0.tgz
+```
+
+测试会打印候选路径及 SHA-256，应与 `SHA256SUMS` 核对。
+发布者分发准确测试过的字节，只在真实分发渠道可用后更新安装指令。

@@ -18,7 +18,11 @@ export function releaseFindings(path, content) {
   const issues = [];
   const parts = path.replaceAll('\\', '/').split('/');
   if (parts.includes('.DS_Store')) issues.push('os-metadata');
-  if (parts.some((p) => ['.git', '.clinx', 'node_modules', 'target', 'coverage'].includes(p)))
+  if (
+    parts.some((p) =>
+      ['.git', '.clinx', '.agents', 'node_modules', 'target', 'coverage'].includes(p),
+    )
+  )
     issues.push('private-or-generated-path');
   if (
     parts.some(
@@ -31,6 +35,13 @@ export function releaseFindings(path, content) {
     issues.push('credential-or-archive-path');
   if (/\bclinx\/tasks\/[^/]+\/(?:checkpoints|revisions)\//.test(parts.join('/')))
     issues.push('task-history');
+  if (/(?:^|\/)clinx\/install-backups\//.test(parts.join('/')) || parts[0] === 'artifacts')
+    issues.push('private-release-or-install-backup');
+  if (
+    /(?:^|\/)clinx\/(?:installation\.json$|agent-entry\.md$|skills\/)/.test(parts.join('/')) &&
+    parts.join('/') !== 'templates/workspace/clinx/agent-entry.md'
+  )
+    issues.push('local-skill-installation');
   for (const [id, pattern] of contentRules) if (pattern.test(content)) issues.push(id);
   return issues;
 }

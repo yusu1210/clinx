@@ -13,6 +13,7 @@ Host agent + clinx-delivery Skill -----> existing code/browser/enterprise tools
           +---- optional CLI
                   |-- task contract + revision history
                   |-- static command/docs candidates (no execution)
+                  |-- local Skill ownership, updates and recovery
                   |-- checkpoint + focused context index
                   `-- check execution -> observations -> applicability -> claim
 ```
@@ -37,6 +38,7 @@ clinx/
   skills/clinx-delivery/    portable instructions and progressively loaded references
   src/                     optional CLI implementation
   bin/                     executable entrypoint
+  npm-shrinkwrap.json      one dependency lock for development and CLI distribution
   schemas/                 generated JSON Schemas; models live in src/schema.ts
   templates/workspace/     optional files for a user's coordination workspace
   examples/                runnable, completed synthetic examples
@@ -49,6 +51,7 @@ clinx/
   clinx.config.json         this repository's self-check configuration
   clinx/tasks/project/     this repository's self-check agreement
   dist/                    generated CLI build, not maintained source
+  artifacts/               local release candidates, ignored and never published implicitly
 ```
 
 `examples/` shows how completed pieces work; `evals/fixtures/` supplies unfinished
@@ -65,10 +68,15 @@ one or more sources, including sibling repositories or a directory of requiremen
 It need not be a Git repository. Sources retain their own code, domain facts and
 procedures; a workspace map links those owners instead of copying their documentation.
 `workspace.ts` resolves sources and file references; `task.ts` owns task records and
-continuity; `install.ts` installs the optional Skill entry. None plans or schedules agents.
+continuity; `install.ts` owns optional Skill file installation and lifecycle.
+`commands.ts` owns discoverable command help, `output.ts` presents one result as text
+or JSON, and `resources.ts` locates packaged assets and copies examples into new
+directories without executing them. None plans or schedules agents.
 
 | Artifact                              | Owner and meaning                                                                    |
 | ------------------------------------- | ------------------------------------------------------------------------------------ |
+| `clinx/installation.json`             | Skill placement, version, baseline hashes and file ownership; not an attestation     |
+| `clinx/install-backups/UUID/`         | Original files and installation record retained before managed replacement/removal   |
 | `clinx.config.json`                   | Workspace: explicit source roots/inputs, context routing, reviewed check definitions |
 | Existing maps and guides              | Maintained by their owners: source facts, navigation and operating procedures        |
 | Optional workspace map or guide       | Cross-source navigation and coordination procedures; links to existing owners        |
@@ -80,7 +88,7 @@ continuity; `install.ts` installs the optional Skill entry. None plans or schedu
 | Sibling stdout/stderr/XML             | Bounded private evidence artifacts retained for inspection                           |
 | `.clinx/evidence/ID/UUID/record.json` | Observer assertion and copied artifacts, bound at capture time; never a verdict      |
 
-Zod definitions in `src/schema.ts` are the model source. `npm run build` generates
+Delivery-record Zod definitions in `src/schema.ts` are the model source. `npm run build` generates
 JSON Schemas. CLI validation adds cross-reference, uniqueness and filesystem checks;
 JSON Schema shape validation alone is not equivalent. Markdown holds reasoning;
 JSON holds machine records. The supported interfaces are the Skill, CLI, and JSON
@@ -160,8 +168,13 @@ discovery does not select temporary names. Existing destinations are not replace
 Writes enforce the same 8 MiB per-file bound as reads. This requires a filesystem
 supporting hard links; there is no unsafe overwrite fallback or full power-loss guarantee.
 Revisions replace only the explicitly named contract after preserving the previous JSON.
-Initialization preflights conflicts, but multi-file filesystem writes are not a
-transaction: an I/O failure can leave a partial scaffold; inspect and retry safely.
+Skill installation preflights conflicts and records ownership. Updates/removal
+preflight all managed paths, retain originals, and publish the installation record
+last. Handled write failures attempt rollback without replacing concurrent edits.
+User-owned files are not adopted, overwritten or deleted. Multi-file writes are not
+crash-atomic; inspect the installation record and backups before recovery. Example
+copying only creates a new directory and retains a failed partial copy for diagnosis.
+See [installation lifecycle](installation.md).
 The lock is not stolen automatically after a crash; see [CLI recovery](cli.md#recovery).
 
 Task discovery isolates per-entry errors. A damaged newest checkpoint is reported,

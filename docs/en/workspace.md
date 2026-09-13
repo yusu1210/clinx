@@ -60,6 +60,8 @@ business-work/                        existing local parent; no Git required
       system-map.md                  links capabilities and their owners
     clinx.config.json                when using CLI records, not needed for init
     clinx/agent-entry.md              optional entry supplied by Skill installation
+    clinx/installation.json           installed Skill version, baseline and file ownership
+    clinx/install-backups/            private originals retained by Skill update/removal
     clinx/tasks/change-123/
       contract.json                  CLI task agreement
       prd.md                         optional local requirement; may be an existing reference
@@ -88,6 +90,11 @@ for clinx. Private requirements, decisions and useful knowledge can be versioned
 an appropriately private repository; they do not belong in the public clinx checkout.
 Keep credentials out of both. `.clinx/` is a local record location, not a security
 boundary; control access and retention, and redact before sharing.
+
+When using CLI-managed Skill installation, preserve `clinx/installation.json` with
+the installed files; it enables safe updates and is not task acceptance evidence.
+Keep `clinx/install-backups/` private. Installing the CLI globally does not create
+these files in every source. See [installation and lifecycle](installation.md).
 
 ## Keep task inputs separate from task outputs
 

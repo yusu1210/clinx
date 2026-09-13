@@ -5,15 +5,17 @@
 A synthetic domain and HTTP example demonstrating rule ownership, filtering before
 pagination, matching counts and a loopback HTTP boundary. It has no browser UI.
 
-From the clinx repository after `npm ci && npm run build`:
+With an installed CLI, copy the example and run inside it:
 
 ```sh
-node bin/clinx.mjs verify eligible-picker --root examples/node-picker
-node bin/clinx.mjs verify eligible-picker --root examples/node-picker --run
-node bin/clinx.mjs verify eligible-picker --root examples/node-picker --claim release-ready --run
+clinx example copy node-picker --to ./picker-demo
+cd picker-demo
+clinx verify eligible-picker
+clinx verify eligible-picker --run
+clinx verify eligible-picker --claim release-ready --run
 ```
 
-The second command should support `local-behavior`; the third deliberately exits 2
+The first execution should support `local-behavior`; the final command deliberately exits 2
 because external release obligations are unresolved. Edit the predicate or the
 referenced contract, then reconcile the old receipt: it must be stale. Regression
 tests in the clinx test suite exercise the broken predicate as a negative control.

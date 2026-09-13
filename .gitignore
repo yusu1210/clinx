@@ -1,5 +1,6 @@
 node_modules/
 dist/
+artifacts/
 .clinx/
 coverage/
 *.tgz
@@ -9,3 +10,4 @@ target/
 .env.*
 clinx/tasks/*/checkpoints/
 clinx/tasks/*/revisions/
+clinx/install-backups/

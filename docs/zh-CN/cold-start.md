@@ -11,8 +11,10 @@
 
 ## 可直接使用的请求
 
+先[接入 Skill](installation.md)，或提供完整且已审阅的 Skill 目录的绝对路径。开始时无需 CLI 配置。
+
 ```text
-读取已审阅的 clinx 目录中的 skills/clinx-delivery/SKILL.md。
+使用已安装的 clinx-delivery Skill 及相关引用。
 需求：<描述、文件或链接>
 工程：<仓库 URL 或本地路径>
 实现需求并验证实际行为。修改前检查现有代码、测试、归属和受影响的消费者。

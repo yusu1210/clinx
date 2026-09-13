@@ -24,9 +24,9 @@ greenfield work and enterprise tools. To try a finished product first, run the
 
 ## Use it for your requirement
 
-Give your agent access to a reviewed clinx checkout, then ask:
+After [connecting the Skill](docs/en/installation.md), give the agent the request:
 
-> Read /path/to/clinx/skills/clinx-delivery/SKILL.md.
+> Use clinx-delivery and its relevant references.
 > Requirement: [PRD or description]. Repositories: [URLs or local paths].
 > Implement the requested behavior. Check what already exists, run the relevant
 > tests and actual consumer path, then report how to use and stop the result, what
@@ -58,46 +58,54 @@ gap; they are optional. See [project integration](docs/en/adoption.md) and
 [workspace layout and ownership](docs/en/workspace.md). Source repositories do not
 need a uniform documentation scaffold or separate initialization.
 
-## Build the CLI when you need records
+## Install and connect once
 
-Requires Node.js 22.16+ and npm. Command execution supports macOS/Linux; this runtime
-requirement does not constrain the target project's language.
-
-```sh
-git clone https://github.com/yusu1210/clinx.git
-cd clinx
-npm ci
-npm run build
-node bin/clinx.mjs --help
-node bin/clinx.mjs inspect --root /path/to/project
-```
-
-Review source and scripts before running them; pin a commit when reproducibility
-matters. `inspect` lists command candidates from local files without executing them.
-It does not check runtime readiness.
-
-To install the Skill in your working directory, preview then apply:
+The optional CLI requires Node.js 22.16+ and npm on macOS/Linux. This does not
+constrain the target project's language or require adding npm files to it.
+The current preview is distributed from reviewed source/local tarballs, **not the
+npm registry**. Follow [installation](docs/en/installation.md) to obtain a normal
+`clinx` command; contributors use the separate source-build instructions.
 
 ```sh
-node bin/clinx.mjs init --root /path/to/project --agent codex
-node bin/clinx.mjs init --root /path/to/project --agent codex --apply
+clinx --version
+cd /path/to/project
+clinx init --agent codex --apply
 ```
 
-This adds the Skill, license, and `clinx/agent-entry.md`. Conflicting files stop
-the write; existing host instructions are untouched. Omit `--agent codex` for a
-generic directory. Add configuration, maps, or guides only from verified project facts.
-See the [CLI walkthrough](docs/en/walkthrough.md).
+This installs the workspace-local Skill and entry and records file ownership.
+It preserves existing host instructions and stops on conflicting files. Omit
+`--apply` for a read-only preview; preview and apply are not two mandatory steps.
+Use `--root /path/to/workspace` when invoking from elsewhere. Generic hosts can
+use `--agent generic` and read the installed Skill explicitly.
+
+Now give the agent your PRD and project paths. No maps, configuration or task JSON
+are prerequisites. The agent prepares useful records from verified facts when needed.
+Skill installation, host discovery, workspace configuration and verified delivery
+are different states; see [integration](docs/en/adoption.md).
+
+```sh
+clinx inspect
+clinx task add --help
+clinx skill status
+```
+
+Results are readable text by default. Agents and scripts use `--json` for structured
+output. [Skill-only use, upgrades, removal and troubleshooting](docs/en/installation.md)
+do not require a second development environment.
 
 ## Try it
 
-From the built checkout:
+No source checkout is needed after CLI installation:
 
 ```sh
-node bin/clinx.mjs verify eligible-picker --root examples/node-picker
-node bin/clinx.mjs verify eligible-picker --root examples/node-picker --run
+clinx example copy node-picker --to ./picker-demo
+cd picker-demo
+clinx verify eligible-picker
+clinx verify eligible-picker --run
 ```
 
-The first command previews the checks. The second runs domain and loopback HTTP
+The copy creates a new directory without executing project commands. Verification
+without `--run` previews checks; `--run` runs domain and loopback HTTP
 tests and saves a local receipt. The example's `release-ready` claim remains
 unresolved because local tests do not establish release conditions.
 

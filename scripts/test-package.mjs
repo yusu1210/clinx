@@ -1,25 +1,55 @@
 import { spawnSync } from 'node:child_process';
 import { cp, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, delimiter, resolve } from 'node:path';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import assert from 'node:assert/strict';
 import { root } from '../test/helpers.mjs';
+import { createRequire } from 'node:module';
 import { assertPublicFile, releaseFindings } from './release-scan.mjs';
 
 const temp = await mkdtemp(join(tmpdir(), 'clinx-package-'));
 const run = (command, args, cwd) => {
+  if (command.endsWith('/.bin/clinx') && !args.includes('--version') && !args.includes('--help'))
+    args = [...args, '--json'];
   const result = spawnSync(command, args, { cwd, encoding: 'utf8', timeout: 120000 });
   assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
   return result.stdout;
 };
-const pack = JSON.parse(
-  run('npm', ['pack', '--json', '--ignore-scripts', '--pack-destination', temp], root),
-)[0];
+const args = process.argv.slice(2);
+if (args.length && (args.length !== 2 || args[0] !== '--tarball' || !args[1].trim()))
+  throw new Error('Usage: npm run test:package -- [--tarball PATH]');
+// An explicit candidate is tested without repacking or modifying its bytes.
+const built = args.length
+  ? null
+  : JSON.parse(
+      run('npm', ['pack', '--json', '--ignore-scripts', '--pack-destination', temp], root),
+    )[0];
+const tarball = args.length ? resolve(args[1]) : join(temp, built.filename);
+const digest = async () =>
+  createHash('sha256')
+    .update(await readFile(tarball))
+    .digest('hex');
+const beforeDigest = await digest();
+const members = run('tar', ['-tzf', tarball], temp)
+  .trim()
+  .split('\n')
+  .filter((path) => !path.endsWith('/'));
+assert.equal(new Set(members).size, members.length, 'Duplicate archive members');
+for (const path of members)
+  assert.ok(
+    path.startsWith('package/') &&
+      path.split('/').every((part) => part && part !== '.' && part !== '..') &&
+      !path.includes('\\'),
+    'Unsafe archive member',
+  );
+const pack = { files: members.map((path) => ({ path: path.slice('package/'.length) })) };
 for (const file of pack.files) {
   assert.deepEqual(releaseFindings(file.path, ''), [], file.path);
 }
 assert.ok(pack.files.some((f) => f.path === 'templates/workspace/clinx.config.json'));
 assert.ok(pack.files.some((f) => f.path === 'skills/clinx-delivery/SKILL.md'));
+assert.ok(pack.files.some((f) => f.path === 'npm-shrinkwrap.json'));
 for (const path of [
   'skills/clinx-delivery/references/delivery.md',
   'skills/clinx-delivery/references/runtime.md',
@@ -66,7 +96,7 @@ run(
     '--no-audit',
     '--no-fund',
     '--registry=https://registry.npmjs.org',
-    join(temp, pack.filename),
+    tarball,
   ],
   temp,
 );
@@ -79,6 +109,34 @@ const copyPackagedExample = async (name) => {
   return dir;
 };
 const manifest = JSON.parse(await readFile(join(installed, 'package.json'), 'utf8'));
+const assertLockedRuntime = async (packageRoot) => {
+  const lock = JSON.parse(await readFile(join(packageRoot, 'npm-shrinkwrap.json'), 'utf8'));
+  assert.deepEqual(lock.packages[''].dependencies, manifest.dependencies);
+  for (const [path, entry] of Object.entries(lock.packages)) {
+    if (!path || entry.dev) continue;
+    const boundary = path.lastIndexOf('node_modules/');
+    const name = path.slice(boundary + 'node_modules/'.length);
+    const require = createRequire(join(packageRoot, path.slice(0, boundary), 'package.json'));
+    let actual;
+    // Inspect npm's installed metadata without importing dependencies or requiring
+    // a package.json subpath export (libraries need not expose that subpath).
+    for (const base of require.resolve.paths(name) ?? []) {
+      try {
+        actual = JSON.parse(await readFile(join(base, name, 'package.json'), 'utf8'));
+        break;
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+      }
+    }
+    assert.ok(actual, `Missing locked runtime dependency: ${name}`);
+    assert.equal(
+      actual.version,
+      entry.version,
+      `Installed version differs from release lock: ${name}`,
+    );
+  }
+};
+await assertLockedRuntime(installed);
 assert.equal(run(binary, ['--version'], temp).trim(), manifest.version);
 assert.equal(manifest.exports['.'], undefined);
 assert.ok(!pack.files.some((f) => /^dist\/index\./.test(f.path)));
@@ -182,8 +240,9 @@ assert.ok(
   ),
 );
 assert.equal(
-  JSON.parse(run(process.execPath, [recorded.cli, 'inspect', '--root', recorded.workspace], temp))
-    .executed,
+  JSON.parse(
+    run(process.execPath, [recorded.cli, 'inspect', '--root', recorded.workspace, '--json'], temp),
+  ).executed,
   false,
 );
 const bulk = JSON.parse(
@@ -220,6 +279,64 @@ assert.ok(
 const unconfigured = await mkdtemp(join(tmpdir(), 'clinx-package-inspect-'));
 assert.equal(JSON.parse(run(binary, ['inspect', '--root', unconfigured], temp)).configured, false);
 assert.deepEqual(await readdir(unconfigured), []);
+
+// Exercise the user's real executable name, with an isolated npm global prefix.
+// This does not touch the user's global tools or require the source checkout at runtime.
+const prefix = join(temp, 'isolated-prefix');
+run(
+  'npm',
+  [
+    'install',
+    '--global',
+    '--prefix',
+    prefix,
+    '--ignore-scripts',
+    '--no-audit',
+    '--no-fund',
+    '--registry=https://registry.npmjs.org',
+    tarball,
+  ],
+  temp,
+);
+const installedCommand = (args, cwd = temp) => {
+  const result = spawnSync('clinx', args, {
+    cwd,
+    env: { ...process.env, PATH: join(prefix, 'bin') + delimiter + process.env.PATH },
+    encoding: 'utf8',
+    timeout: 30000,
+  });
+  assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
+  return result.stdout;
+};
+await assertLockedRuntime(join(prefix, 'lib/node_modules/clinx'));
+assert.equal(installedCommand(['--version']).trim(), manifest.version);
+assert.match(installedCommand(['task', 'add', '--help']), /Usage: clinx task add/);
+assert.match(installedCommand(['inspect'], unconfigured), /Workspace:/);
+assert.equal(JSON.parse(installedCommand(['inspect', '--json'], unconfigured)).configured, false);
+const practice = join(temp, 'new user practice');
+assert.equal(
+  JSON.parse(installedCommand(['example', 'copy', 'noticeboard', '--to', practice, '--json']))
+    .executed,
+  false,
+);
+installedCommand(['init', '--agent', 'codex', '--apply'], practice);
+assert.equal(
+  JSON.parse(installedCommand(['skill', 'status', '--json'], practice)).matchesPackage,
+  true,
+);
+installedCommand(['skill', 'update', '--apply'], practice);
+installedCommand(['skill', 'remove', '--apply'], practice);
+assert.equal(JSON.parse(installedCommand(['skill', 'status', '--json'], practice)).managed, false);
+assert.ok((await readdir(practice)).includes('PRD.md'));
+assert.ok(!(await readdir(practice)).includes('package.json'));
+const productCopy = join(temp, 'copied-product');
+installedCommand(['example', 'copy', 'reading-list', '--to', productCopy]);
+assert.equal(
+  JSON.parse(installedCommand(['verify', 'reading-list', '--run', '--json'], productCopy)).verdict
+    .decision,
+  'supported',
+);
+assert.equal(await digest(), beforeDigest, 'Candidate tarball changed during verification');
 process.stdout.write(
-  `PASS: tarball install, executable, static inspection, packaged Node/full-stack examples, attachment round-trip, raw cold-start preparation and Skill onboarding (${pack.files.length} files).\n`,
+  `PASS: isolated local/global-prefix installs, PATH command, help/text/JSON, example copying, static inspection, packaged full-stack verification, attachment round-trip, raw cold-start preparation and Skill lifecycle (${pack.files.length} files).\nTested tarball: ${tarball}\nSHA-256: ${beforeDigest}\n`,
 );

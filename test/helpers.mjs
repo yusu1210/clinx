@@ -52,7 +52,7 @@ export function cli(dir, ...args) {
   // A child CLI is a fresh invocation, not a worker of this test runner.
   const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;
-  const run = spawnSync(process.execPath, [bin, '--root', dir, ...args], {
+  const run = spawnSync(process.execPath, [bin, '--json', '--root', dir, ...args], {
     encoding: 'utf8',
     timeout: 15000,
     env,

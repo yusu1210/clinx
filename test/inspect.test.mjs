@@ -62,6 +62,20 @@ test('inspect lock conflicts and unknown managers without inventing an executabl
     assert.ok(r.out.sources[0].diagnostics.length > 0);
   }
 });
+test('inspect recognizes a publishable npm lock without inventing a manager or executing it', async () => {
+  const dir = await empty();
+  await json(join(dir, 'package.json'), { scripts: { test: 'do-not-run' } });
+  await put(join(dir, 'npm-shrinkwrap.json'), '{}');
+  await put(join(dir, 'package-lock.json'), '{}');
+  const result = cli(dir, 'inspect');
+  assert.equal(result.status, 0, result.err);
+  assert.deepEqual(result.out.candidates[0].command, ['npm', 'run', 'test']);
+  assert.deepEqual(result.out.sources[0].diagnostics, []);
+  await put(join(dir, 'pnpm-lock.yaml'), 'lockfileVersion: 9');
+  const conflict = cli(dir, 'inspect');
+  assert.deepEqual(conflict.out.candidates, []);
+  assert.ok(conflict.out.sources[0].diagnostics.some((item) => /Conflicting/.test(item.reason)));
+});
 test('inspect lockfile convention and Maven wrapper without executing either', async () => {
   const dir = await empty();
   await json(join(dir, 'package.json'), { scripts: { build: 'false' } });

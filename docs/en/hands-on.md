@@ -24,20 +24,23 @@ the investigation actually requires, then review important boundaries.
 
 ## 1. Prepare the local project
 
-Use an existing Node.js 22.16+ and a macOS/Linux shell. The example has no third-party
-dependencies. Obtain and review the [clinx source](https://github.com/yusu1210/clinx),
-then run from its root:
+Use an existing Node.js 22.16+, a macOS/Linux shell and an [installed CLI](installation.md).
+The example has no third-party dependencies. Copy its raw inputs from the package:
 
 ```sh
-clinx_repo="$PWD"
 clinx_demo=$(mktemp -d)
-cp -R "$clinx_repo/evals/fixtures/noticeboard" "$clinx_demo/noticeboard"
-printf '%s\n' "$clinx_repo/skills/clinx-delivery/SKILL.md" "$clinx_demo/noticeboard"
+clinx example copy noticeboard --to "$clinx_demo/noticeboard"
+clinx init --root "$clinx_demo/noticeboard" --agent codex --apply
+printf '%s\n' "$clinx_demo/noticeboard"
 ```
 
-Keep the two printed absolute paths. This uses the raw projects in `evals/fixtures`;
-you do not need to run an evaluator. The temporary directory isolates this exercise,
+Keep the printed workspace path and open your agent there. This copies only the raw
+projects, not the evaluator or a completed answer. The temporary directory isolates this exercise,
 not durable work. Use a controlled working directory for your real requirements.
+
+For Skill-only practice, instead copy `evals/fixtures/noticeboard` from a reviewed
+source checkout into a new directory and give the agent the absolute path of the
+checkout's `skills/clinx-delivery/SKILL.md`. No CLI build or evaluator is required.
 
 ```text
 noticeboard/
@@ -65,12 +68,13 @@ new requirement.** Stop your server with Ctrl+C in that terminal before continui
 
 ## 2. Give the task to an agent
 
-Use an agent that can read local files, edit and execute commands. Replace the paths
-below with the actual printed values. Explicitly reading the Skill does not depend
-on automatic discovery by the host.
+Use an agent that can read local files, edit and execute commands. Open it in the
+copied workspace and check that clinx-delivery is available. Replace the PRD path
+below with the printed workspace path. If the host cannot discover the Skill, ask
+it to read the installed Skill's absolute SKILL.md path explicitly.
 
 ```text
-Read <absolute-clinx-path>/skills/clinx-delivery/SKILL.md and its relevant references.
+Use clinx-delivery and its relevant references.
 PRD: <absolute-example-path>/PRD.md.
 Projects: service and viewer in the same directory.
 Deliver the PRD locally, verifying the API and actual page, with use/stop instructions.
@@ -139,24 +143,18 @@ Skip this section if a single conversation already delivered the work. For long 
 handoffs, cross-project changes or retained check records, ask the agent to prepare and
 explain configuration. The following is a complete starting point you can inspect.
 
-Build the reviewed CLI in the same shell as step 1:
+Use the same installed CLI and shell variables as step 1:
 
 ```sh
-cd "$clinx_repo"
-npm ci
-npm run build
-clinx() { node "$clinx_repo/bin/clinx.mjs" "$@"; }
 clinx inspect --root "$clinx_demo/noticeboard/service"
-clinx init --root "$clinx_demo/noticeboard" --agent codex
-clinx init --root "$clinx_demo/noticeboard" --agent codex --apply
+clinx skill status --root "$clinx_demo/noticeboard"
 ```
 
-`inspect` reads command candidates without executing them. The two `init` calls preview
-and write `.agents/skills/clinx-delivery/` and `clinx/agent-entry.md`, respectively.
-They do not modify host instructions or generate project facts. Resolve existing file
-conflicts manually, without overwriting. Hosts without automatic Skill discovery can
-keep using step 2's explicit path. Have the agent add `.clinx/` to this project's ignore
-rules so local logs, paths and records are not committed.
+`inspect` reads command candidates without executing them. `skill status` checks the
+files installed in step 1, not project readiness or host discovery. Skill-only users
+can connect with `clinx init --agent codex --apply --root WORKSPACE` if now adding the
+CLI. Let the agent add `.clinx/` and `clinx/install-backups/` to the project's private
+output ignore rules. Use `--json` for structured command results.
 
 Ask the agent to create and review `noticeboard/clinx.config.json`:
 

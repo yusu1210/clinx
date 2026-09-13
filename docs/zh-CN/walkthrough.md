@@ -2,17 +2,15 @@
 
 [English](../en/walkthrough.md)
 
-在已审阅的 clinx 本地目录构建 CLI，并在运行示例的同一个 shell 中定义函数。
-将下面的路径替换为实际目录：
+先按[安装指南](installation.md)安装 CLI，再进入选定工作区；也可从其他位置用 `--root` 明确选择：
 
 ```sh
-cd /path/to/clinx
-npm ci
-npm run build
-clinx() { node /path/to/clinx/bin/clinx.mjs "$@"; }
+clinx --version
+cd /path/to/project
 ```
 
-下文命令使用这个本地版本，无需从注册表安装。只有需求和工程时，
+不需要源码目录或 shell 包装函数。默认输出可读文本，程序消费时使用 `--json`，
+命令细节与例子见 `clinx COMMAND --help`。只有需求和工程时，
 先按[从需求开始](cold-start.md)调查，不需要初始化。
 
 ## 1. 选择必要结构
@@ -24,16 +22,15 @@ clinx() { node /path/to/clinx/bin/clinx.mjs "$@"; }
 clinx inspect --root /path/to/project
 ```
 
-`inspect` 只读命令和文档候选，不执行或初始化工程。确认需要安装 Skill 后，再预览并应用：
+`inspect` 只读命令和文档候选，不执行或初始化工程。确认需要安装 Skill 后执行：
 
 ```sh
-clinx init --root /path/to/project --agent codex
 clinx init --root /path/to/project --agent codex --apply
 ```
 
-前一条预览，后一条写入 Skill、许可与入口。
-阅读 `clinx/agent-entry.md`，按需要与宿主指令整合。
-运行记录命令前把 `.clinx/` 加入项目忽略规则。init 不生成业务配置。
+去掉 `--apply` 可先只读预览。写入 Skill、许可、入口与文件归属记录，不等于业务工程已配置。
+阅读 `clinx/agent-entry.md`，按需与宿主指令整合。将 `.clinx/` 与
+`clinx/install-backups/` 加入既有私密输出忽略规则。init 不生成业务配置。
 
 Agent 调查后用[配置模板](../../templates/workspace/clinx.config.json)起草实际配置：
 选择相关源代码、配置、依赖锁和检查；广泛选择目录时显式排除生成报告与私密记录。

@@ -16,7 +16,16 @@ import {
 import { z } from 'zod';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const omit = new Set(['node_modules', '.git', '.clinx', 'dist', 'target', 'coverage', '.DS_Store']);
+const omit = new Set([
+  'node_modules',
+  '.git',
+  '.clinx',
+  'dist',
+  'artifacts',
+  'target',
+  'coverage',
+  '.DS_Store',
+]);
 let count = 0;
 const walk = async (dir) => {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
@@ -40,10 +49,16 @@ await walk(root);
 const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
 assert.equal(manifest.name, 'clinx');
 assert.equal(manifest.bin.clinx, 'bin/clinx.mjs');
-const lock = JSON.parse(await readFile(join(root, 'package-lock.json'), 'utf8'));
+const lock = JSON.parse(await readFile(join(root, 'npm-shrinkwrap.json'), 'utf8'));
 assert.equal(lock.name, manifest.name);
 assert.equal(lock.version, manifest.version);
 assert.equal(lock.packages[''].version, manifest.version);
+assert.deepEqual(lock.packages[''].dependencies, manifest.dependencies);
+assert.deepEqual(lock.packages[''].devDependencies, manifest.devDependencies);
+assert.ok(
+  !(await readdir(root)).includes('package-lock.json'),
+  'Keep one publishable dependency lock',
+);
 const translatedPairs = await checkTranslations(root);
 for (const name of (await readdir(join(root, 'src'))).filter((name) => name.endsWith('.ts')))
   assert.ok(

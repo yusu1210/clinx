@@ -7,7 +7,14 @@
 
 ## 启动、使用与停止
 
-使用 macOS/Linux、已有 Node.js 22.16+，在本目录运行：
+使用 macOS/Linux、已有 Node.js 22.16+。还没有案例副本时，可用已安装 CLI 复制，无需源码检出目录：
+
+```sh
+clinx example copy reading-list --to ./reading-list-demo
+cd reading-list-demo
+```
+
+在案例目录运行：
 
 ```sh
 node server.mjs
@@ -33,12 +40,12 @@ node server.mjs --data-dir /path/to/your/temporary/data-directory
 
 ```sh
 node --test test/http.test.mjs
-node ../../bin/clinx.mjs inspect
-node ../../bin/clinx.mjs verify reading-list --run
-node ../../bin/clinx.mjs verify reading-list --claim local-product --run
+clinx inspect
+clinx verify reading-list --run
+clinx verify reading-list --claim local-product --run
 ```
 
-clinx 命令要求父项目已构建。默认 `local-http` 验证真实子进程、HTTP、角色、非法输入、
+clinx 命令使用已安装 CLI。默认 `local-http` 验证真实子进程、HTTP、角色、非法输入、
 并发保存、写失败和重启；JUnit 有 10 个具名用例，Node 汇总另计父用例，共 11 个。
 测试只清理自己创建的数据和进程。根项目还通过实际客户端源码和 DOM/fetch 替身
 验证两个响应顺序回归：保留新刷新结果，不让旧响应恢复已退出的视图。这不是真实浏览器验证。

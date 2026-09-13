@@ -2,27 +2,37 @@
 
 [English](../en/cli.md)
 
-构建后运行 `node bin/clinx.mjs --help`。除帮助与版本外，输出为 JSON；
-错误写 stderr。未知或用错位置的选项报错。`--root` 选择已有工作区目录，不向父目录自动查找。
+先[安装 CLI](installation.md)。`clinx --help` 列命令，`clinx task add --help`
+或 `clinx help task add` 查看该命令的输入与示例。默认输出可读文本，在终端和管道中保持一致；
+机器消费显式加 `--json`，帮助与版本也支持。错误写 stderr；JSON 错误含 `error`、`code`、
+`hint`，Schema 错误另含字段级 `issues`。未知或用错位置的选项报错。不交互提问，不使用 ANSI 颜色或遥测。
+`--root` 选择已有目录，默认是调用 cwd，不向父目录自动查找。
 
-| 命令                                                            | 作用                                         |
-| --------------------------------------------------------------- | -------------------------------------------- |
-| `inspect`                                                       | 有界只读候选，不初始化、不执行               |
-| `init [--agent generic\|codex]`                                 | 预览 Skill、许可与入口                       |
-| `init ... --apply`                                              | 写入新增文件；不同内容停止，不覆盖           |
-| `task add --file PATH`                                          | 验证并保存显式任务约定                       |
-| `task list`                                                     | 列出任务与最近检查点，不自动选任务           |
-| `task revise ID --file PATH --reason TEXT`                      | 保留旧约定，应用完整替换                     |
-| `task checkpoint ID --file PATH`                                | 追加输入绑定的续接说明                       |
-| `evidence attach ID --file PATH`                                | 复制已审阅的本地观察附件，不批准验收         |
-| `evidence list ID [--record UUID]`                              | 检查附件字节及本地变化，不查询远端           |
-| `context ID [--focus discover\|contract\|build\|verify\|learn]` | 返回约定、最近检查点、变化和相关索引         |
-| `validate [ID]`                                                 | 验证配置、源根及可选任务引用，不运行项目命令 |
-| `verify ID [--claim NAME]`                                      | 预览所需检查与外部条件                       |
-| `verify ID --run [--allow-external]`                            | 执行已审阅、已获授权的命令，保存本地记录     |
-| `reconcile ID --receipt PATH [--claim NAME]`                    | 对当前输入重核旧记录，不重新执行             |
+| 命令                                                            | 作用                                                |
+| --------------------------------------------------------------- | --------------------------------------------------- |
+| `resources`                                                     | 定位安装包内 Skill、模板、Schema、指南与案例，只读  |
+| `example list`                                                  | 列出公开案例与工具前提                              |
+| `example copy NAME --to DIRECTORY`                              | 只向新目录复制案例，不执行或安装依赖                |
+| `inspect`                                                       | 有界只读候选，不初始化、不执行                      |
+| `init [--agent generic\|codex]`                                 | 预览 Skill、许可与入口                              |
+| `init ... --apply`                                              | 安装 Skill、许可与入口，记录文件归属；冲突停止      |
+| `skill status`                                                  | 对照记录、本地与内置 Skill，不查注册表或宿主        |
+| `skill update [--apply]`                                        | 预览/更新受管文件，保留用户文件并备份替换内容       |
+| `skill remove [--apply]`                                        | 预览/移除未改动受管文件并备份，不删任务与非受管文件 |
+| `task add --file PATH`                                          | 验证并保存显式任务约定                              |
+| `task list`                                                     | 列出任务与最近检查点，不自动选任务                  |
+| `task revise ID --file PATH --reason TEXT`                      | 保留旧约定，应用完整替换                            |
+| `task checkpoint ID --file PATH`                                | 追加输入绑定的续接说明                              |
+| `evidence attach ID --file PATH`                                | 复制已审阅的本地观察附件，不批准验收                |
+| `evidence list ID [--record UUID]`                              | 检查附件字节及本地变化，不查询远端                  |
+| `context ID [--focus discover\|contract\|build\|verify\|learn]` | 返回约定、最近检查点、变化和相关索引                |
+| `validate [ID]`                                                 | 验证配置、源根及可选任务引用，不运行项目命令        |
+| `verify ID [--claim NAME]`                                      | 预览所需检查与外部条件                              |
+| `verify ID --run [--allow-external]`                            | 执行已审阅、已获授权的命令，保存本地记录            |
+| `reconcile ID --receipt PATH [--claim NAME]`                    | 对当前输入重核旧记录，不重新执行                    |
 
-`--file` 相对调用 shell 的 cwd，可从项目外导入；记录路径相对 `--root`。
+`--file` 相对调用 shell 的 cwd，可从项目外导入；`--file -` 读取完整管道 JSON，上限 8 MiB，
+拒绝交互式终端输入。`--to` 也相对调用 cwd，父目录须已存在；执行记录路径相对 `--root`。
 源根可使用绝对路径或相对 `--root` 的路径，包括显式兄弟工程；检查 cwd 限于该源，报告路径限于检查 cwd。
 不展开模板、glob 或 shell 插值。
 命令原样保留空字符串和空白参数，程序名必须非空白。argv 含 1–128 个字符串，
@@ -31,7 +41,8 @@
 ## 输入与初始化
 
 init 不生成配置、地图、指南或任务；按需使用[模板](../../templates/workspace)和 Skill。
-缺少配置不应阻碍普通研发。现有文件不会被覆盖。
+缺少配置不应阻碍普通研发。初始化不覆盖现有文件；Skill 更新按记录基线替换受管文件，
+归属、冲突与备份见[安装与恢复](installation.md)。
 
 每个 source 必须明确非空 `inputs` 字面路径；`exclude` 排除指定子树。
 直接指定的输入若本身被排除则报错。目录名与 gitignore 不自动排除任何输入。

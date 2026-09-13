@@ -9,7 +9,9 @@
 
 Workspace 是 `--root` 选择的本地协调目录，可以包含一个或多个 Source，包括兄弟仓库或需求资料目录，
 自身不必是 Git 仓库。各 Source 保留源码、领域事实与操作指南；工作区地图只链接原归属，不复制其文档。
-`workspace.ts` 负责源与文件引用解析，`task.ts` 负责任务记录和续接，`install.ts` 安装可选 Skill 入口。
+`workspace.ts` 负责源与文件引用解析，`task.ts` 负责任务记录和续接，`install.ts` 负责可选 Skill 文件安装与生命周期。
+`commands.ts` 维护命令帮助，`output.ts` 将同一结果呈现为文本或 JSON，`resources.ts`
+定位安装资源并向新目录复制案例，不执行工程。
 这些模块都不规划或调度 Agent。
 
 ## 仓库布局
@@ -21,6 +23,7 @@ clinx/
   skills/clinx-delivery/    可移植执行说明与按需读取的参考文件
   src/                     可选 CLI 实现
   bin/                     可执行入口
+  npm-shrinkwrap.json      源码开发与 CLI 分发共用的唯一依赖锁
   schemas/                 生成的 JSON Schema，模型归属 src/schema.ts
   templates/workspace/     用户协调工作区的可选文件
   examples/                可运行的已完成合成示例
@@ -33,6 +36,7 @@ clinx/
   clinx.config.json         本仓库的自检配置
   clinx/tasks/project/     本仓库的自检约定
   dist/                    生成的 CLI 构建结果，不是手工维护的源码
+  artifacts/               已忽略的本地发布候选，不隐式发布
 ```
 
 `examples/` 展示已完成部分的用法；`evals/fixtures/` 提供独立交付试验的未完成输入。
@@ -42,20 +46,22 @@ Skill 的执行说明保持单一来源；宿主专用展示元数据不改变�
 
 ## 用户工作区
 
-| 产物                                  | 归属与作用                                 |
-| ------------------------------------- | ------------------------------------------ |
-| `clinx.config.json`                   | 工作区拥有的源范围、上下文索引与已审阅检查 |
-| 既有地图与指南                        | 由原归属方维护的源事实、导航与操作步骤     |
-| 可选工作区地图或指南                  | 跨源导航和协调步骤，链接已有归属方         |
-| `clinx/tasks/ID/contract.json`        | 结果、范围、不变量、决策、权限、验收条件   |
-| 任务 `context`                        | 引用的本地方案，其内容参与任务绑定         |
-| `checkpoints/NNNNNNNN.json`           | 输入绑定的续接说明，不表示完成             |
-| `revisions/*.json`                    | 旧约定及原因、摘要，不回滚代码             |
-| `.clinx/runs/UUID/receipt.json`       | 本地执行记录，未签名、未独立认证           |
-| 同目录 stdout/stderr/XML              | 有界的原始执行输出                         |
-| `.clinx/evidence/ID/UUID/record.json` | 观察者声明与复制附件，不是验收结论         |
+| 产物                                  | 归属与作用                                     |
+| ------------------------------------- | ---------------------------------------------- |
+| `clinx/installation.json`             | Skill 位置、版本、基线哈希与文件归属，不是认证 |
+| `clinx/install-backups/UUID/`         | 更新/移除前保留的原文件与安装记录              |
+| `clinx.config.json`                   | 工作区拥有的源范围、上下文索引与已审阅检查     |
+| 既有地图与指南                        | 由原归属方维护的源事实、导航与操作步骤         |
+| 可选工作区地图或指南                  | 跨源导航和协调步骤，链接已有归属方             |
+| `clinx/tasks/ID/contract.json`        | 结果、范围、不变量、决策、权限、验收条件       |
+| 任务 `context`                        | 引用的本地方案，其内容参与任务绑定             |
+| `checkpoints/NNNNNNNN.json`           | 输入绑定的续接说明，不表示完成                 |
+| `revisions/*.json`                    | 旧约定及原因、摘要，不回滚代码                 |
+| `.clinx/runs/UUID/receipt.json`       | 本地执行记录，未签名、未独立认证               |
+| 同目录 stdout/stderr/XML              | 有界的原始执行输出                             |
+| `.clinx/evidence/ID/UUID/record.json` | 观察者声明与复制附件，不是验收结论             |
 
-模型由 `src/schema.ts` 定义，构建生成 JSON Schema。
+交付记录模型由 `src/schema.ts` 定义，构建生成 JSON Schema。
 CLI 额外检查交叉引用、唯一性和文件系统约束；只做 Schema 校验并不等价。
 Markdown 保存推理，JSON 保存机器记录。支持 Skill、CLI 和 Schema，不提供独立 JavaScript SDK。
 
@@ -109,7 +115,10 @@ Markdown 保存推理，JSON 保存机器记录。支持 Skill、CLI 和 Schema�
 不覆盖已有目标，读取者不把临时文件当记录。写入与读取采用相同的每文件 8 MiB 上限。
 文件系统需支持硬链接；不退化为不安全的覆盖，也不保证完整的掉电持久性。
 修订先保存旧约定再替换指定文件。
-初始化先查冲突，但多文件写入不是事务：I/O 错误可能留下部分文件，需检查后安全重试。
+Skill 初始化先查冲突并记录文件归属；更新/移除先检查全部受管路径，保留原文件，最后发布安装记录。
+可捕获的写入失败尝试回滚，不覆盖并发编辑；不接管、覆盖或删除用户所有的文件。
+多文件写入不保证崩溃原子性，恢复前核对安装记录与备份。
+案例只复制到新目录，失败时保留部分副本供检查，详见[安装生命周期](installation.md)。
 崩溃后不自动抢锁。详见[CLI 恢复](cli.md#恢复)。
 
 任务发现逐项隔离错误。最新检查点损坏时显式报告并要求对账，不静默选择更早的说明；
