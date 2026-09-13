@@ -67,9 +67,9 @@ Markdown 保存推理，JSON 保存机器记录。支持 Skill、CLI 和 Schema�
 
 `clinx/` 保存可选工作区指引与任务记录；`.clinx/` 保存生成的执行日志和观察附件。
 两种名称都不表示内容可公开：任务资料与日志同样需要保护。
-**Workspace / 工作区**协调交付，**Source / 源**提供声明输入，二者都不必是 Git 仓库。
+**Workspace / 工作区** 协调交付，**Source / 源** 提供声明输入，二者都不必是 Git 仓库。
 `validate` 核对结构和引用；`verify` 根据验收条件判断所选声明。
-**Receipt / 回执**记录一次执行，**Attachment / 附件**保存观察但不认证它。
+**Receipt / 回执** 记录一次执行，**Attachment / 附件** 保存观察但不认证它。
 详见 [CLI 参考](cli.md)。
 
 地图和指南没有强制位置或文件名。只在确有知识缺口时使用[工作区模板](../../templates/workspace)；

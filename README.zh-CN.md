@@ -7,7 +7,7 @@ CLI 按需在本地保存任务约定和检查结果；方法与 Skill 不依赖
 [English](README.md) · [文档](docs/zh-CN/README.md) · [方法论](docs/zh-CN/method.md) · [Skill](skills/clinx-delivery/SKILL.md) · [CLI](docs/zh-CN/cli.md)
 
 给 Agent 需求和工程地址即可开始。Agent 阅读相关代码，约定目标行为，使用工程已有工具
-实现并运行结果，最后说明实际验证了什么。这套过程称为**调查 → 约定 → 实现 → 验证 → 沉淀**。
+实现并运行结果，最后说明实际验证了什么。这套过程称为 **调查 → 约定 → 实现 → 验证 → 沉淀**。
 
 ## 先走一遍完整案例
 
