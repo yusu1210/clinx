@@ -171,6 +171,21 @@ test('task addition is validated, not an overwrite', async () => {
   assert.equal(cli(dir, 'task', 'add', '--file', input).status, 0);
   assert.equal(cli(dir, 'task', 'list').out.length, 2);
 });
+test('task addition freezes the current source set when sources are omitted', async () => {
+  const dir = await fixture();
+  const input = join(dir, 'proposal.json');
+  await json(input, { ...contract(), id: 'frozen' });
+  assert.equal(cli(dir, 'task', 'add', '--file', input).status, 0);
+  const configPath = join(dir, 'clinx.config.json');
+  const current = JSON.parse(await readFile(configPath, 'utf8'));
+  await put(join(dir, 'unrelated/README.md'), 'unrelated');
+  current.sources.push({ id: 'unrelated', path: 'unrelated', inputs: ['README.md'] });
+  await json(configPath, current);
+  assert.deepEqual(
+    JSON.parse(await readFile(join(dir, 'clinx/tasks/frozen/contract.json'), 'utf8')).sources,
+    ['main'],
+  );
+});
 test('checkpoint resumes input-bound context and flags code changes', async () => {
   const dir = await fixture();
   const input = join(dir, 'note.json');
