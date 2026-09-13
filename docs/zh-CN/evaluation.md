@@ -35,7 +35,9 @@ CI 文件存在不代表已经在托管环境运行。
 
 固定宿主/模型、输入版本、工具与权限，每次使用隔离工作区。
 分别测试无 clinx、仅 Skill、Skill + CLI；随机顺序、重复采样并保留失败，不只挑最好轨迹。
-[场景目录](../../evals/scenarios.json)包含 14 个场景。
+[场景目录](../../evals/scenarios.json)包含 14 个场景。对于跨仓库所有权、漂移后恢复和确认边界研究，使用
+[Agent 基准套件](../../evals/benchmark/README.md)，其中包含隔离夹具、隐藏验收控制和阶段转换流程；
+仅在获得授权的评测环境中运行。
 
 ```sh
 node evals/prepare.mjs greenfield

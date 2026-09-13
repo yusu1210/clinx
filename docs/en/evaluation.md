@@ -58,7 +58,11 @@ checkout, equivalent tools and an isolated working directory per run. Run each t
 without clinx, with the Skill, and optionally with Skill + CLI. Randomize order and
 repeat enough runs to observe variance; do not pick only the best trajectory.
 
-The catalog contains fourteen scenarios. Prepare raw development inputs:
+The catalog contains fourteen scenarios. For cross-repository ownership,
+resume-after-drift and confirmation-boundary studies, use the extended
+[agent benchmark](../../evals/benchmark/README.md). It contains isolated fixtures,
+hidden acceptance controls and a phase-transition workflow; run it only in an
+authorized evaluation environment. Prepare raw development inputs:
 
 ```sh
 node evals/prepare.mjs greenfield

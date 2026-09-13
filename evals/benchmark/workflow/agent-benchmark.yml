@@ -1,0 +1,262 @@
+name: agent-benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: Scenario or all
+        required: true
+        default: all
+        type: choice
+        options: [all, campaign-cross-repo, campaign-resume-drift, campaign-confirmation]
+      repeats:
+        description: Independent repeats per arm (1-5)
+        required: true
+        default: '1'
+      model:
+        description: Codex model; empty uses the action default
+        required: false
+        default: ''
+      effort:
+        description: Reasoning effort
+        required: true
+        default: high
+        type: choice
+        options: [medium, high]
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - name: Require benchmark credential
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "OPENAI_API_KEY repository secret is required for true Codex agent runs." >&2
+            exit 1
+          fi
+
+  matrix:
+    needs: preflight
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - id: plan
+        env:
+          SCENARIO: ${{ inputs.scenario }}
+          REPEATS: ${{ inputs.repeats }}
+        run: |
+          node <<'NODE'
+          const all = ['campaign-cross-repo','campaign-resume-drift','campaign-confirmation'];
+          const scenario = process.env.SCENARIO;
+          const repeats = Number(process.env.REPEATS);
+          if (!Number.isInteger(repeats) || repeats < 1 || repeats > 5) throw Error('repeats must be 1..5');
+          const scenarios = scenario === 'all' ? all : [scenario];
+          if (scenarios.some(s => !all.includes(s))) throw Error('unknown scenario');
+          const include = [];
+          for (const s of scenarios)
+            for (const arm of ['baseline','skill','skill-cli'])
+              for (let rep = 1; rep <= repeats; rep++) include.push({scenario:s,arm,rep});
+          require('fs').appendFileSync(process.env.GITHUB_OUTPUT, `matrix=${JSON.stringify({include})}\n`);
+          NODE
+
+  prepare:
+    needs: matrix
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22.16.0'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Prepare isolated candidate input
+        run: |
+          node evals/benchmark/scripts/prepare.mjs \
+            "$GITHUB_WORKSPACE" \
+            "${{ matrix.scenario }}" \
+            "${{ matrix.arm }}" \
+            "$RUNNER_TEMP/run"
+          tar -C "$RUNNER_TEMP" -czf "$RUNNER_TEMP/input.tgz" run
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: input-${{ matrix.scenario }}-${{ matrix.arm }}-${{ matrix.rep }}
+          path: ${{ runner.temp }}/input.tgz
+          if-no-files-found: error
+          retention-days: 7
+
+  phase1:
+    needs: [matrix, prepare]
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: input-${{ matrix.scenario }}-${{ matrix.arm }}-${{ matrix.rep }}
+          path: ${{ runner.temp }}
+      - run: tar -C "$GITHUB_WORKSPACE" -xzf "$RUNNER_TEMP/input.tgz"
+      - name: Record start time and expose prompt inside the isolated workspace
+        run: |
+          date +%s%3N > "$GITHUB_WORKSPACE/run/phase1-start-ms"
+          cp "$GITHUB_WORKSPACE/run/project/request.md" "$GITHUB_WORKSPACE/benchmark-prompt.md"
+      - id: agent1
+        continue-on-error: true
+        uses: openai/codex-action@86365089eb2b84e0a8fb0717b304f8bdcb13b20e
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          working-directory: ${{ github.workspace }}/run/project
+          prompt-file: benchmark-prompt.md
+          model: ${{ inputs.model }}
+          effort: ${{ inputs.effort }}
+          permission-profile: ':workspace'
+          safety-strategy: drop-sudo
+      - name: Record end time, final message and runtime
+        env:
+          CODEX_FINAL_MESSAGE: ${{ steps.agent1.outputs.final-message }}
+        run: |
+          date +%s%3N > "$GITHUB_WORKSPACE/run/phase1-end-ms"
+          printf '%s\n' "${{ steps.agent1.outcome }}" > "$GITHUB_WORKSPACE/run/phase1-agent-outcome"
+          printf '%s\n' "$CODEX_FINAL_MESSAGE" > "$GITHUB_WORKSPACE/run/phase1-final.md"
+          codex --version > "$GITHUB_WORKSPACE/run/codex-version.txt" || true
+          tar -C "$GITHUB_WORKSPACE" -czf "$RUNNER_TEMP/phase1.tgz" run
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: phase1-${{ matrix.scenario }}-${{ matrix.arm }}-${{ matrix.rep }}
+          path: ${{ runner.temp }}/phase1.tgz
+          if-no-files-found: error
+          retention-days: 7
+
+  transition:
+    needs: [matrix, phase1]
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: phase1-${{ matrix.scenario }}-${{ matrix.arm }}-${{ matrix.rep }}
+          path: ${{ runner.temp }}
+      - run: tar -C "$RUNNER_TEMP" -xzf "$RUNNER_TEMP/phase1.tgz"
+      - name: Enforce phase-one design boundary
+        if: matrix.scenario == 'campaign-confirmation'
+        run: node evals/benchmark/scripts/check-phase1.mjs "$RUNNER_TEMP/run"
+      - name: Apply evaluator-controlled transition
+        if: matrix.scenario != 'campaign-cross-repo'
+        run: node evals/benchmark/scripts/transition.mjs "${{ matrix.scenario }}" "$RUNNER_TEMP/run"
+      - run: tar -C "$RUNNER_TEMP" -czf "$RUNNER_TEMP/transition.tgz" run
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: transition-${{ matrix.scenario }}-${{ matrix.arm }}-${{ matrix.rep }}
+          path: ${{ runner.temp }}/transition.tgz
+          if-no-files-found: error
+          retention-days: 7
+
+  phase2:
+    needs: [matrix, transition]
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: transition-${{ matrix.scenario }}-${{ matrix.arm }}-${{ matrix.rep }}
+          path: ${{ runner.temp }}
+      - run: tar -C "$GITHUB_WORKSPACE" -xzf "$RUNNER_TEMP/transition.tgz"
+      - name: Record phase-two start and expose prompt
+        if: matrix.scenario != 'campaign-cross-repo'
+        run: |
+          date +%s%3N > "$GITHUB_WORKSPACE/run/phase2-start-ms"
+          cp "$GITHUB_WORKSPACE/run/project/request-phase2.md" "$GITHUB_WORKSPACE/benchmark-prompt.md"
+      - name: Continue in a fresh Codex context
+        id: agent2
+        continue-on-error: true
+        if: matrix.scenario != 'campaign-cross-repo'
+        uses: openai/codex-action@86365089eb2b84e0a8fb0717b304f8bdcb13b20e
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          working-directory: ${{ github.workspace }}/run/project
+          prompt-file: benchmark-prompt.md
+          model: ${{ inputs.model }}
+          effort: ${{ inputs.effort }}
+          permission-profile: ':workspace'
+          safety-strategy: drop-sudo
+      - name: Record phase-two end and final message
+        if: matrix.scenario != 'campaign-cross-repo'
+        env:
+          CODEX_FINAL_MESSAGE: ${{ steps.agent2.outputs.final-message }}
+        run: |
+          date +%s%3N > "$GITHUB_WORKSPACE/run/phase2-end-ms"
+          printf '%s\n' "${{ steps.agent2.outcome }}" > "$GITHUB_WORKSPACE/run/phase2-agent-outcome"
+          printf '%s\n' "$CODEX_FINAL_MESSAGE" > "$GITHUB_WORKSPACE/run/phase2-final.md"
+      - run: tar -C "$GITHUB_WORKSPACE" -czf "$RUNNER_TEMP/final.tgz" run
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: final-${{ matrix.scenario }}-${{ matrix.arm }}-${{ matrix.rep }}
+          path: ${{ runner.temp }}/final.tgz
+          if-no-files-found: error
+          retention-days: 7
+
+  grade:
+    needs: [matrix, phase2]
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: final-${{ matrix.scenario }}-${{ matrix.arm }}-${{ matrix.rep }}
+          path: ${{ runner.temp }}
+      - run: tar -C "$RUNNER_TEMP" -xzf "$RUNNER_TEMP/final.tgz"
+      - name: Grade hidden acceptance
+        id: hidden_grade
+        continue-on-error: true
+        run: |
+          set +e
+          node evals/benchmark/scripts/grade.mjs "${{ matrix.scenario }}" "$RUNNER_TEMP/run"
+          status=$?
+          cp "$RUNNER_TEMP/run/grade.json"             "$RUNNER_TEMP/result-${{ matrix.scenario }}-${{ matrix.arm }}-${{ matrix.rep }}.json"
+          exit "$status"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: result-${{ matrix.scenario }}-${{ matrix.arm }}-${{ matrix.rep }}
+          path: ${{ runner.temp }}/result-${{ matrix.scenario }}-${{ matrix.arm }}-${{ matrix.rep }}.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Preserve benchmark failure in job status
+        if: steps.hidden_grade.outcome != 'success'
+        run: exit 1
+
+  aggregate:
+    needs: grade
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          pattern: result-*
+          path: ${{ runner.temp }}/results
+          merge-multiple: true
+      - run: node evals/benchmark/scripts/aggregate.mjs "$RUNNER_TEMP/results"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: benchmark-summary
+          path: ${{ runner.temp }}/results/aggregate.json
+          if-no-files-found: error
+          retention-days: 30
