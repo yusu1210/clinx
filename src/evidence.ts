@@ -179,6 +179,17 @@ export async function listEvidence(p: Workspace, id: string, recordId?: string) 
           throw new Error(`Artifact origin outside captured sources: ${artifact.original.source}`);
       if (Date.parse(record.observation.observedAt) > Date.parse(record.createdAt))
         throw new Error('Observation postdates capture');
+      // Preserve valid metadata even when an artifact is missing, changed or beyond
+      // the aggregate listing budget. Integrity is a separate assessment.
+      entry.record = record;
+      if (current) {
+        entry.localBinding =
+          canonical(current) === canonical(record.capturedInputs) ? 'matches' : 'changed';
+        if (entry.localBinding === 'changed')
+          entry.reasons.push(
+            'Local config, contract/design or declared sources changed since capture',
+          );
+      } else entry.reasons.push(`Cannot establish current local inputs: ${bindingError}`);
       let total = 0;
       for (const artifact of record.artifacts) {
         if (artifact.bytes > remainingBytes) {
@@ -198,16 +209,7 @@ export async function listEvidence(p: Workspace, id: string, recordId?: string) 
         )
           throw new Error(`Artifact integrity mismatch: ${artifact.path}`);
       }
-      entry.record = record;
       entry.integrity = 'intact';
-      if (current) {
-        entry.localBinding =
-          canonical(current) === canonical(record.capturedInputs) ? 'matches' : 'changed';
-        if (entry.localBinding === 'changed')
-          entry.reasons.push(
-            'Local config, contract/design or declared sources changed since capture',
-          );
-      } else entry.reasons.push(`Cannot establish current local inputs: ${bindingError}`);
     } catch (error) {
       entry.reasons.push(String(error));
     }

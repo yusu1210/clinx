@@ -39,9 +39,7 @@ function selected(task: TaskContract, claim: string) {
   if (!task.claims.includes(claim)) throw new Error(`Unknown claim: ${claim}`);
   return task.obligations.filter((o) => o.claims.includes(claim));
 }
-export async function previewChecks(p: Workspace, id: string, requestedClaim?: string) {
-  p = await openWorkspace(p.root);
-  const { task } = await readTask(p, id);
+function planChecks(p: Workspace, task: TaskContract, id: string, requestedClaim?: string) {
   const claim = requestedClaim ?? task.defaultClaim;
   const obligations = selected(task, claim);
   const ids = new Set(obligations.flatMap((o) => ('checks' in o ? o.checks : [])));
@@ -55,19 +53,28 @@ export async function previewChecks(p: Workspace, id: string, requestedClaim?: s
       'Review argv, scripts they invoke, source scope, and side effects. --run executes trusted project commands with your OS permissions, not in a sandbox.',
   };
 }
+export async function previewChecks(p: Workspace, id: string, requestedClaim?: string) {
+  p = await openWorkspace(p.root);
+  const { task } = await readTask(p, id);
+  return planChecks(p, task, id, requestedClaim);
+}
 export async function verify(p: Workspace, id: string, claim?: string, allowExternal = false) {
   p = await openWorkspace(p.root);
   if (process.platform === 'win32')
     throw new Error(
       'Execution currently supports macOS and Linux only; the methodology and Skill are platform independent',
     );
-  const preview = await previewChecks(p, id, claim);
-  if (!allowExternal && preview.checks.some((c) => c.sideEffects === 'external'))
-    throw new Error(
-      'External checks require task-specific authority and --allow-external; no commands were executed',
-    );
   return withLock(p.root, async () => {
+    // Select the executable plan only after acquiring the writer lock. A preview is
+    // advisory; a concurrent task revision must never leave execution using old argv
+    // or an old side-effect classification.
+    p = await openWorkspace(p.root);
     const { task, taskDigest } = await readTask(p, id);
+    const plan = planChecks(p, task, id, claim);
+    if (!allowExternal && plan.checks.some((c) => c.sideEffects === 'external'))
+      throw new Error(
+        'External checks require task-specific authority and --allow-external; no commands were executed',
+      );
     const roots = await sourceRoots(p.root, { ...p.config, sources: taskSources(p, task) });
     const before = await fingerprintSources(p, task);
     const runId = randomUUID();
@@ -80,10 +87,10 @@ export async function verify(p: Workspace, id: string, claim?: string, allowExte
       startedAt: new Date().toISOString(),
       finishedAt: new Date().toISOString(),
       trust: 'local-execution-not-attested',
-      definitionDigest: definitionDigest(p, task, preview.checks),
-      definition: verificationDefinition(p, task, preview.checks),
+      definitionDigest: definitionDigest(p, task, plan.checks),
+      definition: verificationDefinition(p, task, plan.checks),
       taskDigest,
-      claim: preview.claim,
+      claim: plan.claim,
       runtime: { node: process.version, platform: process.platform, arch: process.arch },
       sources: [],
       checks: [],
@@ -93,7 +100,7 @@ export async function verify(p: Workspace, id: string, claim?: string, allowExte
     process.on('SIGINT', interrupt);
     process.on('SIGTERM', interrupt);
     try {
-      for (const check of preview.checks) {
+      for (const check of plan.checks) {
         const started = performance.now();
         try {
           receipt.checks.push(
@@ -138,7 +145,7 @@ export async function verify(p: Workspace, id: string, claim?: string, allowExte
       process.removeListener('SIGTERM', interrupt);
     }
     const receiptPath = `.clinx/runs/${runId}/receipt.json`;
-    return { receipt: receiptPath, verdict: await reconcile(p, id, receiptPath, preview.claim) };
+    return { receipt: receiptPath, verdict: await reconcile(p, id, receiptPath, plan.claim) };
   });
 }
 export async function reconcile(

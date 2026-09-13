@@ -10,7 +10,7 @@ import { grade } from '../evals/grade-cold-start.mjs';
 
 test('cold-start preparation separates raw multi-project inputs from method and oracle', async () => {
   let prd;
-  for (const variant of ['baseline', 'skill', 'recorded']) {
+  for (const variant of ['baseline', 'skill', 'skill-cli']) {
     const r = spawnSync(process.execPath, ['evals/prepare.mjs', 'cold-start', variant], {
       cwd: root,
       encoding: 'utf8',
@@ -31,7 +31,11 @@ test('cold-start preparation separates raw multi-project inputs from method and 
       assert.equal(output.skill, null);
       assert.doesNotMatch(request, /clinx-delivery/);
     } else assert.ok(record.hashes['clinx-delivery/references/cold-start.md']);
-    assert.equal(Boolean(output.cli), variant === 'recorded');
+    assert.equal(Boolean(output.cli), variant === 'skill-cli');
+    assert.equal(
+      JSON.parse(await readFile(output.runRecord, 'utf8')).treatment.cliAvailable,
+      variant === 'skill-cli',
+    );
   }
 });
 

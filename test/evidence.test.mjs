@@ -69,7 +69,10 @@ test('tampered or missing attachment bytes are reported invalid, not observed pa
   const r = add(f).out;
   const stored = join(f.dir, dirname(r.path), r.record.artifacts[0].path);
   await put(stored, 'edited evidence');
-  assert.equal(list(f).out.records[0].integrity, 'invalid');
+  const tampered = list(f).out.records[0];
+  assert.equal(tampered.integrity, 'invalid');
+  assert.equal(tampered.record.id, r.record.id);
+  assert.equal(tampered.localBinding, 'matches');
   await put(stored, 'larger than the recorded byte limit'.repeat(100));
   assert.match(list(f).out.records[0].reasons.join(' '), /bounded file/);
   await unlink(stored);

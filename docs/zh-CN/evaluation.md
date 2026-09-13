@@ -42,7 +42,7 @@ node evals/prepare.mjs greenfield
 node evals/prepare.mjs brownfield
 node evals/prepare.mjs cold-start baseline
 node evals/prepare.mjs cold-start skill
-node evals/prepare.mjs cold-start recorded
+node evals/prepare.mjs cold-start skill-cli
 node evals/prepare.mjs bulk-reset skill
 ```
 
@@ -51,7 +51,8 @@ greenfield 是空工程；brownfield 只有原始未扩展代码、测试与中�
 不带 clinx 配置或解题约定。cold-start 只有 PRD 与 service/viewer 两个工程。
 三组原始产品输入哈希一致，只有方法处理不同；准备命令不启动 Agent、不执行项目、不安装依赖。
 
-baseline 不复制 Skill；skill（默认）复制 Skill；recorded 额外允许 CLI。
+baseline 不复制 Skill；skill（默认）复制 Skill；skill-cli 额外提供 CLI。
+是否实际使用 CLI 需要在 run-record.json 中单独记录。
 CLI 运行时与答案、评估器分离，逐个解析并链接实际安装的直接运行依赖，按协议只读使用，并在输入记录中说明；
 这不是沙箱，也不是依赖字节认证。只能给候选 Agent 原始输入和选定方法，不给完整 clinx 答案库。
 

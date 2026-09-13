@@ -225,7 +225,7 @@ const cold = JSON.parse(
 assert.equal(cold.skill, null);
 assert.deepEqual((await readdir(cold.workspace)).sort(), ['PRD.md', 'service', 'viewer']);
 const recorded = JSON.parse(
-  run(process.execPath, [join(installed, 'evals/prepare.mjs'), 'cold-start', 'recorded'], temp),
+  run(process.execPath, [join(installed, 'evals/prepare.mjs'), 'cold-start', 'skill-cli'], temp),
 );
 assert.equal(run(process.execPath, [recorded.cli, '--version'], temp).trim(), manifest.version);
 const toolRoot = join(recorded.cli, '../..');

@@ -4,7 +4,7 @@
   "scenario": "bulk-reset",
   "runsPerArm": 1,
   "protocol": {
-    "arms": ["baseline", "skill", "recorded"],
+    "arms": ["baseline", "skill", "skill-cli"],
     "independentAgentContexts": true,
     "sameRawProject": true,
     "hiddenEvaluator": "evals/grade-bulk-reset.mjs",
@@ -29,7 +29,7 @@
       "applicationSha256": "d3442d0cc30f6d1819209963d1973ab70fa991f438b0bbe9a3c18775bfe67f24"
     },
     {
-      "arm": "recorded",
+      "arm": "skill-cli",
       "passedChecks": 16,
       "totalChecks": 16,
       "reportedMaterialBoundaries": true,
@@ -42,7 +42,7 @@
     "The PRD already specified detailed failure and recovery semantics.",
     "Model identity, token usage, elapsed effort and tool-call counts were not captured.",
     "The evaluator uses a local in-process receiver, not production integration.",
-    "CLI availability did not cause the recorded arm to create task or evidence records."
+    "CLI availability did not cause the skill-cli arm to create task or evidence records."
   ],
   "conclusion": "Protocol smoke test only; no agent-effectiveness or performance claim."
 }

@@ -46,8 +46,8 @@
     {
       "source": "docs/en/evaluation.md",
       "translation": "docs/zh-CN/evaluation.md",
-      "sourceSha256": "80e67048a665b303e62d97b510cb15e19854ae970c17f8f1bb2ee4b3b2f788c9",
-      "translationSha256": "98c51365e3ba49da3d4792f18f1492c047bbbac323ec07a0adc4c415a8959a37"
+      "sourceSha256": "874117dd0d80e05c341e2f8124815df4a4683a505bd06995a3dc23dd4fd981d0",
+      "translationSha256": "cc9c7cf2ab66cb63b346d905967355824fe7ef43b35340f852be91b0dc5e20f0"
     },
     {
       "source": "docs/en/evidence.md",

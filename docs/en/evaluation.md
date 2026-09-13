@@ -65,7 +65,7 @@ node evals/prepare.mjs greenfield
 node evals/prepare.mjs brownfield
 node evals/prepare.mjs cold-start baseline
 node evals/prepare.mjs cold-start skill
-node evals/prepare.mjs cold-start recorded
+node evals/prepare.mjs cold-start skill-cli
 node evals/prepare.mjs bulk-reset skill
 ```
 
@@ -76,7 +76,9 @@ Cold-start provides only a PRD and sibling service/viewer directories: no clinx
 configuration, map or completed solution. It runs with existing Node and no third-party
 packages; it does not test authenticated Git cloning, enterprise tools or arbitrary stacks.
 
-The optional second argument selects `baseline`, `skill` (default) or `recorded`.
+The optional second argument selects `baseline`, `skill` (default) or `skill-cli`.
+The latter makes the reviewed CLI available to the agent; the run record separately
+captures whether the agent actually used it.
 Baseline does not copy the Skill. Skill copies only the Skill plus raw inputs.
 Recorded also permits the reviewed CLI, without mandating its use. Its runtime is
 copied to a separate tools directory without evaluator or reference implementations;

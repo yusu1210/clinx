@@ -37,7 +37,7 @@ test('evaluation preparation copies raw inputs without starting an agent or leak
 test('evaluation arms receive identical raw projects without clinx task guidance', async () => {
   for (const scenario of ['brownfield', 'cold-start', 'bulk-reset']) {
     let raw;
-    for (const variant of ['baseline', 'skill', 'recorded']) {
+    for (const variant of ['baseline', 'skill', 'skill-cli']) {
       const result = spawnSync(process.execPath, ['evals/prepare.mjs', scenario, variant], {
         cwd: root,
         encoding: 'utf8',
@@ -45,6 +45,9 @@ test('evaluation arms receive identical raw projects without clinx task guidance
       assert.equal(result.status, 0, result.stderr);
       const prepared = JSON.parse(result.stdout);
       const inputs = JSON.parse(await readFile(prepared.inputs, 'utf8'));
+      const runRecord = JSON.parse(await readFile(prepared.runRecord, 'utf8'));
+      assert.equal(runRecord.arm, variant);
+      assert.equal(runRecord.outcome.cliUsed, null);
       const projectFiles = Object.fromEntries(
         Object.entries(inputs.hashes).filter(([p]) => p.startsWith('project/')),
       );

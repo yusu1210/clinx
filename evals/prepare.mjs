@@ -41,10 +41,10 @@ const variant = process.argv[3] ?? 'skill';
 if (
   ![3, 4].includes(process.argv.length) ||
   !Object.hasOwn(requests, scenario ?? '') ||
-  !['baseline', 'skill', 'recorded'].includes(variant)
+  !['baseline', 'skill', 'skill-cli'].includes(variant)
 ) {
   process.stderr.write(
-    'Usage: node evals/prepare.mjs greenfield|brownfield|cold-start|bulk-reset [baseline|skill|recorded]\n',
+    'Usage: node evals/prepare.mjs greenfield|brownfield|cold-start|bulk-reset [baseline|skill|skill-cli]\n',
   );
   process.exitCode = 3;
 } else {
@@ -65,7 +65,7 @@ if (
     await cp(join(root, 'evals/fixtures/bulk-reset'), workspace, { recursive: true });
   }
   let cli = null;
-  if (variant === 'recorded') {
+  if (variant === 'skill-cli') {
     // Keep runnable support separate from evaluator/reference implementations.
     // Dependencies are shared read-only by protocol, not isolated by a sandbox.
     const bundle = join(output, 'tools/clinx');
@@ -117,6 +117,58 @@ if (
     JSON.stringify({ version: 1, scenario, variant, hashes }, null, 2) + '\n',
     { flag: 'wx' },
   );
+  await writeFile(
+    join(output, 'run-record.json'),
+    JSON.stringify(
+      {
+        version: 1,
+        experimentId: null,
+        runId: null,
+        preparedAt: new Date().toISOString(),
+        scenario,
+        arm: variant,
+        treatment: {
+          skillAvailable: Boolean(skill),
+          cliAvailable: Boolean(cli),
+          skillDigest: null,
+          clinxCommit: null,
+        },
+        environment: {
+          model: null,
+          host: null,
+          hostVersion: null,
+          reasoningEffort: null,
+          permissionSummary: null,
+          workspaceRootsSummary: null,
+        },
+        timing: {
+          startedAt: null,
+          finishedAt: null,
+          elapsedMs: null,
+          agentActiveMs: null,
+        },
+        usage: {
+          toolCalls: null,
+          inputTokens: null,
+          outputTokens: null,
+          cost: null,
+        },
+        interaction: { humanMessages: null, humanReviewMinutes: null },
+        outcome: {
+          hiddenAcceptance: null,
+          originalTests: null,
+          scopeViolations: null,
+          falseCompletion: null,
+          cliUsed: null,
+          recordsCreated: null,
+        },
+        notes: [],
+      },
+      null,
+      2,
+    ) + '\n',
+    { flag: 'wx' },
+  );
   process.stdout.write(
     JSON.stringify(
       {
@@ -127,6 +179,7 @@ if (
         cli,
         request: join(output, 'request.md'),
         inputs: join(output, 'initial-inputs.json'),
+        runRecord: join(output, 'run-record.json'),
         executed: false,
         next: 'Give only request, project and Skill to an authorized agent. No agent, model or command has been launched.',
       },

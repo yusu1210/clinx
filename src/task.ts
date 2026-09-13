@@ -1,4 +1,4 @@
-import { readdir, realpath, rename } from 'node:fs/promises';
+import { readdir, realpath, rename, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import {
@@ -186,33 +186,56 @@ export async function reviseTask(p: Workspace, id: string, input: unknown, reaso
     const task = validateTask(input, p.config);
     if (task.id !== id) throw new Error('Revision cannot change task ID');
     const nextDigest = await taskBinding(p, task);
-    const previous = await readJson(await boundedPath(p.root, `${taskPath(id)}/contract.json`));
+    const contractFile = await boundedPath(p.root, `${taskPath(id)}/contract.json`);
+    const previousBytes = await readBounded(contractFile);
+    let previous: unknown;
+    try {
+      previous = JSON.parse(previousBytes.toString('utf8'));
+    } catch {
+      throw new SyntaxError(`Invalid JSON in ${contractFile}; inspect the file locally`);
+    }
     if (parseTask(previous).id !== id) throw new Error('Task ID does not match its directory');
-    const revisions = await makePrivateDir(p.root, `${taskPath(id)}/revisions`);
     const revision = `${new Date().toISOString().replace(/[:.]/g, '-')}-${randomUUID()}`;
-    await writeNew(
-      join(revisions, `${revision}.json`),
-      JSON.stringify(
-        {
-          version: 1,
-          reason,
-          // Archive the original JSON, not a normalized replacement or a binding
-          // rebuilt from old reference paths that may now be missing or changed.
-          previousContractDigest: sha256(canonical(previous)),
-          nextDigest,
-          previous,
-        },
-        null,
-        2,
-      ),
-    );
     const temporary = await boundedPath(
       p.root,
       `${taskPath(id)}/.contract-${randomUUID()}.tmp`,
       true,
     );
     await writeNew(temporary, `${JSON.stringify(task, null, 2)}\n`);
-    await rename(temporary, await boundedPath(p.root, `${taskPath(id)}/contract.json`));
+    let replaced = false;
+    try {
+      // The lock coordinates clinx writers, but a human editor or another tool may
+      // not participate. Refuse to replace bytes that changed after this revision
+      // read and validated them.
+      if (!(await readBounded(contractFile)).equals(previousBytes))
+        throw new Error(
+          'Task contract changed during revision; the external edit was preserved. Inspect and retry from the current contract.',
+        );
+      const revisions = await makePrivateDir(p.root, `${taskPath(id)}/revisions`);
+      await writeNew(
+        join(revisions, `${revision}.json`),
+        JSON.stringify(
+          {
+            version: 1,
+            reason,
+            // Archive the original JSON, not a normalized replacement or a binding
+            // rebuilt from old reference paths that may now be missing or changed.
+            previousContractDigest: sha256(canonical(previous)),
+            nextDigest,
+            previous,
+          },
+          null,
+          2,
+        ),
+      );
+      await rename(temporary, contractFile);
+      replaced = true;
+    } finally {
+      if (!replaced)
+        await unlink(temporary).catch((error: NodeJS.ErrnoException) => {
+          if (error.code !== 'ENOENT') throw error;
+        });
+    }
     return {
       task: id,
       revision,
