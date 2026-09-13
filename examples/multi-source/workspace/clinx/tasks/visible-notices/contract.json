@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "visible-notices",
+  "title": "Visible notices across sources",
+  "outcome": "The consumer sees only active notices with a consistent total",
+  "mode": "implementation",
+  "sources": ["client", "service", "policy"],
+  "scope": ["Use the existing policy through the service and verify the actual consumer"],
+  "authority": ["Local investigation and verification only; do not deploy"],
+  "context": [
+    { "path": "clinx/tasks/visible-notices/prd.md", "why": "Requested behavior" },
+    { "source": "service", "path": "docs/contract.md", "why": "Shared consumer contract" },
+    {
+      "path": "clinx/tasks/visible-notices/design.md",
+      "why": "Task-specific reuse and verification decision"
+    }
+  ],
+  "defaultClaim": "local",
+  "claims": ["local"],
+  "obligations": [
+    {
+      "id": "visible",
+      "description": "HTTP consumer excludes inactive notices and receives a matching total",
+      "claims": ["local"],
+      "checks": ["consumer"]
+    }
+  ]
+}

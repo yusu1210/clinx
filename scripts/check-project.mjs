@@ -1,6 +1,7 @@
 import { readdir, readFile, access } from 'node:fs/promises';
 import { join, dirname, resolve, relative } from 'node:path';
 import { assertPublicFile } from './release-scan.mjs';
+import { checkTranslations } from './translations.mjs';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
 import {
@@ -43,26 +44,7 @@ const lock = JSON.parse(await readFile(join(root, 'package-lock.json'), 'utf8'))
 assert.equal(lock.name, manifest.name);
 assert.equal(lock.version, manifest.version);
 assert.equal(lock.packages[''].version, manifest.version);
-for (const dir of [
-  'docs',
-  'examples/node-picker',
-  'examples/reading-list',
-  'examples/maven-reactor',
-]) {
-  for (const name of await readdir(join(root, dir))) {
-    if (!name.endsWith('.md') || name.endsWith('.zh-CN.md')) continue;
-    const translated = `${name.slice(0, -3)}.zh-CN.md`;
-    await access(join(root, dir, translated));
-    assert.ok(
-      (await readFile(join(root, dir, name), 'utf8')).includes(`](${translated})`),
-      `Missing language link: ${dir}/${name}`,
-    );
-    assert.ok(
-      (await readFile(join(root, dir, translated), 'utf8')).includes(`](${name})`),
-      `Missing language link: ${dir}/${translated}`,
-    );
-  }
-}
+const translatedPairs = await checkTranslations(root);
 for (const name of (await readdir(join(root, 'src'))).filter((name) => name.endsWith('.ts')))
   assert.ok(
     manifest.files.includes(`dist/${name.slice(0, -3)}.js`),
@@ -120,5 +102,5 @@ for (const scenario of scenarios.scenarios) {
     );
 }
 process.stdout.write(
-  `PASS: ${count} authored/generated source files checked; local Markdown links, schema sync, Skill metadata and basic private-material heuristics.\n`,
+  `PASS: ${count} authored/generated source files checked; local Markdown links, ${translatedPairs} translation byte bindings, schema sync, Skill metadata and basic private-material heuristics.\n`,
 );

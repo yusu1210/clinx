@@ -3,12 +3,12 @@
   "name": "clinx",
   "context": [
     {
-      "path": "docs/method.md",
+      "path": "docs/en/method.md",
       "description": "Method and semantic adequacy",
       "when": ["discover", "contract", "learn"]
     },
     {
-      "path": "docs/architecture.md",
+      "path": "docs/en/architecture.md",
       "description": "Canonical artifacts, runtime ownership and limits",
       "when": ["discover", "contract", "build", "verify"]
     },
@@ -35,7 +35,8 @@
         "examples/maven-reactor/application/target",
         "examples/node-picker/.clinx",
         "examples/reading-list/.clinx",
-        "examples/maven-reactor/.clinx"
+        "examples/maven-reactor/.clinx",
+        "examples/multi-source/workspace/.clinx"
       ]
     }
   ],
@@ -55,7 +56,7 @@
       "result": {
         "format": "junit",
         "from": "stdout",
-        "minTests": 137,
+        "minTests": 172,
         "expectedTests": [
           "test#real Node domain + HTTP example and negative control",
           "test#revision preserves old contract and invalidates prior handoff",
@@ -84,14 +85,31 @@
           "test#completed exit 0 survives stdout storage failure without a supported claim",
           "test#interrupted execution and surviving artifacts are retained when archiving fails",
           "test#unexpected execution errors are unknown, never a claim that nothing ran",
-          "test#unavailable source roots preserve history while current execution remains blocked"
+          "test#unavailable source roots preserve history while current execution remains blocked",
+          "test#receipt definition is self-contained and selector drift does not corrupt historical interpretation",
+          "test#corrupt saved source definitions cannot interpret historical pass or support current claims",
+          "test#retired checks leave historical observations and handoffs readable but forbid new execution",
+          "test#source-owned evidence copies original bytes with qualified identity and survives original removal",
+          "test#stored artifact origins must remain unique and inside captured source identity",
+          "test#source-only, translation-only and simultaneous edits all require explicit pair review",
+          "test#language directories pair nested guides and reject orphan or flat guides",
+          "test#hands-on guide JSON runs the documented task without treating passing old tests as product acceptance",
+          "test#receipt paths accept the selected workspace alias without accepting inner symlinks or escapes",
+          "test#context navigation selects task sources and focus while retaining workspace references",
+          "test#workspace navigation binds acceptance only when explicitly referenced as a task input",
+          "test#co-located task design is an input while unbound validation notes are outputs",
+          "test#workspace Skill onboarding neither requires source guides nor changes source files",
+          "test#canonical keys and source paths use locale-independent ordering without Unicode ties",
+          "test#JSON diagnostics identify the file without echoing its potentially private contents",
+          "test#execution preserves stream order and independently bounds stdout and stderr",
+          "test#inspect isolates unusable check directories without discarding valid navigation or executing"
         ]
       }
     },
     {
       "id": "hygiene",
       "source": "project",
-      "description": "Local Markdown links, model/schema sync, Skill metadata and basic leak heuristics",
+      "description": "Markdown links, translation review bindings, model/schema sync, Skill metadata and basic leak heuristics",
       "command": ["node", "scripts/check-project.mjs"],
       "result": { "format": "exit-code" }
     }

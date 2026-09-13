@@ -4,7 +4,12 @@
   "properties": {
     "version": {
       "type": "number",
-      "const": 1
+      "const": 2
+    },
+    "protocolVersion": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
     },
     "clinxVersion": {
       "type": "string",
@@ -31,9 +36,188 @@
       "type": "string",
       "const": "local-execution-not-attested"
     },
-    "configDigest": {
+    "definitionDigest": {
       "type": "string",
       "pattern": "^[a-f0-9]{64}$"
+    },
+    "definition": {
+      "type": "object",
+      "properties": {
+        "sources": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$"
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 16384,
+                "pattern": "\\S"
+              },
+              "inputs": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 16384,
+                  "pattern": "\\S"
+                }
+              },
+              "exclude": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 16384,
+                  "pattern": "\\S"
+                }
+              }
+            },
+            "required": [
+              "id",
+              "path",
+              "inputs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$"
+              },
+              "source": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$"
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 16384,
+                "pattern": "\\S"
+              },
+              "command": {
+                "minItems": 1,
+                "maxItems": 128,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 16384
+                }
+              },
+              "cwd": {
+                "default": ".",
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 16384,
+                "pattern": "\\S"
+              },
+              "timeoutMs": {
+                "default": 120000,
+                "type": "integer",
+                "minimum": 50,
+                "maximum": 3600000
+              },
+              "sideEffects": {
+                "default": "local",
+                "type": "string",
+                "enum": [
+                  "local",
+                  "external"
+                ]
+              },
+              "result": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "format": {
+                        "type": "string",
+                        "const": "exit-code"
+                      }
+                    },
+                    "required": [
+                      "format"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "format": {
+                        "type": "string",
+                        "const": "junit"
+                      },
+                      "from": {
+                        "type": "string",
+                        "enum": [
+                          "stdout",
+                          "files"
+                        ]
+                      },
+                      "paths": {
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 16384,
+                          "pattern": "\\S"
+                        }
+                      },
+                      "minTests": {
+                        "default": 1,
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      },
+                      "expectedTests": {
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 16384,
+                          "pattern": "\\S"
+                        }
+                      }
+                    },
+                    "required": [
+                      "format",
+                      "from"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "source",
+              "description",
+              "command",
+              "result"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "sources",
+        "checks"
+      ],
+      "additionalProperties": false
     },
     "taskDigest": {
       "anyOf": [
@@ -256,12 +440,14 @@
   },
   "required": [
     "version",
+    "protocolVersion",
     "clinxVersion",
     "runId",
     "startedAt",
     "finishedAt",
     "trust",
-    "configDigest",
+    "definitionDigest",
+    "definition",
     "taskDigest",
     "claim",
     "runtime",

@@ -16,10 +16,15 @@ branch choices and existing directories. Read applicable instructions before exe
 project code. Follow relevant caller/dependency references, not the entire parent
 workspace. An inaccessible dependency's interface and runtime are different evidence.
 
+Choose one coordination location without imposing new files on each source. Reuse
+existing instructions and documents; missing maps or write access to a dependency
+do not require an onboarding rewrite. See [integration.md](integration.md) for ownership.
+
 ## Discover enough for the next real action
 
 Start from relevant entries, rule/state owners, consumers and tests. Existing maps
-help navigation but cannot override current source. Find actual commands in guides,
+help navigation; distinguish intended contracts from observed implementation when they
+disagree. Find actual commands in guides,
 CI, scripts, manifests and locks; review their bodies and hooks. Optional static
 discovery is incomplete, not a reason to replace an unsupported stack.
 

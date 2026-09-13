@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "pairs": [
+    {
+      "source": "CHANGELOG.md",
+      "translation": "CHANGELOG.zh-CN.md",
+      "sourceSha256": "ee7f90d85ba8097e19d87d3db21f202b62beaee1b8b4b56b1a532ecaf45c53dc",
+      "translationSha256": "10ea2e16ef656b336eaac31418a32546296deb305b6a0e5ac5484f3990b53638"
+    },
+    {
+      "source": "CONTRIBUTING.md",
+      "translation": "CONTRIBUTING.zh-CN.md",
+      "sourceSha256": "506a65d421cf205a9bccd5e6fd36cc02b3a09ea72c3ae866ac71701895c5f662",
+      "translationSha256": "fc6f308d8b2678dd4e6acdc9fbe91cf8277436192d9ff9fd94332ae3258a293d"
+    },
+    {
+      "source": "docs/en/adoption.md",
+      "translation": "docs/zh-CN/adoption.md",
+      "sourceSha256": "30b128d3302783d880d015401b1113340d8a3ff312e796d5721d7ffa83c46db8",
+      "translationSha256": "7a64c3c390f01d9016b199ba29cebd9f7c5d7571dfc7bcac4905e13e24bda951"
+    },
+    {
+      "source": "docs/en/architecture.md",
+      "translation": "docs/zh-CN/architecture.md",
+      "sourceSha256": "2d9027c049897d5b2d4419e7be8a5364850cc637b54ccaf079138b7c9c25f91f",
+      "translationSha256": "886e8009a036c84235ff3141f20c0ff4f57004ff1ab77fcd70b689c50d79144c"
+    },
+    {
+      "source": "docs/en/cli.md",
+      "translation": "docs/zh-CN/cli.md",
+      "sourceSha256": "3a5896e0bc1a245721d3a8a8887326a1e62d8a7d2a10e1b6dab1cb3126271c8a",
+      "translationSha256": "8c402b0552243e0ef97ef2d4132fca8103db5de90725e5b8295228716932d353"
+    },
+    {
+      "source": "docs/en/cold-start.md",
+      "translation": "docs/zh-CN/cold-start.md",
+      "sourceSha256": "14389b39e7ce38a80e33a3b54ce93832061de43110506d4fe6f852bae478b2ce",
+      "translationSha256": "76641b545eaa48be413bee21c2a5425e230914451f8f8760189bcda5ee413176"
+    },
+    {
+      "source": "docs/en/collaboration.md",
+      "translation": "docs/zh-CN/collaboration.md",
+      "sourceSha256": "e4324b10b9876879de3b329561b83f0a2ad95e4f3b29c9b954e67ee89ba6aad3",
+      "translationSha256": "9411fb66af950b86576073c24df6e8d354ae3827f874c034e666e2cbc0c01dbf"
+    },
+    {
+      "source": "docs/en/evaluation.md",
+      "translation": "docs/zh-CN/evaluation.md",
+      "sourceSha256": "4a6287b6048e950f0975c733fe59d9daeac0c6002c0a85b358c0f8948cf15c54",
+      "translationSha256": "333c49b3cec15b1ed1c60ffcf4947edfff3f1730797667abe304f7d34085daa9"
+    },
+    {
+      "source": "docs/en/evidence.md",
+      "translation": "docs/zh-CN/evidence.md",
+      "sourceSha256": "1c9539071065033f7081394a40d2a91afe1cc200c8489ef09656a734192ea6f8",
+      "translationSha256": "2ba9c849673152949c5901add64a67bc9b9cfd4ae55a95bc8db21a2d3b7affcf"
+    },
+    {
+      "source": "docs/en/hands-on.md",
+      "translation": "docs/zh-CN/hands-on.md",
+      "sourceSha256": "4906f25d300fab314e91e7b01e87e30a48d4e67abe3db71e55ec610aeb5f2b08",
+      "translationSha256": "c28ea356629a44703ec1166ddd09840ab138f817c5f37b06b9080e3d61e1d341"
+    },
+    {
+      "source": "docs/en/method.md",
+      "translation": "docs/zh-CN/method.md",
+      "sourceSha256": "e8b9e2c937dabf90d5ad9286ff7dfbd939472b11ab9193331f6add4ec9876020",
+      "translationSha256": "9bfa09ca4ee68190ce62efe7c0597d2bf2bce578d3cd8a78ef4de10d1b64984e"
+    },
+    {
+      "source": "docs/en/README.md",
+      "translation": "docs/zh-CN/README.md",
+      "sourceSha256": "c427764af39cd4b11300206f1958d3297407cbc1ece7cdaa31592a38c656a7ca",
+      "translationSha256": "b3b7d945504cff55ae3c5d4419a06242cbd8fe21682dfc4e0a4182084cd1b51b"
+    },
+    {
+      "source": "docs/en/validation.md",
+      "translation": "docs/zh-CN/validation.md",
+      "sourceSha256": "c82a82750b59d8ad13d6dfe0abae3ce8d63514adf71106e4934d9ce70817cf07",
+      "translationSha256": "3e7a59654c86beb9eca13a8adfb844549d1f719074f9fbb63d979d37fc7d70d6"
+    },
+    {
+      "source": "docs/en/walkthrough.md",
+      "translation": "docs/zh-CN/walkthrough.md",
+      "sourceSha256": "bf76d9d13908b06b2cfbf4fb851a90569b8e72e5318083507676e0f16c764126",
+      "translationSha256": "90baa9fd79eb9dcb941ab6182db9875eeff1f19bb753b92c2b14127bfae39079"
+    },
+    {
+      "source": "docs/en/workspace.md",
+      "translation": "docs/zh-CN/workspace.md",
+      "sourceSha256": "f50522dccb41e5995e5484cf653471c805cbdde55e07610957b2fde59a209c23",
+      "translationSha256": "b02814b1b79055d8198d850456de462780da1ea24f8526ca3b57b575e1ecf664"
+    },
+    {
+      "source": "examples/maven-reactor/README.md",
+      "translation": "examples/maven-reactor/README.zh-CN.md",
+      "sourceSha256": "a2418685ff5f29a0b5f91867fe056ed06ec88f667174d620558a195ce82c99ab",
+      "translationSha256": "99dca4433e9e4116c28f156ec982e70fc3ae9cd3a11ccf35a6056b06034fbc00"
+    },
+    {
+      "source": "examples/multi-source/README.md",
+      "translation": "examples/multi-source/README.zh-CN.md",
+      "sourceSha256": "e2125b512c65f424d64f67487a2dfe15fb2867db07f633bde30fc298aa6ebff3",
+      "translationSha256": "29b05e620d6810958299d92938d77b9c6472102981ae18a35607deb71431c9de"
+    },
+    {
+      "source": "examples/node-picker/README.md",
+      "translation": "examples/node-picker/README.zh-CN.md",
+      "sourceSha256": "38c31ee4379f76fe066ad61d0d92c191d32bca1b96eea95650fc0e8e33525402",
+      "translationSha256": "5e9e887301f41dfc526044c12a8a0548d10fdff238d301277f3b0b56b46163c4"
+    },
+    {
+      "source": "examples/reading-list/README.md",
+      "translation": "examples/reading-list/README.zh-CN.md",
+      "sourceSha256": "b477bee1bdc91178a0f62c70cec2d63505a8981fb05819e6a1667732accfc606",
+      "translationSha256": "b0e39e9c6726e39647a0cb9c1c21a6d48206e5b4bfca3d971a93c041d36347a0"
+    },
+    {
+      "source": "README.md",
+      "translation": "README.zh-CN.md",
+      "sourceSha256": "90a245485d556e76602c64abf13cd879fb5a9abf688c14e998ccf1fbe8984ca7",
+      "translationSha256": "f66694479ddeb8a30ff4e4f777b4e34881bc9f04534a7818f9531f71ef53433c"
+    },
+    {
+      "source": "SECURITY.md",
+      "translation": "SECURITY.zh-CN.md",
+      "sourceSha256": "76a16db635aef5251c5fd682d411817fa1f68fb0d1f13ae10c62186188ba502f",
+      "translationSha256": "abf56c7e788cc40d5ddee4c61a85baafe16103441d79c78f4c9f30a76a500403"
+    }
+  ]
+}

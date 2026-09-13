@@ -58,7 +58,7 @@ test('old local observations remain visible but cannot satisfy stale obligations
   assert.equal(stale.out.verdict.checks[0].observation, 'pass');
   assert.equal(stale.out.verdict.obligations[0].disposition, 'unresolved');
 });
-test('receipt applicability includes every declared source and the complete configuration', async () => {
+test('default task scope includes every source and explicitly selected config bytes', async () => {
   const c = config();
   c.sources.push({ id: 'other', path: 'other', inputs: ['state.txt'] });
   const dir = await fixture((value) => Object.assign(value, c));

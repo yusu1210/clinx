@@ -193,7 +193,7 @@ export async function gradeBulkReset(workspace, caseTimeoutMs = 1000) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (process.argv.length !== 3) {
-    process.stderr.write('Usage: node evals/grade-bulk-reset.mjs PROJECT\n');
+    process.stderr.write('Usage: node evals/grade-bulk-reset.mjs WORKSPACE\n');
     process.exitCode = 3;
   } else {
     try {

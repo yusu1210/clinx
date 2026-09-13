@@ -1,7 +1,0 @@
-{
-  "version": 1,
-  "name": "project",
-  "context": [],
-  "sources": [{ "id": "main", "path": ".", "inputs": ["src"], "exclude": [] }],
-  "checks": []
-}

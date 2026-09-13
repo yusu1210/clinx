@@ -4,6 +4,22 @@ The general capability is finding and preserving useful engineering facts, not
 requiring every project to adopt the same files. Separate domain rules from platform
 procedures: a rule can apply through multiple tools; a tool serves many domains.
 
+## Choose a coordination location, not a repository scaffold
+
+Use the existing checkout for one repository. For a cross-repository task, choose a
+coordination directory and link the actual sources; do not move or initialize every
+repository. Creating an `AGENTS.md`, `docs/` directory or system map in each source
+is optional. Read existing applicable instructions before acting, checking the host's
+discovery rules rather than assuming sibling instructions load automatically.
+
+Keep durable source-local facts with their owner and normal review process. Existing
+team documentation can remain canonical. For read-only or separately owned sources,
+retain source/revision-qualified observations in the workspace when useful; do not
+modify them just to onboard or represent local notes as owner-approved rules. Shared
+maps describe cross-source relationships; task-specific decisions stay with the task.
+Missing documentation alone does not block investigation through code, tests and CI.
+Missing necessary meaning, access or authority still blocks the dependent action.
+
 ## Keep knowledge where the next task can use it
 
 Reuse an existing map or guide first. When one is missing and recurring discovery
@@ -18,8 +34,10 @@ task. The packaged project templates are optional drafting aids, not prerequisit
 | Task decisions and operation IDs | Task contract/handoff                               | Scope, choices, observations, blockers and next action                               |
 
 Do not copy code into a parallel knowledge database. Refresh facts when relevant
-source or procedures change. A map is navigation, not stronger evidence than code;
-a documented command is not proof that it ran. No useful new knowledge means no new
+source or procedures change. A map is navigation, not proof of current behavior.
+Distinguish observed implementation from authoritative intended behavior; resolve
+material conflicts with the relevant owner instead of automatically preferring either.
+A documented command is not proof that it ran. No useful new knowledge means no new
 document is necessary. Conversely, a useful general capability is not removed merely
 to reduce file count.
 

@@ -111,3 +111,21 @@ test('inspect invalid clinx configuration fails instead of treating it as an unc
   await json(join(dir, 'clinx.config.json'), { version: 99 });
   assert.equal(cli(dir, 'inspect').status, 3);
 });
+
+test('inspect isolates unusable check directories without discarding valid navigation or executing', async () => {
+  for (const cwd of ['missing', '../outside', 'src/input.txt', 'linked']) {
+    const dir = await fixture((c) => {
+      c.checks.push({ ...c.checks[0], id: 'available', cwd: '.' });
+      c.checks[0].cwd = cwd;
+    });
+    if (cwd === 'linked') await symlink('src', join(dir, cwd));
+    const before = await readdir(dir);
+    const result = cli(dir, 'inspect');
+    assert.equal(result.status, 0, result.err);
+    assert.equal(result.out.executed, false);
+    assert.ok(result.out.candidates.some((c) => c.origin.key === 'checks.available'));
+    assert.ok(!result.out.candidates.some((c) => c.origin.key === 'checks.unit'));
+    assert.ok(result.out.sources[0].diagnostics.some((d) => d.path === cwd));
+    assert.deepEqual(await readdir(dir), before);
+  }
+});

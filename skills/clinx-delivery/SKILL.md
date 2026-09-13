@@ -25,15 +25,15 @@ the host and user permit it and the work has an independent, useful boundary.
 
 Read the reference that applies to the next action:
 
-| Situation                                                                | Reference                                       |
-| ------------------------------------------------------------------------ | ----------------------------------------------- |
-| PRD and unfamiliar or empty projects                                     | [cold-start.md](references/cold-start.md)       |
-| Material semantics, architecture, scale, failure boundaries or review    | [delivery.md](references/delivery.md)           |
-| Running, debugging or observing the real consumer                        | [runtime.md](references/runtime.md)             |
-| Requested checkpoints, shared effects, changed authority or contributors | [collaboration.md](references/collaboration.md) |
-| Resuming, revising or retaining knowledge                                | [continuity.md](references/continuity.md)       |
-| Connecting project knowledge, shared Skills, tools or workflows          | [integration.md](references/integration.md)     |
-| Using the optional CLI                                                   | [cli.md](references/cli.md)                     |
+| Situation                                                                 | Reference                                       |
+| ------------------------------------------------------------------------- | ----------------------------------------------- |
+| PRD and unfamiliar or empty projects                                      | [cold-start.md](references/cold-start.md)       |
+| Material semantics, architecture, scale, failure boundaries or review     | [delivery.md](references/delivery.md)           |
+| Running, debugging or observing the real consumer                         | [runtime.md](references/runtime.md)             |
+| Requested checkpoints, shared effects, changed authority or contributors  | [collaboration.md](references/collaboration.md) |
+| Resuming, revising or retaining knowledge                                 | [continuity.md](references/continuity.md)       |
+| Workspace ownership, project knowledge, shared Skills, tools or workflows | [integration.md](references/integration.md)     |
+| Using the optional CLI                                                    | [cli.md](references/cli.md)                     |
 
 For small reversible work, use normal tools and a conversational agreement.
 Persist only when ambiguity, coordination, duration or future reuse warrants it.

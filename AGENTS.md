@@ -7,11 +7,14 @@ requirements are complete.
 
 - `src/schema.ts` owns the public models; `npm run build` generates JSON Schemas.
 - `src/runner.ts` owns bounded execution; `src/verify.ts` owns evidence and verdicts.
-- `src/project.ts` and `src/workspace.ts` own context and continuity, not autonomous planning.
+- `src/workspace.ts` owns source resolution and binding; `src/task.ts` owns task continuity.
+- `src/install.ts` installs the Skill and entry without generating project facts.
 - `src/inspect.ts` owns bounded static command discovery, not runtime readiness.
 - `src/evidence.ts` owns local observation attachments, never claim promotion or remote truth.
 - `skills/clinx-delivery` owns portable agent procedures; disclose detail progressively.
 - `npm run check` runs type checks, tests, and repository hygiene checks.
+- Review changed English/Chinese guide pairs against actual behavior before updating
+  `docs/translations.json`; a matching hash is not proof of translation accuracy.
 - `npm run test:maven` runs the real multi-module Java example (requires Maven/JDK).
 - `npm run test:package` tests the tarball from a separate temporary installation.
 - Keep execution, observation, applicability, and claim decisions distinct.

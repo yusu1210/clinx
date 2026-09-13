@@ -112,7 +112,8 @@ another job's "latest" result. For an unknown write, query the existing operatio
 use its supported same-operation replay before considering a new write.
 
 An interrupted worker, unreadable required result or invalid mandatory check is not
-a pass. Evidence-storage failure does not establish that an operation never ran. Preserve the gap and reconcile actual effects before resuming dependent work;
+a pass. Evidence-storage failure does not establish that an operation never ran.
+Preserve the gap and reconcile actual effects before resuming dependent work;
 continue only work that does not rely on the missing result. Optional usage telemetry
 may fail without stopping delivery, with the loss disclosed. It must not silently
 supply a successful default to an acceptance check. A manual decision may authorize

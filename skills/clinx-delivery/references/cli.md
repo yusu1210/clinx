@@ -2,8 +2,9 @@
 
 Use a reviewed local binary or checkout, not an unverified package fetched by name.
 The CLI records engineering work; the agent still makes decisions and uses existing
-tools. `--root` selects the project; `--file` is relative to the caller's working
-directory. Other recorded paths are project-relative unless specified.
+tools. `--root` selects the workspace coordination directory, which need not be a Git
+repository; `--file` is relative to the caller's working directory. Other recorded
+paths are workspace-relative unless specified.
 
 ## Adopt only the support needed
 
@@ -23,6 +24,21 @@ unknown current applicability. Do not narrow away a relevant input to make evide
 With an empty repository, begin using the Skill and an ordinary handoff; if records
 already help, bind actual requirement/design files until code exists. Do not invent
 source files or checks merely to initialize the CLI.
+
+For a multi-source task, use `sources` to name relevant source IDs. Include unchanged
+dependencies and consumers as well as modified sources; a check's cwd does not describe
+everything it reads. Omitting task `sources` conservatively binds every configured source.
+Revise the agreement when discovery changes that scope, not to hide failing evidence.
+Config and task context can reference original source-owned files with
+`{ "source": "service", "path": "docs/design.md" }`; omit `source` for workspace-local
+files. Do not duplicate source-owned designs into the coordination directory.
+
+CLI agreements live at `clinx/tasks/<id>/contract.json`; reference existing requirement
+and design files wherever they are maintained. Config `context` is navigation, selected
+by focus and, for source-owned entries, task source scope. Task `context` binds file
+bytes; workspace-local paths are relative to `--root`, not the task directory. Keep
+generated records and append-only validation notes out of input selectors/design
+references unless their content is deliberately part of the acceptance input.
 
 `clinx inspect` is optional, bounded static navigation. It supports a limited set
 of manifests and declared checks; candidates remain untrusted and readiness-unchecked.
@@ -77,7 +93,10 @@ the existing platform owns any enforceable approval. See [collaboration.md](coll
 bindings, not remote state. Neither satisfies an external obligation. The input
 contains `obligations`, UTC `observedAt`, `observer`, `method` (manual/tool),
 `target` (identity/revision), `outcome` (pass/fail/inconclusive), `summary`,
-`artifacts` (path/description) and optional `limitations`. Redact secrets first.
+`artifacts` (optional source, path, description) and optional `limitations`. Paths
+are relative to the named task source, or the workspace if no source is given.
+Artifacts are copied once with their qualified origin; source removal does not erase
+the archived observation. Source selection is not permission. Redact secrets first.
 Limits: 8 nonempty regular files, 8 MiB each and 16 MiB total.
 
 Review relevant failures and gaps alongside local verdicts. Do not manufacture JUnit
@@ -90,8 +109,15 @@ Exit codes: 0 valid/preview/supported, 1 failed claim, 2 unresolved claim, 3 err
 Read the response type: a successful context/preview is not a verified claim.
 `current` means declared local bindings match, not that dependencies, toolchains,
 credentials or remote targets are unchanged. Hashes are not attestations.
-Bindings include the whole configuration, task and all declared sources. A stale
-receipt cannot contribute current passing checks, and separate receipts are not merged.
+Bindings include the task/reference bytes, task-related sources and relevant check
+definitions. Navigation alone and unrelated sources do not stale an explicitly scoped
+task; a config explicitly included as source input still binds its full bytes.
+A stale receipt cannot contribute current passing checks, and receipts are not merged.
+Product version and reader runtime are not evidence identity; unsupported evidence
+protocols remain unknown. Check environment requirements through actual project tools.
+Receipts save their source selectors and checks together. Current configuration drift
+changes applicability, not the meaning of an intact historical observation; damaged
+saved definitions cannot establish either a historical pass or a current claim.
 
 In the final handoff distinguish the requested outcome, actual native observations
 and CLI aggregation. If you directly verified a current target outside the runner,

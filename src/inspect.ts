@@ -1,7 +1,7 @@
 import { lstat, realpath } from 'node:fs/promises';
 import { join } from 'node:path';
 import { boundedPath, readBounded, sha256, sourceRoots } from './files.js';
-import { project } from './project.js';
+import { openWorkspace } from './workspace.js';
 
 export interface Candidate {
   source: string;
@@ -51,7 +51,7 @@ export async function inspect(root: string) {
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
   }
-  const p = configured ? await project(root) : null;
+  const p = configured ? await openWorkspace(root) : null;
   const roots = p
     ? [...(await sourceRoots(p.root, p.config))].map(([id, root]) => ({ id, root }))
     : [{ id: 'main', root }];
@@ -181,7 +181,14 @@ export async function inspect(root: string) {
       }
     }
     for (const check of p?.config.checks.filter((c) => c.source === source.id) ?? []) {
-      const cwd = await boundedPath(source.root, check.cwd);
+      let cwd: string;
+      try {
+        cwd = await boundedPath(source.root, check.cwd);
+        if (!(await lstat(cwd)).isDirectory()) throw new Error('Check cwd must be a directory');
+      } catch (error) {
+        diagnostics.push({ path: check.cwd, reason: `Check ${check.id}: ${String(error)}` });
+        continue;
+      }
       candidates.push({
         source: source.id,
         cwd,

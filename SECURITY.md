@@ -21,7 +21,8 @@ Do not run untrusted project checks with credentials or privileges they should n
 - `.clinx` logs are bounded and privately created, but not automatically redacted.
   Commands may emit tokens, private data or sensitive paths. Keep `.clinx/` ignored,
   review artifacts before sharing, and use existing credential stores.
-- Evidence attachments are project-local copies with capture-time hashes. Metadata
+- Evidence attachments copy workspace-local or explicitly task-scoped source files
+  into a local archive with capture-time hashes. Source scope does not authorize access. Metadata
   and observer outcomes are untrusted assertions, never approval. They neither fetch
   URLs nor validate remote identity/freshness. Review/redact before copying; old
   failures and inconclusive results must not be hidden by local passes.
@@ -40,7 +41,9 @@ Do not run untrusted project checks with credentials or privileges they should n
 ## XML and input handling
 
 JUnit XML is bounded; DTD/entity declarations are rejected. Schemas are strict and
-cross-reference validation is applied. Unsupported formats, absent outputs and
+cross-reference validation is applied. Malformed JSON diagnostics identify the file
+without echoing its contents; this does not redact command logs or user-supplied metadata.
+Unsupported formats, absent outputs and
 ambiguous test identities become inconclusive rather than success. These safeguards
 do not validate the truth of test assertions or remote observations.
 

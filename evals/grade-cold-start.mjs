@@ -20,6 +20,10 @@ export async function grade(workspace) {
     ['invalid', { startsAt: 'not-a-date' }, false],
     ['reversed', { startsAt: '2026-04-01T13:00:00Z', endsAt: '2026-04-01T11:00:00Z' }, false],
     ['zero-window', { startsAt: instant, endsAt: instant }, false],
+    ['fractional-future-start', { startsAt: '2026-04-01T12:00:00.0001Z' }, false],
+    ['fractional-future-end', { endsAt: '2026-04-01T12:00:00.0001Z' }, true],
+    ['timezone-required', { startsAt: '2026-04-01T11:00:00' }, false],
+    ['impossible-calendar', { startsAt: '2026-02-30T00:00:00Z' }, false],
   ];
   const notices = cases.map(([id, fields]) => ({ id, title: id, published: true, ...fields }));
   const expected = cases.filter(([, , visible]) => visible).map(([id]) => id);

@@ -12,3 +12,5 @@ if (
 )
   throw new Error('Invalid clinx package version');
 export const version = manifest.version;
+// Bump when saved execution facts must be interpreted differently, not for packaging changes.
+export const evidenceProtocolVersion = 2;

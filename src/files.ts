@@ -12,16 +12,18 @@ import {
   unlink,
 } from 'node:fs/promises';
 import { delimiter, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
-import type { Config, Source } from './schema.js';
+import type { WorkspaceConfig, Source } from './schema.js';
 
 export const MAX_FILE_BYTES = 8 * 1024 * 1024;
 export const sha256 = (value: string | Uint8Array): string =>
   createHash('sha256').update(value).digest('hex');
+// Evidence ordering must not depend on ICU versions or linguistic equivalence.
+export const compareText = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 export function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
   if (value !== null && typeof value === 'object') {
     return `{${Object.entries(value)
-      .sort(([a], [b]) => a.localeCompare(b, 'en'))
+      .sort(([a], [b]) => compareText(a, b))
       .map(([k, v]) => `${JSON.stringify(k)}:${canonical(v)}`)
       .join(',')}}`;
   }
@@ -75,7 +77,12 @@ export async function readBounded(file: string, limit = MAX_FILE_BYTES): Promise
   }
 }
 export async function readJson(file: string): Promise<unknown> {
-  return JSON.parse((await readBounded(file)).toString('utf8'));
+  const text = (await readBounded(file)).toString('utf8');
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new SyntaxError(`Invalid JSON in ${file}; inspect the file locally`);
+  }
 }
 export async function writeNew(file: string, value: string | Uint8Array): Promise<void> {
   if (Buffer.byteLength(value) > MAX_FILE_BYTES)
@@ -97,7 +104,10 @@ export async function writeNew(file: string, value: string | Uint8Array): Promis
     await unlink(temporary);
   }
 }
-export async function sourceRoots(root: string, config: Config): Promise<Map<string, string>> {
+export async function sourceRoots(
+  root: string,
+  config: WorkspaceConfig,
+): Promise<Map<string, string>> {
   const roots = new Map<string, string>();
   for (const source of config.sources) {
     // Explicit source paths may name sibling repositories. Paths within them may not escape.
@@ -154,7 +164,7 @@ export async function fingerprint(
   const files = [...entries.keys()].filter((p) => !p.endsWith('/')).length;
   if (files === 0) throw new Error(`${source.id}: input scope contains no files`);
   return {
-    digest: sha256(canonical([...entries].sort(([a], [b]) => a.localeCompare(b, 'en')))),
+    digest: sha256(canonical([...entries].sort(([a], [b]) => compareText(a, b)))),
     files,
   };
 }

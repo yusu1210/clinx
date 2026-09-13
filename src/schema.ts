@@ -17,6 +17,8 @@ const relativePath = text.refine(
   'Use a relative path',
 );
 export const focusSchema = z.enum(['discover', 'contract', 'build', 'verify', 'learn']);
+export const fileRefSchema = z.strictObject({ source: id.optional(), path: relativePath });
+export type FileRef = z.infer<typeof fileRefSchema>;
 const resultSchema = z.discriminatedUnion('format', [
   z.strictObject({ format: z.literal('exit-code') }),
   z.strictObject({
@@ -27,6 +29,31 @@ const resultSchema = z.discriminatedUnion('format', [
     expectedTests: z.array(text).default([]),
   }),
 ]);
+export const sourceSchema = z.strictObject({
+  id,
+  path: text,
+  inputs: z.array(relativePath).min(1),
+  exclude: z.array(relativePath).default([]),
+});
+export const checkSchema = z.strictObject({
+  id,
+  source: id,
+  description: text,
+  command: z
+    .array(argument)
+    .min(1)
+    .max(128)
+    .refine((argv) => /\S/.test(argv[0] ?? ''), 'Command requires a nonblank executable'),
+  cwd: relativePath.default('.'),
+  timeoutMs: z.number().int().min(50).max(3600000).default(120000),
+  sideEffects: z.enum(['local', 'external']).default('local'),
+  result: resultSchema,
+});
+export const verificationDefinitionSchema = z.strictObject({
+  sources: z.array(sourceSchema).min(1),
+  checks: z.array(checkSchema),
+});
+export type VerificationDefinition = z.infer<typeof verificationDefinitionSchema>;
 export const configSchema = z.strictObject({
   $schema: z.string().optional(),
   version: z.literal(1),
@@ -34,6 +61,7 @@ export const configSchema = z.strictObject({
   context: z
     .array(
       z.strictObject({
+        source: id.optional(),
         path: relativePath,
         description: text,
         when: z
@@ -42,34 +70,8 @@ export const configSchema = z.strictObject({
       }),
     )
     .default([]),
-  sources: z
-    .array(
-      z.strictObject({
-        id,
-        path: text,
-        inputs: z.array(relativePath).min(1),
-        exclude: z.array(relativePath).default([]),
-      }),
-    )
-    .min(1),
-  checks: z
-    .array(
-      z.strictObject({
-        id,
-        source: id,
-        description: text,
-        command: z
-          .array(argument)
-          .min(1)
-          .max(128)
-          .refine((argv) => /\S/.test(argv[0] ?? ''), 'Command requires a nonblank executable'),
-        cwd: relativePath.default('.'),
-        timeoutMs: z.number().int().min(50).max(3600000).default(120000),
-        sideEffects: z.enum(['local', 'external']).default('local'),
-        result: resultSchema,
-      }),
-    )
-    .default([]),
+  sources: z.array(sourceSchema).min(1),
+  checks: z.array(checkSchema).default([]),
 });
 const obligationBase = { id, description: text, claims: z.array(id).min(1) };
 export const taskSchema = z.strictObject({
@@ -78,11 +80,12 @@ export const taskSchema = z.strictObject({
   id,
   title: text,
   outcome: text,
+  sources: z.array(id).min(1).optional(),
   scope: z.array(text).min(1),
   invariants: z.array(text).default([]),
   authority: z.array(text).default([]),
   decisions: z.array(z.strictObject({ question: text, choice: text, basis: text })).default([]),
-  context: z.array(z.strictObject({ path: relativePath, why: text })).default([]),
+  context: z.array(fileRefSchema.extend({ why: text })).default([]),
   mode: z.enum(['implementation', 'design', 'diagnosis', 'review']),
   defaultClaim: id,
   claims: z.array(id).min(1),
@@ -104,11 +107,11 @@ export const checkpointInputSchema = z.strictObject({
   blockers: z.array(text).default([]),
 });
 export const checkpointSchema = z.strictObject({
-  version: z.literal(1),
+  version: z.literal(2),
   sequence: z.number().int().positive(),
   createdAt: z.string().datetime(),
   taskId: id,
-  configDigest: digest,
+  definitionDigest: digest,
   taskDigest: digest,
   sources: z.array(z.strictObject({ id, digest })),
   note: checkpointInputSchema,
@@ -122,19 +125,19 @@ export const evidenceInputSchema = z.strictObject({
   outcome: z.enum(['pass', 'fail', 'inconclusive']),
   summary: text,
   artifacts: z
-    .array(z.strictObject({ path: relativePath, description: text }))
+    .array(fileRefSchema.extend({ description: text }))
     .min(1)
     .max(8),
   limitations: z.array(text).max(128).default([]),
 });
 export const evidenceSchema = z.strictObject({
-  version: z.literal(1),
+  version: z.literal(2),
   id: z.string().uuid(),
   taskId: id,
   createdAt: z.string().datetime(),
   trust: z.literal('local-attachment-not-attested'),
   capturedInputs: z.strictObject({
-    configDigest: digest,
+    definitionDigest: digest,
     taskDigest: digest,
     sources: z.array(z.strictObject({ id, digest })),
   }),
@@ -143,7 +146,7 @@ export const evidenceSchema = z.strictObject({
     .array(
       z.strictObject({
         path: z.string().regex(/^artifacts\/[0-7]\.[a-zA-Z0-9]{1,12}$/),
-        originalPath: relativePath,
+        original: fileRefSchema,
         description: text,
         bytes: z
           .number()
@@ -165,13 +168,15 @@ export const testSummarySchema = z.strictObject({
   skipped: z.number().int().nonnegative(),
 });
 export const receiptSchema = z.strictObject({
-  version: z.literal(1),
+  version: z.literal(2),
+  protocolVersion: z.number().int().positive(),
   clinxVersion: text,
   runId: z.string().uuid(),
   startedAt: z.string().datetime(),
   finishedAt: z.string().datetime(),
   trust: z.literal('local-execution-not-attested'),
-  configDigest: digest,
+  definitionDigest: digest,
+  definition: verificationDefinitionSchema,
   taskDigest: digest.nullable(),
   claim: text,
   runtime: z.strictObject({ node: text, platform: text, arch: text }),
@@ -199,10 +204,10 @@ export const receiptSchema = z.strictObject({
   ),
 });
 
-export type Config = z.infer<typeof configSchema>;
-export type Check = Config['checks'][number];
-export type Source = Config['sources'][number];
-export type Task = z.infer<typeof taskSchema>;
+export type WorkspaceConfig = z.infer<typeof configSchema>;
+export type Check = z.infer<typeof checkSchema>;
+export type Source = z.infer<typeof sourceSchema>;
+export type TaskContract = z.infer<typeof taskSchema>;
 export type Receipt = z.infer<typeof receiptSchema>;
 export type CheckReceipt = Receipt['checks'][number];
 // Detailed cases are transient parser input to assessment, not duplicated in receipts.
@@ -232,8 +237,16 @@ export interface Verdict {
 export function unique(values: string[], label: string): void {
   if (new Set(values).size !== values.length) throw new Error(`Duplicate ${label}`);
 }
-export function validateConfig(value: unknown): Config {
+export function validateConfig(value: unknown): WorkspaceConfig {
   const config = configSchema.parse(value);
+  validateDefinition(config);
+  for (const ref of config.context) {
+    if (ref.source && !config.sources.some((s) => s.id === ref.source))
+      throw new Error(`Unknown context source: ${ref.source}`);
+  }
+  return config;
+}
+export function validateDefinition(config: VerificationDefinition): void {
   unique(
     config.sources.map((s) => s.id),
     'source IDs',
@@ -253,12 +266,16 @@ export function validateConfig(value: unknown): Config {
       unique(check.result.expectedTests, 'expected test IDs');
     }
   }
-  return config;
 }
 // Validate the contract itself independently of today's project configuration.
 // Historical references may be obsolete; that must not prevent a valid revision.
-export function parseTask(value: unknown): Task {
+export function parseTask(value: unknown): TaskContract {
   const task = taskSchema.parse(value);
+  if (task.sources) unique(task.sources, 'task source IDs');
+  unique(
+    task.context.map((ref) => JSON.stringify([ref.source ?? null, ref.path])),
+    'task context references',
+  );
   unique(task.claims, 'claim IDs');
   unique(
     task.obligations.map((o) => o.id),
@@ -279,11 +296,27 @@ export function parseTask(value: unknown): Task {
   }
   return task;
 }
-export function validateTask(value: unknown, config: Config): Task {
+export function validateTask(value: unknown, config: WorkspaceConfig): TaskContract {
   const task = parseTask(value);
+  const sources = task.sources ?? config.sources.map((s) => s.id);
+  for (const source of sources) {
+    if (!config.sources.some((s) => s.id === source))
+      throw new Error(`Unknown task source: ${source}`);
+  }
+  for (const ref of task.context) {
+    if (ref.source && !sources.includes(ref.source))
+      throw new Error(`Context source outside task sources: ${ref.source}`);
+  }
   for (const o of task.obligations) {
     if ('checks' in o && o.checks.some((c) => !config.checks.some((check) => check.id === c)))
       throw new Error(`${o.id}: unknown check`);
+    if ('checks' in o) {
+      for (const id of o.checks) {
+        const check = config.checks.find((c) => c.id === id)!;
+        if (!sources.includes(check.source))
+          throw new Error(`${id}: check source outside task sources: ${check.source}`);
+      }
+    }
   }
   return task;
 }

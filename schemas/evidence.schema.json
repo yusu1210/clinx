@@ -4,7 +4,7 @@
   "properties": {
     "version": {
       "type": "number",
-      "const": 1
+      "const": 2
     },
     "id": {
       "type": "string",
@@ -27,7 +27,7 @@
     "capturedInputs": {
       "type": "object",
       "properties": {
-        "configDigest": {
+        "definitionDigest": {
           "type": "string",
           "pattern": "^[a-f0-9]{64}$"
         },
@@ -58,7 +58,7 @@
         }
       },
       "required": [
-        "configDigest",
+        "definitionDigest",
         "taskDigest",
         "sources"
       ],
@@ -164,11 +164,24 @@
             "type": "string",
             "pattern": "^artifacts\\/[0-7]\\.[a-zA-Z0-9]{1,12}$"
           },
-          "originalPath": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 16384,
-            "pattern": "\\S"
+          "original": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$"
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 16384,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
           },
           "description": {
             "type": "string",
@@ -188,7 +201,7 @@
         },
         "required": [
           "path",
-          "originalPath",
+          "original",
           "description",
           "bytes",
           "sha256"

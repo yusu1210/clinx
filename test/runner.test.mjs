@@ -4,9 +4,42 @@ import fs from 'node:fs/promises';
 import { syncBuiltinESMExports } from 'node:module';
 import { join } from 'node:path';
 import { fixture, cli, json } from './helpers.mjs';
-import { project } from '../dist/project.js';
+import { openWorkspace } from '../dist/workspace.js';
 import { verify, reconcile } from '../dist/verify.js';
-import { runCheck } from '../dist/runner.js';
+import { execute, runCheck } from '../dist/runner.js';
+
+test('execution preserves stream order and independently bounds stdout and stderr', async () => {
+  const dir = await fixture();
+  const limit = 2 * 1024 * 1024;
+  for (const overflow of [0, 1]) {
+    const script = `
+      const fs = require('node:fs');
+      for (let i = 0; i < 256; i++) {
+        fs.writeSync(1, Buffer.alloc(8192, i));
+        fs.writeSync(2, Buffer.alloc(8192, 255 - i));
+      }
+      if (${overflow}) { fs.writeSync(1, 'overflow'); fs.writeSync(2, 'overflow'); }
+    `;
+    const result = await execute(
+      [process.execPath, '-e', script],
+      dir,
+      5000,
+      new AbortController().signal,
+    );
+    assert.equal(result.execution, 'completed');
+    assert.equal(result.exitCode, 0);
+    assert.equal(result.outputTruncated, Boolean(overflow));
+    assert.equal(result.stdout.length, limit);
+    assert.equal(result.stderr.length, limit);
+    for (let i = 0; i < 256; i++) {
+      assert.deepEqual(result.stdout.subarray(i * 8192, (i + 1) * 8192), Buffer.alloc(8192, i));
+      assert.deepEqual(
+        result.stderr.subarray(i * 8192, (i + 1) * 8192),
+        Buffer.alloc(8192, 255 - i),
+      );
+    }
+  }
+});
 
 for (const exitCode of [0, 7]) {
   for (const suffix of ['stdout', 'stderr']) {
@@ -26,7 +59,7 @@ for (const exitCode of [0, 7]) {
       });
       syncBuiltinESMExports();
       try {
-        const p = await project(dir);
+        const p = await openWorkspace(dir);
         const result = await verify(p, 'change');
         assert.equal(await fs.readFile(join(dir, 'effect.txt'), 'utf8'), 'executed');
         const receipt = JSON.parse(await fs.readFile(join(dir, result.receipt), 'utf8'));
@@ -73,7 +106,7 @@ test('interrupted execution and surviving artifacts are retained when archiving 
     ];
     c.checks[0].timeoutMs = 5000;
   });
-  const p = await project(dir);
+  const p = await openWorkspace(dir);
   const controller = new AbortController();
   const timer = setInterval(async () => {
     try {
@@ -107,7 +140,7 @@ test('interrupted execution and surviving artifacts are retained when archiving 
 test('unexpected execution errors are unknown, never a claim that nothing ran', async (t) => {
   const dir = await fixture();
   // Fail after preflight, before any execution facts can be returned.
-  const p = await project(dir);
+  const p = await openWorkspace(dir);
   const fsModule = await import('node:child_process');
   const childProcess = fsModule.default;
   const mock = t.mock.method(childProcess, 'spawn', () => {

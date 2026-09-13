@@ -1,33 +1,34 @@
 import { parseArgs } from 'node:util';
-import { resolve } from 'node:path';
-import { readJson, sourceRoots } from './files.js';
+import { isAbsolute, relative, resolve } from 'node:path';
+import { inside, readJson, sourceRoots } from './files.js';
 import { inspect } from './inspect.js';
 import { addEvidence, listEvidence } from './evidence.js';
-import { context, listTasks, project, readTask } from './project.js';
+import { openWorkspace, taskSources } from './workspace.js';
+import { addTask, checkpoint, context, listTasks, readTask, reviseTask } from './task.js';
 import { focusSchema } from './schema.js';
 import { previewChecks, reconcile, verify } from './verify.js';
 import { version } from './version.js';
-import { addTask, checkpoint, init, reviseTask } from './workspace.js';
+import { init } from './install.js';
 
 export const help = `clinx — CLI support for AI-native full-stack engineering
 
   inspect                               Find local command/docs candidates; no init or execution
-  init [--agent codex|generic] [--apply]   Preview / add Skill and entry; no project configuration
+  init [--agent codex|generic] [--apply]   Preview / add Skill and entry; no workspace configuration
   task add --file contract.json          Validate and persist an explicit task contract
   task list                             List tasks; never silently select one
   task revise ID --file JSON --reason TEXT  Preserve previous contract, apply revision
   task checkpoint ID --file note.json    Save an input-bound handoff note (not proof)
   evidence attach ID --file JSON         Attach reviewed local artifacts; never approves a claim
   evidence list ID [--record UUID]       Check attachment bytes/local drift; no remote validation
-  context ID [--focus discover|contract|build|verify|learn]  Restore task + relevant index
-  validate [ID]                         Validate project and optional task; no commands run
+  context ID [--focus discover|contract|build|verify|learn]  Read task + relevant index
+  validate [ID]                         Validate workspace or task scope; no commands run
   verify ID [--claim NAME]               Preview selected checks and external obligations
-  verify ID --run [--allow-external]     Run reviewed, authorized commands; save receipt
-  reconcile ID --receipt PATH           Reconcile existing evidence; no commands run
+  verify ID [--claim NAME] --run [--allow-external]  Run authorized checks; save receipt
+  reconcile ID --receipt PATH [--claim NAME]  Reconcile evidence; no commands run
 
 Common: --root DIRECTORY (default cwd), --help, --version. Results are JSON.
 Exit codes: 0 valid/preview/supported, 1 failed claim, 2 unresolved claim, 3 error.
-init defaults to generic; --agent codex adds only project-local .agents/skills.
+init defaults to generic; --agent codex installs in workspace-local .agents/skills.
 No model calls, environment setup, automatic deploy, telemetry, or publication.
 `;
 export async function main(argv: string[]): Promise<number> {
@@ -106,13 +107,16 @@ export async function main(argv: string[]): Promise<number> {
     } else if (key === 'task list') {
       result = await listTasks(root);
     } else {
-      const p = await project(root);
+      const p = await openWorkspace(root);
       if (command === 'validate') {
-        await sourceRoots(p.root, p.config);
         const task = sub ? await readTask(p, sub) : null;
+        await sourceRoots(p.root, {
+          ...p.config,
+          sources: task ? taskSources(p, task.task) : p.config.sources,
+        });
         result = {
           valid: true,
-          project: p.config.name,
+          workspace: p.config.name,
           task: task?.task.id ?? null,
           note: 'Structure and references validated; not semantic correctness or command availability',
         };
@@ -144,12 +148,15 @@ export async function main(argv: string[]): Promise<number> {
         if (values['allow-external'] && !values.run)
           throw new Error('--allow-external requires --run');
         if (command === 'reconcile') {
-          const verdict = await reconcile(
-            p,
-            id,
-            required(values.receipt, '--receipt'),
-            values.claim,
-          );
+          const receipt = required(values.receipt, '--receipt');
+          // An explicitly selected workspace may itself be a filesystem alias.
+          // Normalize only its lexical prefix; boundedPath still rejects symlinks
+          // and escapes inside the canonical workspace.
+          const receiptPath =
+            isAbsolute(receipt) && inside(root, resolve(receipt))
+              ? relative(root, resolve(receipt))
+              : receipt;
+          const verdict = await reconcile(p, id, receiptPath, values.claim);
           result = { verdict };
           exit = verdict.decision === 'supported' ? 0 : verdict.decision === 'failed' ? 1 : 2;
         } else if (values.run) {

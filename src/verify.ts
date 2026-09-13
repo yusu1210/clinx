@@ -11,25 +11,36 @@ import {
   withLock,
   writeNew,
 } from './files.js';
-import { project, readTask, fingerprintSources, type Project } from './project.js';
-import { version } from './version.js';
+import {
+  openWorkspace,
+  fingerprintSources,
+  taskSources,
+  definitionDigest,
+  verificationDefinition,
+  digestDefinition,
+  type Workspace,
+} from './workspace.js';
+import { readTask, readTaskDefinition, taskBinding } from './task.js';
+import { version, evidenceProtocolVersion } from './version.js';
 import { assessTests, runCheck } from './runner.js';
 import { mergeJUnit, parseJUnit } from './junit.js';
 import {
   receiptSchema,
   unique,
+  validateDefinition,
+  validateTask,
   type CheckReceipt,
   type Receipt,
-  type Task,
+  type TaskContract,
   type Verdict,
 } from './schema.js';
 
-function selected(task: Task, claim: string) {
+function selected(task: TaskContract, claim: string) {
   if (!task.claims.includes(claim)) throw new Error(`Unknown claim: ${claim}`);
   return task.obligations.filter((o) => o.claims.includes(claim));
 }
-export async function previewChecks(p: Project, id: string, requestedClaim?: string) {
-  p = await project(p.root);
+export async function previewChecks(p: Workspace, id: string, requestedClaim?: string) {
+  p = await openWorkspace(p.root);
   const { task } = await readTask(p, id);
   const claim = requestedClaim ?? task.defaultClaim;
   const obligations = selected(task, claim);
@@ -38,14 +49,14 @@ export async function previewChecks(p: Project, id: string, requestedClaim?: str
     taskId: id,
     claim,
     obligations,
-    sources: p.config.sources,
+    sources: taskSources(p, task),
     checks: p.config.checks.filter((c) => ids.has(c.id)),
     warning:
       'Review argv, scripts they invoke, source scope, and side effects. --run executes trusted project commands with your OS permissions, not in a sandbox.',
   };
 }
-export async function verify(p: Project, id: string, claim?: string, allowExternal = false) {
-  p = await project(p.root);
+export async function verify(p: Workspace, id: string, claim?: string, allowExternal = false) {
+  p = await openWorkspace(p.root);
   if (process.platform === 'win32')
     throw new Error(
       'Execution currently supports macOS and Linux only; the methodology and Skill are platform independent',
@@ -56,19 +67,21 @@ export async function verify(p: Project, id: string, claim?: string, allowExtern
       'External checks require task-specific authority and --allow-external; no commands were executed',
     );
   return withLock(p.root, async () => {
-    const { taskDigest } = await readTask(p, id);
-    const roots = await sourceRoots(p.root, p.config);
-    const before = await fingerprintSources(p);
+    const { task, taskDigest } = await readTask(p, id);
+    const roots = await sourceRoots(p.root, { ...p.config, sources: taskSources(p, task) });
+    const before = await fingerprintSources(p, task);
     const runId = randomUUID();
     const runDir = await makePrivateDir(p.root, `.clinx/runs/${runId}`);
     const receipt: Receipt = {
-      version: 1,
+      version: 2,
+      protocolVersion: evidenceProtocolVersion,
       clinxVersion: version,
       runId,
       startedAt: new Date().toISOString(),
       finishedAt: new Date().toISOString(),
       trust: 'local-execution-not-attested',
-      configDigest: p.configDigest,
+      definitionDigest: definitionDigest(p, task, preview.checks),
+      definition: verificationDefinition(p, task, preview.checks),
       taskDigest,
       claim: preview.claim,
       runtime: { node: process.version, platform: process.platform, arch: process.arch },
@@ -105,7 +118,7 @@ export async function verify(p: Project, id: string, claim?: string, allowExtern
       // Null is unknown, never a fabricated successful snapshot.
       let after: Awaited<ReturnType<typeof fingerprintSources>> = [];
       try {
-        after = await fingerprintSources(p);
+        after = await fingerprintSources(p, task);
       } catch {
         /* Reconciliation reports the current gap. */
       }
@@ -129,14 +142,14 @@ export async function verify(p: Project, id: string, claim?: string, allowExtern
   });
 }
 export async function reconcile(
-  p: Project,
+  p: Workspace,
   id: string,
   receiptPath: string,
   requestedClaim?: string,
 ): Promise<Verdict> {
-  // Callers may retain an old Project object across an execution or a long pause.
-  p = await project(p.root);
-  const { task, taskDigest } = await readTask(p, id);
+  // Callers may retain an old Workspace object across an execution or a long pause.
+  p = await openWorkspace(p.root);
+  const task = await readTaskDefinition(p, id);
   const claim = requestedClaim ?? task.defaultClaim;
   const obligations = selected(task, claim);
   const file = await boundedPath(p.root, receiptPath);
@@ -150,22 +163,50 @@ export async function reconcile(
     'receipt sources',
   );
   const reasons: string[] = [];
-  if (receipt.clinxVersion !== version)
-    reasons.push('CLI implementation version differs from this run');
-  if (
-    receipt.runtime.node !== process.version ||
-    receipt.runtime.platform !== process.platform ||
-    receipt.runtime.arch !== process.arch
-  )
-    reasons.push('CLI runtime differs from this run');
-  if (receipt.configDigest !== p.configDigest) reasons.push('Configuration differs from this run');
+  let taskDigest: string | null = null;
+  try {
+    validateTask(task, p.config);
+    taskDigest = await taskBinding(p, task);
+  } catch (error) {
+    reasons.push(`Cannot establish task context inputs: ${String(error)}`);
+  }
+  const supportedProtocol = receipt.protocolVersion === evidenceProtocolVersion;
+  if (!supportedProtocol) reasons.push('Unsupported evidence interpretation protocol');
+  const ids = new Set(obligations.flatMap((o) => ('checks' in o ? o.checks : [])));
+  const checks = p.config.checks.filter((c) => ids.has(c.id));
+  if (receipt.definitionDigest !== definitionDigest(p, task, checks))
+    reasons.push('Task source or selected check definitions differ from this run');
+  let validDefinition = true;
+  try {
+    validateDefinition(receipt.definition);
+    if (receipt.definitionDigest !== digestDefinition(receipt.definition))
+      throw new Error('Saved verification definition digest mismatch');
+    if (
+      canonical(receipt.definition.checks.map((c) => c.id)) !==
+      canonical(receipt.checks.map((c) => c.id))
+    )
+      throw new Error('Saved check definitions do not match execution records');
+    if (
+      canonical(receipt.definition.sources.map((s) => s.id).sort()) !==
+      canonical(receipt.sources.map((s) => s.id).sort())
+    )
+      throw new Error('Saved source definitions do not match input records');
+  } catch (error) {
+    validDefinition = false;
+    reasons.push(`Cannot interpret saved verification definition: ${String(error)}`);
+  }
   if (receipt.taskDigest !== taskDigest)
     reasons.push('Contract or referenced design differs from this run');
   if (receipt.claim !== claim) reasons.push('Receipt was produced for a different claim');
   let current: Awaited<ReturnType<typeof fingerprintSources>> = [];
-  let unknown = receipt.sources.some((s) => s.after === null);
+  let unknown =
+    taskDigest === null ||
+    !supportedProtocol ||
+    !validDefinition ||
+    receipt.sources.some((s) => s.after === null);
   try {
-    current = await fingerprintSources(p);
+    validateTask(task, p.config);
+    current = await fingerprintSources(p, task);
   } catch (error) {
     unknown = true;
     reasons.push(`Cannot fingerprint current inputs: ${String(error)}`);
@@ -200,7 +241,10 @@ export async function reconcile(
       }
     }
     // Recompute observations from saved artifacts, not a mutable "pass" field.
-    const definition = p.config.checks.find((c) => c.id === check.id);
+    const definition =
+      supportedProtocol && validDefinition
+        ? receipt.definition.checks.find((c) => c.id === check.id)
+        : undefined;
     let observed: CheckReceipt['observation'] = 'inconclusive';
     let reason =
       check.execution === 'completed'

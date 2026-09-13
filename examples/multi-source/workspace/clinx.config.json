@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "name": "notice-delivery",
+  "sources": [
+    { "id": "client", "path": "../client", "inputs": ["src", "test"] },
+    { "id": "service", "path": "../service", "inputs": ["src"] },
+    { "id": "policy", "path": "../policy", "inputs": ["src"] },
+    { "id": "analytics", "path": "../analytics", "inputs": ["events.json"] }
+  ],
+  "context": [
+    {
+      "source": "service",
+      "path": "docs/contract.md",
+      "description": "Owned HTTP contract",
+      "when": ["always"]
+    },
+    {
+      "path": "knowledge/system-map.md",
+      "description": "Cross-source capability navigation",
+      "when": ["discover", "contract"]
+    }
+  ],
+  "checks": [
+    {
+      "id": "consumer",
+      "source": "client",
+      "description": "Real HTTP consumer and shared visibility rule",
+      "command": ["node", "--test", "--test-reporter=junit", "test/notices.test.mjs"],
+      "result": {
+        "format": "junit",
+        "from": "stdout",
+        "minTests": 1,
+        "expectedTests": ["test#consumer receives only visible notices and matching total"]
+      }
+    }
+  ]
+}

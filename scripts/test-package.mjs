@@ -18,19 +18,26 @@ const pack = JSON.parse(
 for (const file of pack.files) {
   assert.deepEqual(releaseFindings(file.path, ''), [], file.path);
 }
-assert.ok(pack.files.some((f) => f.path === 'templates/project/clinx.config.json'));
+assert.ok(pack.files.some((f) => f.path === 'templates/workspace/clinx.config.json'));
 assert.ok(pack.files.some((f) => f.path === 'skills/clinx-delivery/SKILL.md'));
 for (const path of [
   'skills/clinx-delivery/references/delivery.md',
   'skills/clinx-delivery/references/runtime.md',
   'skills/clinx-delivery/references/collaboration.md',
-  'docs/collaboration.md',
-  'docs/collaboration.zh-CN.md',
+  'docs/en/collaboration.md',
+  'docs/zh-CN/collaboration.md',
+  'docs/en/hands-on.md',
+  'docs/zh-CN/hands-on.md',
+  'docs/en/workspace.md',
+  'docs/zh-CN/workspace.md',
+  'examples/multi-source/workspace/knowledge/system-map.md',
+  'examples/multi-source/workspace/clinx/tasks/visible-notices/prd.md',
+  'examples/multi-source/workspace/clinx/tasks/visible-notices/design.md',
   'skills/clinx-delivery/references/integration.md',
   'skills/clinx-delivery/LICENSE',
-  'templates/project/clinx/system-map.md',
-  'templates/project/clinx/local-guide.md',
-  'templates/project/clinx/task-brief.md',
+  'templates/workspace/clinx/system-map.md',
+  'templates/workspace/clinx/local-guide.md',
+  'templates/workspace/clinx/task-brief.md',
   'examples/reading-list/server.mjs',
   'examples/reading-list/public/app.js',
   'examples/reading-list/public/index.html',
@@ -88,6 +95,26 @@ const verified = JSON.parse(
   run(binary, ['--root', fixture, 'verify', 'eligible-picker', '--run'], temp),
 );
 assert.equal(verified.verdict.decision, 'supported');
+const multi = await copyPackagedExample('multi-source');
+const workspace = join(multi, 'workspace');
+const coordinated = JSON.parse(
+  run(binary, ['verify', 'visible-notices', '--root', workspace, '--run'], temp),
+);
+assert.equal(coordinated.verdict.decision, 'supported');
+const resumed = JSON.parse(run(binary, ['context', 'visible-notices', '--root', workspace], temp));
+assert.equal(resumed.index[0].source, 'service');
+assert.equal(resumed.index[0].available, true);
+assert.equal(resumed.index.find((item) => item.path === 'knowledge/system-map.md').available, true);
+assert.equal(
+  JSON.parse(
+    run(
+      binary,
+      ['reconcile', 'visible-notices', '--root', workspace, '--receipt', coordinated.receipt],
+      temp,
+    ),
+  ).verdict.decision,
+  'supported',
+);
 const fullstack = await copyPackagedExample('reading-list');
 const inspection = JSON.parse(run(binary, ['inspect', '--root', fullstack], temp));
 assert.equal(inspection.executed, false);

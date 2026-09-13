@@ -67,13 +67,13 @@ test('cold-start fixture runs existing HTTP tests but fails the new product orac
   assert.equal(baseline.status, 0, baseline.stdout + baseline.stderr);
   const result = await grade(dir);
   assert.equal(result.passed, false);
-  assert.equal(result.scenarios, 12);
+  assert.equal(result.scenarios, 16);
   assert.ok(result.results.every((r) => r.passed === false));
 });
 
-test('cold-start oracle accepts a compatible implementation and rejects exclusive-start regression', async () => {
+test('cold-start oracle accepts a compatible implementation and rejects boundary and normalization regressions', async () => {
   // Evaluator control only. This implementation is never copied to raw task inputs.
-  for (const inclusive of [true, false]) {
+  for (const regression of ['none', 'exclusive-start', 'truncate', 'timezone', 'calendar']) {
     const dir = await mkdtemp(join(tmpdir(), 'clinx-oracle-control-'));
     await cp(join(root, 'evals/fixtures/noticeboard'), dir, { recursive: true });
     const serverPath = join(dir, 'service/src/server.mjs');
@@ -86,15 +86,30 @@ test('cold-start oracle accepts a compatible implementation and rejects exclusiv
     );
     await put(
       join(dir, 'service/src/catalog.mjs'),
-      `export function listNotices(notices, now) {
+      `function boundary(value, absent) {
+        if (value == null) return absent;
+        if (typeof value !== 'string') return NaN;
+        const match = /^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})(?:\\.(\\d+))?(Z|[+-]\\d{2}:\\d{2})$/.exec(value);
+        if (!match) return ${regression === 'timezone' ? 'Date.parse(value)' : 'NaN'};
+        const [, year, month, day, hour, minute, second, fraction = '', zone] = match;
+        const calendar = new Date(year + '-' + month + '-' + day + 'T00:00:00Z');
+        if (${regression === 'calendar' ? 'false' : 'calendar.getUTCFullYear() !== Number(year) || calendar.getUTCMonth() + 1 !== Number(month) || calendar.getUTCDate() !== Number(day)'}) return NaN;
+        if (+hour > 23 || +minute > 59 || +second > 59) return NaN;
+        if (zone !== 'Z' && (+zone.slice(1, 3) > 23 || +zone.slice(4) > 59)) return NaN;
+        const milliseconds = Date.parse(value);
+        // The supplied clock has millisecond resolution; ceil preserves comparisons
+        // against a strictly later fractional boundary, for either endpoint.
+        return milliseconds + (${regression === 'truncate' ? 'false' : '/[1-9]/.test(fraction.slice(3))'} ? 1 : 0);
+      }
+      export function listNotices(notices, now) {
       const items = notices.filter(n => {
-        const start = n.startsAt == null ? -Infinity : Date.parse(n.startsAt);
-        const end = n.endsAt == null ? Infinity : Date.parse(n.endsAt);
-        return n.published === true && start < end && start ${inclusive ? '<=' : '<'} now && now < end;
+        const start = boundary(n.startsAt, -Infinity);
+        const end = boundary(n.endsAt, Infinity);
+        return n.published === true && start < end && start ${regression === 'exclusive-start' ? '<' : '<='} now && now < end;
       });
       return { items, total: items.length };
     }`,
     );
-    assert.equal((await grade(dir)).passed, inclusive);
+    assert.equal((await grade(dir)).passed, regression === 'none', regression);
   }
 });

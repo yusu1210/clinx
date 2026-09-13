@@ -41,9 +41,11 @@ export async function execute(
   return new Promise((resolve) => {
     let execution: Execution['execution'] = 'completed';
     let started = false;
-    let stdout = Buffer.alloc(0),
-      stderr = Buffer.alloc(0),
-      truncated = false;
+    const output: Record<'out' | 'err', { parts: Buffer[]; bytes: number }> = {
+      out: { parts: [], bytes: 0 },
+      err: { parts: [], bytes: 0 },
+    };
+    let truncated = false;
     const child = spawn(executable, command.slice(1), {
       cwd,
       shell: false,
@@ -77,12 +79,14 @@ export async function execute(
     if (abort.aborted) onAbort();
     const timer = setTimeout(() => stop('timed-out'), timeoutMs);
     const collect = (data: Buffer, which: 'out' | 'err') => {
-      const current = which === 'out' ? stdout : stderr;
-      const remaining = OUTPUT_LIMIT - current.length;
+      const current = output[which];
+      const remaining = OUTPUT_LIMIT - current.bytes;
       if (data.length > remaining) truncated = true;
-      const next = Buffer.concat([current, data.subarray(0, Math.max(0, remaining))]);
-      if (which === 'out') stdout = next;
-      else stderr = next;
+      const length = Math.min(data.length, remaining);
+      if (length > 0) {
+        current.parts.push(data.subarray(0, length));
+        current.bytes += length;
+      }
     };
     child.stdout.on('data', (data) => collect(data as Buffer, 'out'));
     child.stderr.on('data', (data) => collect(data as Buffer, 'err'));
@@ -104,8 +108,8 @@ export async function execute(
         exitCode,
         signal,
         durationMs: performance.now() - start,
-        stdout,
-        stderr,
+        stdout: Buffer.concat(output.out.parts, output.out.bytes),
+        stderr: Buffer.concat(output.err.parts, output.err.bytes),
         outputTruncated: truncated,
       });
     });

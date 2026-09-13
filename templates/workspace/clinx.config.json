@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "name": "workspace",
+  "context": [],
+  "sources": [{ "id": "main", "path": ".", "inputs": ["src"], "exclude": [] }],
+  "checks": []
+}

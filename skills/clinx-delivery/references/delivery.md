@@ -22,7 +22,7 @@ stack and constraints; an empty repository does not imply a new platform. Ask ab
 material product choices, choose routine details within scope, and avoid speculative
 components. Exercise an uncertain dependency early if it could invalidate the design.
 
-Keep a thin agreement: outcome, scope/non-goals, invariants and owners, acceptance
+Keep a concise agreement: outcome, scope/non-goals, invariants and owners, acceptance
 observations, important decisions and authority. Freeze enough meaning to act, not
 every file and algorithm. Long reasoning can be referenced; do not duplicate a rule
 across requirement, plan, implementation notes and machine status.
@@ -32,16 +32,23 @@ different delivery endpoint or bypass project approval rules.
 
 ## Resolve assumptions that can change the outcome
 
-Use the relevant rows below, not a mandatory checklist for every change. For a material
-choice, establish the owner/source, exact interpretation, observation that could disprove
-it, and consequence if unresolved. Keep this with the decision or existing tests; no
-new form is required. A chosen default is not an approved product constraint.
+Use the relevant questions below; they are not a checklist for every change.
+For a material choice, record its owner, exact meaning, a possible counterexample,
+and the consequence of leaving it unresolved. A chosen default is not an approved
+product constraint.
 
-| Risk signal                                   | Establish before relying on the choice                                                   | Useful challenge                                                                                                                         |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| A value or state crosses a boundary           | Exact field/layer, type, units, omission/reset semantics, authority and consumer version | Compare the actual encoded request and receiving effect; absent, null, empty and zero are not interchangeable without a contract         |
-| Work grows with data, audience or concurrency | Relevant response/freshness budget, capacity/cost limit and their basis                  | Normal and credible peak load, missing inputs and invalid configuration; positive or finite is not a sufficient bound                    |
-| Work can fail, repeat or arrive late          | Permanent invalid input, transient failure, unknown remote outcome and obsolete work     | Bounded retries, accepted-but-response-lost, duplicate effects and order changes; confirm provider guarantees rather than inventing them |
+- **A value crosses a boundary:** Identify the field and layer, type, units, precision,
+  omission/reset behavior, authority, and consumer version. Compare an actual encoded
+  request with its receiving effect; absent, null, empty, and zero may mean different
+  things. Where conversion loses information, test the resulting decision at the
+  boundary; rounding must not silently change eligibility, ordering or value.
+- **Work grows with data or concurrency:** Find the source of the response-time,
+  freshness, capacity, or cost limit. Test a credible peak and missing or invalid
+  inputs; a finite loop alone does not establish acceptable performance.
+- **Work can fail, repeat, or arrive late:** Distinguish permanent rejection,
+  transient failure, unknown remote outcome, and obsolete work. Test accepted
+  requests with lost responses, duplicate effects, and changed order against the
+  provider's actual retry and idempotency guarantees.
 
 Trace the critical transformation all the way to its consumer. Do not repair a value
 only in a mock or assume a downstream wrapper supplies an unobserved conversion.

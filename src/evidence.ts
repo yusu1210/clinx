@@ -11,7 +11,15 @@ import {
   withLock,
   writeNew,
 } from './files.js';
-import { project, readTask, fingerprintSources, taskPath, type Project } from './project.js';
+import {
+  openWorkspace,
+  fingerprintSources,
+  definitionDigest,
+  resolveFileRef,
+  taskSources,
+  type Workspace,
+} from './workspace.js';
+import { readTask, taskPath } from './task.js';
 import { evidenceInputSchema, evidenceSchema, unique, type Evidence } from './schema.js';
 
 const maxTotalBytes = 16 * 1024 * 1024;
@@ -21,25 +29,25 @@ const store = (id: string) => {
 };
 const note =
   'Attachments retain an observer assertion, not a verified verdict or authority. Local bindings describe capture-time inputs, not necessarily the observed deployment. Remote state and target revision are not verified; review all relevant pass/fail/inconclusive observations alongside verify.';
-async function binding(p: Project, id: string) {
-  const { taskDigest } = await readTask(p, id);
+async function binding(p: Workspace, id: string) {
+  const { task, taskDigest } = await readTask(p, id);
   return {
-    configDigest: p.configDigest,
+    definitionDigest: definitionDigest(p, task),
     taskDigest,
-    sources: (await fingerprintSources(p)).map(({ id, digest }) => ({ id, digest })),
+    sources: (await fingerprintSources(p, task)).map(({ id, digest }) => ({ id, digest })),
   };
 }
 
-export async function addEvidence(p: Project, id: string, value: unknown) {
+export async function addEvidence(p: Workspace, id: string, value: unknown) {
   const input = evidenceInputSchema.parse(value);
   unique(input.obligations, 'evidence obligation IDs');
   unique(
-    input.artifacts.map((a) => a.path),
-    'evidence artifact paths',
+    input.artifacts.map((a) => JSON.stringify([a.source ?? null, a.path])),
+    'evidence artifact references',
   );
   if (Date.parse(input.observedAt) > Date.now()) throw new Error('Observation is in the future');
   return withLock(p.root, async () => {
-    const current = await project(p.root);
+    const current = await openWorkspace(p.root);
     const { task } = await readTask(current, id);
     for (const obligation of input.obligations)
       if (!task.obligations.some((o) => o.id === obligation))
@@ -48,7 +56,9 @@ export async function addEvidence(p: Project, id: string, value: unknown) {
     let total = 0;
     const copies = [];
     for (const [index, artifact] of input.artifacts.entries()) {
-      const bytes = await readBounded(await boundedPath(current.root, artifact.path));
+      if (artifact.source && !taskSources(current, task).some((s) => s.id === artifact.source))
+        throw new Error(`Evidence source outside task sources: ${artifact.source}`);
+      const bytes = await readBounded(await resolveFileRef(current, artifact));
       total += bytes.length;
       if (bytes.length === 0 || total > maxTotalBytes)
         throw new Error('Evidence requires nonempty artifacts with at most 16 MiB total');
@@ -57,18 +67,21 @@ export async function addEvidence(p: Project, id: string, value: unknown) {
         bytes,
         entry: {
           path: `artifacts/${index}${/^\.[a-zA-Z0-9]{1,12}$/.test(extension) ? extension : '.bin'}`,
-          originalPath: artifact.path,
+          original: {
+            ...(artifact.source ? { source: artifact.source } : {}),
+            path: artifact.path,
+          },
           description: artifact.description,
           bytes: bytes.length,
           sha256: sha256(bytes),
         },
       });
     }
-    if (canonical(capturedInputs) !== canonical(await binding(await project(p.root), id)))
+    if (canonical(capturedInputs) !== canonical(await binding(await openWorkspace(p.root), id)))
       throw new Error('Inputs changed during evidence capture; inspect and retry');
     const { artifacts: _paths, ...observation } = input;
     const record = evidenceSchema.parse({
-      version: 1,
+      version: 2,
       id: randomUUID(),
       taskId: id,
       createdAt: new Date().toISOString(),
@@ -103,8 +116,8 @@ interface ListedEvidence {
   reasons: string[];
 }
 
-export async function listEvidence(p: Project, id: string, recordId?: string) {
-  p = await project(p.root);
+export async function listEvidence(p: Workspace, id: string, recordId?: string) {
+  p = await openWorkspace(p.root);
   // A stale design reference can make the binding unreadable; retain access to history.
   const location = store(id);
   await boundedPath(p.root, `${taskPath(id)}/contract.json`);
@@ -154,6 +167,16 @@ export async function listEvidence(p: Project, id: string, recordId?: string) {
         record.capturedInputs.sources.map((s) => s.id),
         'captured source IDs',
       );
+      unique(
+        record.artifacts.map((a) => JSON.stringify([a.original.source ?? null, a.original.path])),
+        'stored artifact references',
+      );
+      for (const artifact of record.artifacts)
+        if (
+          artifact.original.source &&
+          !record.capturedInputs.sources.some((s) => s.id === artifact.original.source)
+        )
+          throw new Error(`Artifact origin outside captured sources: ${artifact.original.source}`);
       if (Date.parse(record.observation.observedAt) > Date.parse(record.createdAt))
         throw new Error('Observation postdates capture');
       let total = 0;

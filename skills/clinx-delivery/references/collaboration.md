@@ -2,8 +2,8 @@
 
 Use this reference when a task requests confirmation, has a consequential shared or
 production effect, changes its authority, resumes a pending decision or involves
-separate contributors. It guides
-the host agent; clinx does not implement an approval service or enforce platform access.
+separate contributors. It guides the host agent; clinx does not implement an
+approval service or enforce platform access.
 
 ## One outcome owner; delegate only separable work
 
@@ -22,6 +22,12 @@ agreement, permitted read/write scope, dependencies and expected evidence. Arran
 non-overlapping writes or integration through the host's existing isolation tools;
 separate workspaces do not isolate shared runtime resources. Do not start duplicate
 work that the primary agent will also perform.
+
+Task IDs separate records, not checkouts. Independent deliveries needing different
+revisions should use separate coordination roots pointing at their own checkouts;
+CLI source paths are workspace-wide. Do not retarget a shared source underneath
+another active task. Separate checkouts still share external targets unless explicitly
+isolated: agree on ports, identities, data and cleanup ownership where relevant.
 
 On return, inspect the actual changes and observations, reconcile semantic conflicts,
 and verify the combined effect after integration. A contributor's "done" is not task

@@ -79,9 +79,6 @@ if (
       'package.json',
       'LICENSE',
       ...manifest.files.filter((p) => p.startsWith('dist/') && !p.includes('*')),
-      ...(await readdir(join(root, 'dist')))
-        .filter((p) => p.endsWith('.js.map'))
-        .map((p) => `dist/${p}`),
     ]) {
       await mkdir(join(bundle, path, '..'), { recursive: true });
       await cp(join(root, path), join(bundle, path), { recursive: true });

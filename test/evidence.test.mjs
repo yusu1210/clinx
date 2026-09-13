@@ -206,18 +206,21 @@ test('attachment store cannot write through a symlink or steal a writer lock', a
   assert.equal(await readFile(join(f.dir, '.clinx/write.lock'), 'utf8'), 'owned by another writer');
 });
 
-test('attachment APIs refresh a retained Project instead of trusting its old configuration', async () => {
+test('attachment APIs refresh a retained Workspace instead of trusting its old check definitions', async () => {
   const f = await setup();
-  const { project } = await import('../dist/project.js');
+  const { openWorkspace } = await import('../dist/workspace.js');
   const { addEvidence, listEvidence } = await import('../dist/evidence.js');
-  const cached = await project(f.dir);
-  await addEvidence(cached, 'change', observation());
+  const cached = await openWorkspace(f.dir);
+  const first = await addEvidence(cached, 'change', observation());
   const config = JSON.parse(await readFile(join(f.dir, 'clinx.config.json'), 'utf8'));
-  config.name = 'new-config';
+  config.checks[0].timeoutMs = 1000;
   await json(join(f.dir, 'clinx.config.json'), config);
   assert.equal((await listEvidence(cached, 'change')).records[0].localBinding, 'changed');
   const second = await addEvidence(cached, 'change', observation());
-  assert.notEqual(second.record.capturedInputs.configDigest, cached.configDigest);
+  assert.notEqual(
+    second.record.capturedInputs.definitionDigest,
+    first.record.capturedInputs.definitionDigest,
+  );
 });
 
 test('attachment selection inspects only the explicit UUID and rejects unsafe selectors', async () => {
@@ -230,4 +233,27 @@ test('attachment selection inspects only the explicit UUID and rejects unsafe se
   assert.equal(selected.out.records.length, 1);
   assert.equal(selected.out.records[0].integrity, 'intact');
   assert.equal(cli(f.dir, 'evidence', 'list', 'change', '--record', '../escape').status, 3);
+});
+
+test('stored artifact origins must remain unique and inside captured source identity', async () => {
+  const f = await setup();
+  const saved = add(f).out;
+  const path = join(f.dir, saved.path);
+  const original = JSON.parse(await readFile(path, 'utf8'));
+  for (const mutate of [
+    (r) => {
+      r.artifacts[0].original.source = 'missing';
+    },
+    (r) => {
+      r.artifacts.push({ ...r.artifacts[0], path: 'artifacts/1.txt' });
+    },
+  ]) {
+    const record = structuredClone(original);
+    mutate(record);
+    await json(path, record);
+    const result = list(f).out.records[0];
+    assert.equal(result.integrity, 'invalid');
+    assert.equal(result.record, null);
+    assert.match(result.reasons.join(' '), /Artifact origin|Duplicate stored artifact references/);
+  }
 });

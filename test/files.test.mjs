@@ -11,14 +11,16 @@ import {
   fingerprint,
   boundedPath,
   readBounded,
+  readJson,
   canonical,
   findExecutable,
 } from '../dist/files.js';
-import { project, context } from '../dist/project.js';
-import { checkpoint } from '../dist/workspace.js';
+import { openWorkspace } from '../dist/workspace.js';
+import { context } from '../dist/task.js';
+import { checkpoint } from '../dist/task.js';
 import { execute } from '../dist/runner.js';
 import { verify, reconcile } from '../dist/verify.js';
-import { fixture, put, json } from './helpers.mjs';
+import { fixture, put, json, cli } from './helpers.mjs';
 
 test('fingerprint is independent of overlapping input ordering, but binds mode and content', async () => {
   const dir = await fixture();
@@ -27,6 +29,23 @@ test('fingerprint is independent of overlapping input ordering, but binds mode a
   assert.deepEqual(await fingerprint(dir, { ...base, inputs: ['src/input.txt', 'src'] }), first);
   await chmod(join(dir, 'src/input.txt'), 0o700);
   assert.notEqual((await fingerprint(dir, base)).digest, first.digest);
+});
+
+test('canonical keys and source paths use locale-independent ordering without Unicode ties', async () => {
+  const first = 'a.txt';
+  const second = 'a\u200b.txt';
+  const left = { [first]: 1, [second]: 2 };
+  const right = { [second]: 2, [first]: 1 };
+  assert.equal(canonical(left), canonical(right));
+  assert.equal(canonical({ a: 1, Z: 2 }), '{"Z":2,"a":1}');
+  const dir = await fixture();
+  await put(join(dir, first), 'first');
+  await put(join(dir, second), 'second');
+  const source = { id: 'main', path: '.', inputs: [first, second], exclude: [] };
+  assert.deepEqual(
+    await fingerprint(dir, source),
+    await fingerprint(dir, { ...source, inputs: [second, first] }),
+  );
 });
 test('only declared exclusions are skipped; directory names have no implicit meaning', async () => {
   const dir = await fixture();
@@ -96,6 +115,22 @@ test('bounded reads reject large files and traversal', async () => {
   await assert.rejects(readBounded(join(dir, 'src/input.txt'), 2));
   assert.equal(canonical({ b: 2, a: 1 }), canonical({ a: 1, b: 2 }));
 });
+
+test('JSON diagnostics identify the file without echoing its potentially private contents', async () => {
+  const dir = await fixture();
+  const path = join(dir, 'clinx.config.json');
+  await put(path, 'do-not-print-me');
+  await assert.rejects(readJson(path), (error) => {
+    assert.ok(error instanceof SyntaxError);
+    assert.match(error.message, /clinx.config.json/);
+    assert.doesNotMatch(error.message, /do-not-print-me/);
+    return true;
+  });
+  const result = cli(dir, 'validate');
+  assert.equal(result.status, 3);
+  assert.match(result.err, /clinx.config.json/);
+  assert.doesNotMatch(result.err, /do-not-print-me/);
+});
 test('bounded reads reject a FIFO without waiting for a writer', async () => {
   const dir = await fixture();
   const file = join(dir, 'pipe');
@@ -163,11 +198,14 @@ test('a change to an explicitly declared build directory invalidates old evidenc
     join(dir, 'src/check.mjs'),
     "import assert from 'node:assert/strict'; import {readFileSync} from 'node:fs'; assert.equal(JSON.parse(readFileSync('build/policy.json')).enabled,true);\n",
   );
-  const run = await verify(await project(dir), 'change');
+  const run = await verify(await openWorkspace(dir), 'change');
   assert.equal(run.verdict.decision, 'supported');
   await json(join(dir, 'build/policy.json'), { enabled: false });
-  assert.equal((await reconcile(await project(dir), 'change', run.receipt)).applicability, 'stale');
-  assert.equal((await verify(await project(dir), 'change')).verdict.decision, 'failed');
+  assert.equal(
+    (await reconcile(await openWorkspace(dir), 'change', run.receipt)).applicability,
+    'stale',
+  );
+  assert.equal((await verify(await openWorkspace(dir), 'change')).verdict.decision, 'failed');
 });
 test('context and checkpoints refresh retained configuration instead of restoring an old index', async () => {
   const dir = await fixture((c) => {
@@ -176,39 +214,51 @@ test('context and checkpoints refresh retained configuration instead of restorin
   });
   await put(join(dir, 'old.md'), 'old');
   await put(join(dir, 'new.md'), 'new');
-  const p = await project(dir);
+  const p = await openWorkspace(dir);
   const note = { focus: 'build', state: 'active', summary: 'Observed', next: 'Continue' };
   await checkpoint(p, 'change', note);
   const config = JSON.parse(await readFile(join(dir, 'clinx.config.json'), 'utf8'));
   config.context[0].path = 'new.md';
   await json(join(dir, 'clinx.config.json'), config);
   const current = await context(p, 'change');
-  assert.equal(current.continuity, 'reconcile-required');
+  assert.equal(current.continuity, 'inputs-match');
   assert.equal(current.index[0].path, 'new.md');
   await checkpoint(p, 'change', note);
   assert.equal((await context(p, 'change')).continuity, 'inputs-match');
 });
-test('a receipt from another CLI implementation remains readable but requires revalidation', async () => {
+test('product version and reader runtime do not redefine historical execution', async () => {
   const dir = await fixture();
-  const p = await project(dir);
+  const p = await openWorkspace(dir);
   const run = await verify(p, 'change');
   const receipt = JSON.parse(await readFile(join(dir, run.receipt), 'utf8'));
   receipt.clinxVersion += '-different-implementation';
+  receipt.runtime = {
+    node: 'historical-runtime',
+    platform: 'historical-platform',
+    arch: 'historical-arch',
+  };
   await json(join(dir, run.receipt), receipt);
   const result = await reconcile(p, 'change', run.receipt);
-  assert.equal(result.applicability, 'stale');
-  assert.ok(result.reasons.includes('CLI implementation version differs from this run'));
+  assert.equal(result.applicability, 'current');
+  assert.equal(result.decision, 'supported');
+  receipt.protocolVersion += 1;
+  await json(join(dir, run.receipt), receipt);
+  const unsupported = await reconcile(p, 'change', run.receipt);
+  assert.equal(unsupported.applicability, 'unknown');
+  assert.equal(unsupported.decision, 'unresolved');
 });
-test('reconcile refreshes config even when the caller retains a Project object', async () => {
+test('reconcile refreshes check definitions even when the caller retains a Workspace object', async () => {
   const dir = await fixture();
-  const p = await project(dir);
+  const p = await openWorkspace(dir);
   const run = await verify(p, 'change');
   const config = JSON.parse(await readFile(join(dir, 'clinx.config.json'), 'utf8'));
-  config.checks[0].description = 'Changed meaning';
+  config.checks[0].timeoutMs = 1000;
   await json(join(dir, 'clinx.config.json'), config);
   const result = await reconcile(p, 'change', run.receipt);
   assert.equal(result.applicability, 'stale');
-  assert.ok(result.reasons.includes('Configuration differs from this run'));
+  assert.ok(
+    result.reasons.includes('Task source or selected check definitions differ from this run'),
+  );
 });
 
 test('new-file publication is bounded, exclusive and leaves no temporary files on success or collision', async () => {
