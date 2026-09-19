@@ -25,7 +25,7 @@ npm run test:maven
 然后用空操作反例确认旧报告不能通过。可能下载公开依赖至隔离缓存。
 临时测试目录可能保留用于诊断。
 
-`npm run bundle` 在新目录准备本地 CLI 包、独立 Skill 包与校验和，不上传。
+`npm run bundle` 在新目录准备本地 CLI 包、分别独立的交付与知识 Skill 包及校验和，不上传。
 另一份候选需选择新的 `--output` 目录，见[安装说明](installation.md)。生成包不代表获得发布批准。
 向 `npm run test:package` 传入 `-- --tarball PATH`，可直接验收该包而不重新打包；
 测试会打印 SHA-256，并核对测试期间字节未变。

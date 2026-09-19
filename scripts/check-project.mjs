@@ -2,6 +2,7 @@ import { readdir, readFile, access } from 'node:fs/promises';
 import { join, dirname, resolve, relative } from 'node:path';
 import { assertPublicFile } from './release-scan.mjs';
 import { checkTranslations } from './translations.mjs';
+import { syncSkills } from './sync-skills.mjs';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
 import {
@@ -77,16 +78,19 @@ for (const [name, schema] of Object.entries({
   const actual = JSON.parse(await readFile(join(root, 'schemas', `${name}.schema.json`), 'utf8'));
   assert.deepEqual(actual, z.toJSONSchema(schema, { target: 'draft-2020-12', io: 'input' }));
 }
-const skill = await readFile(join(root, 'skills/clinx-delivery/SKILL.md'), 'utf8');
-assert.match(skill, /^---\nname: clinx-delivery\ndescription: .+\n/);
-assert.match(skill, /\nlicense: MIT\n/);
-assert.equal(
-  await readFile(join(root, 'skills/clinx-delivery/LICENSE'), 'utf8'),
-  await readFile(join(root, 'LICENSE'), 'utf8'),
-);
-assert.ok(skill.split('\n').length < 160, 'Keep Skill entry concise');
-const metadata = await readFile(join(root, 'skills/clinx-delivery/agents/openai.yaml'), 'utf8');
-assert.ok(metadata.includes('$clinx-delivery'));
+await syncSkills(root);
+for (const name of ['clinx-delivery', 'clinx-knowledge']) {
+  const skill = await readFile(join(root, `skills/${name}/SKILL.md`), 'utf8');
+  assert.ok(skill.startsWith(`---\nname: ${name}\ndescription: `));
+  assert.match(skill, /\nlicense: MIT\n/);
+  assert.equal(
+    await readFile(join(root, `skills/${name}/LICENSE`), 'utf8'),
+    await readFile(join(root, 'LICENSE'), 'utf8'),
+  );
+  assert.ok(skill.split('\n').length < 160, 'Keep Skill entry concise');
+  const metadata = await readFile(join(root, `skills/${name}/agents/openai.yaml`), 'utf8');
+  assert.ok(metadata.includes('$' + name));
+}
 const text = z.string().trim().min(1);
 const scenario = z
   .object({

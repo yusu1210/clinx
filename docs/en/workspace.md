@@ -10,6 +10,10 @@ share a separate coordination directory without moving or reinitializing them.
 Choose locations by who owns the information, what changes with it, and who needs to
 read it. Do not create files just to complete a directory tree.
 
+Known project locations should be resolved from the existing entry, not supplied anew
+for every task. Keep shared project identity separate from machine-specific locators
+and the current checkout choice; see [context reuse](project-context.md).
+
 ## What belongs in a source repository?
 
 Durable facts that change with one repository usually belong with that repository's
@@ -56,6 +60,7 @@ business-work/                        existing local parent; no Git required
   delivery/                          coordination workspace; CLI --root points here
     AGENTS.md                        optional host entry; reuse an existing one
     .agents/skills/clinx-delivery/    installed with clinx init --agent codex --apply
+    .agents/skills/clinx-knowledge/   same managed installation; reuse if already available
     knowledge/                       optional shared navigation, not a second codebase
       system-map.md                  links capabilities and their owners
     clinx.config.json                when using CLI records, not needed for init
@@ -102,12 +107,116 @@ locally; it enables safe updates and is not task acceptance evidence. Do not com
 Keep `.clinx/install/backups/` private. Installing the CLI globally does not create
 these files in every source. See [installation and lifecycle](installation.md).
 
+## Name a task for retrieval and continuity
+
+Name one intended outcome, not every message, session or workflow stage. Continue
+the existing task when its outcome remains the same; use a separate, linked task for
+an independently acceptable outcome. Shared terminology or a shared PRD alone does
+not establish identity. A small conversational task needs no CLI record just to get a name.
+
+| Surface                    | Recommended convention                                                | Example                                                   |
+| -------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------- |
+| Human title                | Object + intended outcome or specific problem, in the user's language | Prevent duplicate invoice submission                      |
+| Stable task ID             | Fixed creation date + lowercase ASCII kebab-case topic                | `2026-09-18-invoice-submit-dedup`                         |
+| CLI task directory         | Preserve the ID as the directory name                                 | `clinx/tasks/2026-09-18-invoice-submit-dedup/`            |
+| Git branch, when needed    | Repository policy, with a task link or ID where useful                | `fix/invoice-submit-dedup` if that repository uses `fix/` |
+| Task artifact, when useful | Its information role within the existing task home                    | `design.md`                                               |
+
+Put distinguishing domain terms early in the title. Add a qualifier only when it
+separates plausible alternatives. "Investigate invoice submission timeouts" describes
+an investigation; "Optimize invoices" does not say which problem is in scope. A title
+names intended work, not proof that it is complete. Avoid asserting an unverified root
+cause or prescribing an unsettled solution. Do not add routine stage, status, owner,
+model, "latest" or "final-v2" prefixes/suffixes. Keep those facts in their existing
+progress or metadata home. No exact word count has been established as optimal.
+
+Use one convention for every new persistent task: `YYYY-MM-DD-<short-topic>`.
+The prefix records the task's creation date in the workspace's agreed timezone; it
+never changes when work resumes, a deadline moves or the task is reopened. Use
+recognizable lowercase ASCII kebab-case for the topic, not a Chinese title stripped
+into an empty slug. Keep external issue keys and canonical links in the agreement
+or note; having an issue does not change the directory convention. Do not treat task
+`context.path` as a URL: it binds local files. The agent prepares the ID without a
+naming form from the user. A host conversation ID and a clinx task ID remain separate.
+
+Before creating a record, inspect plausible existing tasks and case variants. Reuse
+the same task when appropriate; otherwise add a meaningful topic qualifier. Do not
+reuse an old ID for unrelated work, overwrite a collision or depend on case alone.
+The date is not a uniqueness guarantee. Recurring tasks follow the same convention:
+`2026-10-03-access-review-2026-09` means a task created on October 3 to review September.
+The review period is a topic qualifier, not a different meaning for the prefix.
+
+Use the full dated string as both the CLI ID and directory name, for example
+`clinx/tasks/2026-09-18-invoice-submit-dedup/`. Keep the CLI layout flat at
+`clinx/tasks/<id>/`; nesting tasks under year/month directories is not supported.
+CLI task contracts currently have no task-level `createdAt` field; checkpoint timestamps
+are handoff times, not creation times. The prefix helps browse newly named tasks
+lexically by creation day; mixed legacy IDs do not form a complete chronology.
+Preserve existing IDs and history rather than infer dates from filesystem modification
+times or rename old tasks for style. The new convention is guidance, not a schema change.
+
+Track owner, priority, due date, milestone, dependencies and progress in the existing
+tracker or task note. They can change without renaming the task. Do not add unsupported
+fields to `contract.json`, move tasks between status directories, or turn a deadline
+into a permanent ID. A directory date is neither a schedule nor evidence of completion.
+
+The current CLI accepts 1–96 ASCII characters matching
+`^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$`; this compatibility boundary is broader than the
+recommended style. Preserve existing valid IDs. Avoid filesystem reserved names
+such as `con`, `nul` and `com1`, and do not assume an accepted task ID is a portable
+filename or a valid Git branch. When creating a branch, check it independently with
+`git check-ref-format --branch BRANCH`; follow any additional repository policy.
+One task can span repositories and branches without changing its ID.
+
+For ordinary working branches without an established naming policy, use
+`<type>/<short-description>` or `<type>/<issue-key>-<short-description>`, for example
+`fix/invoice-submit-dedup` or `fix/acct-1842-invoice-submit-dedup`.
+Choose `feat`, `fix`, `refactor`, `docs`, `test` or `chore` for the actual change;
+use `perf`, `build` or `ci` when the distinction helps. Keep descriptions in lowercase
+ASCII kebab-case; preserve an issue key's exact form when a tracker requires it.
+Keep agent/model names, routine dates and progress markers out of branch names.
+Use `release` or `hotfix` only when the project's release process gives them meaning.
+This is a recommended convention, not a Git standard or a new branching strategy.
+Existing CI, branch protections and issue-linking rules take precedence: for example,
+GitLab's documented automatic issue linking expects the number at the start, such as
+`1842-invoice-submit-dedup`. Do not assume a key anywhere in a name links an issue.
+If CI derives artifact tags from a branch, use its supported sanitized slug rather
+than a raw name containing `/`. See [GitLab branch rules](https://docs.gitlab.com/user/project/repository/branches/).
+
+`task revise` keeps the ID fixed. A useful title correction is possible through a
+reasoned revision, but the title participates in the task digest: even a title-only
+change makes earlier matching bindings differ. Inspect continuity and affected
+evidence before reuse. Cosmetic host-title edits alone do not rewrite the CLI contract.
+Do not move the directory or create a replacement task merely to refresh its wording.
+See the [agent procedure](../../skills/clinx-delivery/references/continuity.md).
+
 ## Keep task inputs separate from task outputs
 
 Use one current agreement. For a small task, the requirement and decisions can remain
 in the conversation or one document. Split investigation, design or implementation
 planning only when their size, ownership or review cadence warrants it. Six stage
 documents are not six mandatory deliverables.
+
+For consequential choices about shared behavior, persistent state, compatibility,
+security or recovery, retain a reviewable design before implementing those choices.
+Reuse an existing RFC, PR or approved design; neither a `design.md` filename nor a new
+approval click is universally required. Required human decisions follow the actual
+agreement and project policy. Reviewability, effective approval and release authority
+are separate; see the [design review reference](../../skills/clinx-delivery/references/design-review.md).
+
+| Information   | Separate it when                                                               | Keep clear                                                                   |
+| ------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Investigation | Understanding the existing system needs its own review or substantial evidence | Observed revisions, inferences and unknowns; a historical snapshot           |
+| Design        | Consequential choices need a stable review target                              | Reasons, affected owners, acceptance and an identifiable reviewed revision   |
+| Execution     | Milestones, dependencies or resumption need a persistent record                | One current progress home, with or without the CLI                           |
+| Operation     | Operators, targets or release timing differ                                    | Feasible migration and recovery in design; concrete actions before execution |
+
+These are information roles, not a required file set or CLI schema. Directory names
+such as `knowledge/`, `docs/` and `tasks/` do not establish ownership or freshness.
+Keep current guidance maintained, preserve historical decisions with supersession
+links, and distinguish rebuildable indexes from original observations that cannot be
+recreated. Before handoff, reconcile the actual result with the effective design and
+original acceptance; rewriting the design is not approval of a deviation.
 
 When using the CLI:
 

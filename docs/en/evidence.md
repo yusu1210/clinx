@@ -85,9 +85,11 @@ local changes. Hashes cannot prevent replacing both a record and its artifacts.
 
 Listing caps artifact reads at 128 MiB and the directory at 1024 records. Entries
 past the byte budget are `integrity: not-checked`, not invalid or passing; use a
-saved UUID with `--record` to inspect one. Unavailable source roots leave local
-binding unknown without hiding intact attachments. Invalid project configuration
-remains a command error. The command never deletes archives to fit a limit.
+saved UUID with `--record` to inspect one. Listing saved attachments does not require
+valid configuration, a current contract or source access. If any is unavailable,
+`localBinding` is unknown with a reason; archive identity and artifact integrity are
+still checked. This does not repair the missing inputs or permit new capture.
+The command never deletes archives to fit a limit.
 
 `evidence list` exit 0 means listing completed, possibly with invalid/unknown records.
 Read every relevant entry. `verify` does not use attachments: external obligations

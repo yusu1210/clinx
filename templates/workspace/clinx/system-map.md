@@ -36,6 +36,10 @@ useful beyond this task. A missing entry is not proof that the capability is abs
 
 ## Canonical paths and cross-project contracts
 
+Link stable project identities and useful business aliases through the existing project
+directory. Keep machine checkout paths in local bindings, not a second shared catalog.
+Do not turn a saved location or past access result into a permanent permission grant.
+
 ```text
 Input or event -> entry -> rule/state owner -> observable effect -> consumer
 Boundary -> owning schema/API/event definition -> known supported consumers

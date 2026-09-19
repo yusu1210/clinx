@@ -29,7 +29,7 @@ the npm registry unless they are cached.
 tests and a no-op control that must reject unchanged reports. It can download public
 dependencies into an isolated cache. Temporary test workspaces may be retained for diagnosis.
 
-`npm run bundle` prepares a new local CLI tarball, standalone Skill archive and
+`npm run bundle` prepares a new local CLI tarball, separate delivery and knowledge Skill archives and
 checksums without uploading. Use a fresh `--output` directory for another candidate;
 see [installation](installation.md). A generated bundle is not itself a release approval.
 Pass `-- --tarball PATH` to `npm run test:package` to test that exact package instead

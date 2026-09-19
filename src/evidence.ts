@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { readdir } from 'node:fs/promises';
+import { opendir, realpath } from 'node:fs/promises';
 import { extname } from 'node:path';
 import {
   boundedPath,
@@ -116,27 +116,30 @@ interface ListedEvidence {
   reasons: string[];
 }
 
-export async function listEvidence(p: Workspace, id: string, recordId?: string) {
-  p = await openWorkspace(p.root);
-  // A stale design reference can make the binding unreadable; retain access to history.
+export async function listEvidence(root: string, id: string, recordId?: string) {
+  root = await realpath(root);
+  // Archive integrity does not depend on today's configuration or task contract.
   const location = store(id);
-  await boundedPath(p.root, `${taskPath(id)}/contract.json`);
-  let names: string[];
+  const names: string[] = [];
   try {
-    names = recordId
-      ? [evidenceSchema.shape.id.parse(recordId)]
-      : await readdir(await boundedPath(p.root, location));
+    if (recordId !== undefined) names.push(evidenceSchema.shape.id.parse(recordId));
+    else {
+      const directory = await opendir(await boundedPath(root, location));
+      for await (const entry of directory) {
+        if (names.length === 1024)
+          throw new Error('More than 1024 evidence records; select a saved UUID with --record');
+        names.push(entry.name);
+      }
+    }
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT')
       return { taskId: id, records: [], note };
     throw error;
   }
-  if (names.length > 1024)
-    throw new Error('More than 1024 evidence records; select a saved UUID with --record');
   let current: Evidence['capturedInputs'] | undefined;
   let bindingError: string | undefined;
   try {
-    current = await binding(p, id);
+    current = await binding(await openWorkspace(root), id);
   } catch (error) {
     bindingError = String(error);
   }
@@ -153,7 +156,7 @@ export async function listEvidence(p: Workspace, id: string, recordId?: string) 
     };
     try {
       if (!/^[a-f0-9-]{36}$/.test(name)) throw new Error('Unexpected evidence directory identity');
-      const directory = await boundedPath(p.root, `${location}/${name}`);
+      const directory = await boundedPath(root, `${location}/${name}`);
       const record = evidenceSchema.parse(
         await readJson(await boundedPath(directory, 'record.json')),
       );

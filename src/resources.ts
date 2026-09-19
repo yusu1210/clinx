@@ -40,7 +40,10 @@ export const exampleCatalog = [
 export function resources() {
   return {
     version,
-    skill: join(packageRoot, 'skills/clinx-delivery'),
+    skills: {
+      delivery: join(packageRoot, 'skills/clinx-delivery'),
+      knowledge: join(packageRoot, 'skills/clinx-knowledge'),
+    },
     templates: join(packageRoot, 'templates/workspace'),
     examples: join(packageRoot, 'examples'),
     schemas: join(packageRoot, 'schemas'),

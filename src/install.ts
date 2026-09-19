@@ -19,8 +19,9 @@ const recordPath = '.clinx/install/state.json';
 const legacyRecordPath = 'clinx/installation.json';
 const entryPath = 'clinx/agent-entry.md';
 type Agent = 'codex' | 'generic';
-const skillPath = (agent: Agent) =>
-  agent === 'codex' ? '.agents/skills/clinx-delivery' : 'clinx/skills/clinx-delivery';
+const skillNames = ['clinx-delivery', 'clinx-knowledge'] as const;
+const skillPath = (agent: Agent, name: (typeof skillNames)[number]) =>
+  (agent === 'codex' ? '.agents/skills/' : 'clinx/skills/') + name;
 const fileSchema = z
   .object({ path: z.string(), sha256: z.string().regex(/^[a-f0-9]{64}$/), owned: z.boolean() })
   .strict();
@@ -33,6 +34,25 @@ const installationSchema = z
   })
   .strict();
 type Installation = z.infer<typeof installationSchema>;
+function assetProvenance(record: Installation | null, packaged: Map<string, Buffer>) {
+  const sameVersionDifferentAssets = Boolean(
+    record &&
+      record.packageVersion === version &&
+      (record.files.length !== packaged.size ||
+        record.files.some(
+          (file) => !packaged.has(file.path) || sha256(packaged.get(file.path)!) !== file.sha256,
+        )),
+  );
+  return {
+    packageRoot: packageAsset(),
+    sameVersionDifferentAssets,
+    warnings: sameVersionDifferentAssets
+      ? [
+          'The selected CLI and recorded Skill baseline have the same version but different assets. Update replaces files from this CLI; it does not establish which copy is newer. Check packageRoot before applying.',
+        ]
+      : [],
+  };
+}
 type Change = {
   path: string;
   status: 'create' | 'identical' | 'update' | 'remove' | 'missing' | 'preserve' | 'conflict';
@@ -71,23 +91,26 @@ async function installation(root: string) {
     );
   }
   const record = installationSchema.parse(input);
-  const prefix = skillPath(record.agent) + '/';
+  const prefixes = skillNames.map((name) => skillPath(record.agent, name) + '/');
   if (
     new Set(record.files.map((f) => f.path)).size !== record.files.length ||
     record.files.some(
       (f) =>
         f.path !== entryPath &&
-        (!f.path.startsWith(prefix) ||
-          !f.path
-            .slice(prefix.length)
-            .split('/')
-            .every((part) => /^[a-zA-Z0-9_.-]+$/.test(part) && part !== '.' && part !== '..')),
+        !prefixes.some(
+          (prefix) =>
+            f.path.startsWith(prefix) &&
+            f.path
+              .slice(prefix.length)
+              .split('/')
+              .every((part) => /^[a-zA-Z0-9_.-]+$/.test(part) && part !== '.' && part !== '..'),
+        ),
     )
   )
     throw new CliError(
       'INSTALLATION_INVALID',
       'Invalid installation ownership paths',
-      'Only the Skill tree and clinx/agent-entry.md may be managed.',
+      'Only the bundled Skill trees and clinx/agent-entry.md may be managed.',
     );
   return { bytes, record };
 }
@@ -104,7 +127,8 @@ async function assets(agent: Agent) {
       else throw new Error('Unsupported packaged asset');
     }
   };
-  await collect(packageAsset('skills', 'clinx-delivery'), skillPath(agent));
+  for (const name of skillNames)
+    await collect(packageAsset('skills', name), skillPath(agent, name));
   return files;
 }
 
@@ -180,7 +204,13 @@ async function plan(root: string, action: 'init' | 'update' | 'remove', agent?: 
         'Run clinx skill status, then clinx skill update to review the packaged changes.',
       );
   }
-  return { saved, agent, changes, next: action === 'init' && saved.record ? saved.record : next };
+  return {
+    saved,
+    agent,
+    changes,
+    provenance: assetProvenance(saved.record, packaged),
+    next: action === 'init' && saved.record ? saved.record : next,
+  };
 }
 
 const equal = (a: Buffer | null, b: Buffer | null) =>
@@ -306,6 +336,7 @@ async function operate(
     applied: apply,
     root,
     origin: { name: 'clinx', version },
+    ...p.provenance,
     agent: p.agent,
     installedVersion: apply
       ? action === 'remove'
@@ -318,7 +349,7 @@ async function operate(
     next:
       action === 'remove'
         ? 'Only unchanged managed files are removed on apply. Backups, unmanaged files, task records, configuration and host instructions remain. The CLI itself stays installed.'
-        : 'Use clinx-delivery with the PRD and project paths. Skill files are not proof of host discovery, host access or project readiness. No configuration, map, guide or task was generated. Use existing tools; let the agent prepare reviewed inputs and checks only when CLI records help. Keep .clinx/ in your existing private-output ignore policy.',
+        : 'Use clinx-delivery for the requirement, or clinx-knowledge for scoped knowledge work. Reuse known project context; supply a project or knowledge anchor only if missing. Skill files do not prove host discovery, access or readiness. No configuration, map, guide or task was generated. Let the agent prepare reviewed inputs and checks only when records help. Keep .clinx/ in your private-output ignore policy.',
   };
 }
 export const init = (root: string, agent: Agent | undefined, apply: boolean) =>
@@ -335,6 +366,7 @@ export async function manageSkill(
     return {
       root,
       managed: false,
+      packageRoot: packageAsset(),
       packageVersion: version,
       installedVersion: null,
       next: 'No installation record. Existing Skill files, if any, are user-owned. Run clinx init to preview a new installation; this command does not inspect host discovery.',
@@ -366,6 +398,7 @@ export async function manageSkill(
     agent: record.agent,
     packageVersion: version,
     installedVersion: record.packageVersion,
+    ...assetProvenance(record, packaged),
     matchesPackage: files.every((f) => f.matchesPackage),
     files,
     next: 'Use skill update to preview bundled changes. This is a local ownership record, not an attestation or a check of host discovery. Never edit recorded hashes to bypass conflicts.',

@@ -8,6 +8,15 @@ type Command = {
 };
 
 export const commands: Record<string, Command> = {
+  status: {
+    usage: 'status [ID] [--limit N --after NAME]',
+    summary: 'Summarize local setup and tasks without executing or selecting work',
+    options: ['limit', 'after'],
+    positionals: 2,
+    details:
+      'Works without initialization. No ID: returns up to 50 task summaries (maximum --limit 200); use nextAfter with --after for another page. With an ID: reads only that task and checks continuity; pagination is not used. Does not observe host discovery, remote approvals or acceptance. Exit zero means a snapshot was returned, not that all components are healthy; inspect issues, field diagnostics and per-task issues.',
+    examples: ['clinx status', 'clinx status feature --json'],
+  },
   'example list': {
     usage: 'example list',
     summary: 'List bundled, public practice cases and their prerequisites',
@@ -31,7 +40,7 @@ export const commands: Record<string, Command> = {
   },
   init: {
     usage: 'init [--agent codex|generic] [--apply]',
-    summary: 'Preview or install the workspace-local Skill and entry',
+    summary: 'Preview or install the delivery and knowledge Skills and entry',
     options: ['agent', 'apply'],
     positionals: 1,
     details:
@@ -67,7 +76,7 @@ export const commands: Record<string, Command> = {
   },
   resources: {
     usage: 'resources',
-    summary: 'Locate the installed Skill, templates, examples, schemas and guides',
+    summary: 'Locate the installed Skills, templates, examples, schemas and guides',
     options: [],
     positionals: 1,
     details:
@@ -96,22 +105,22 @@ export const commands: Record<string, Command> = {
     ],
   },
   'task list': {
-    usage: 'task list',
+    usage: 'task list [--limit N --after NAME]',
     summary: 'List task agreements, handoffs and record issues',
-    options: [],
+    options: ['limit', 'after'],
     positionals: 2,
     details:
-      'Works without configuration. Never silently selects a task. Listing success is not task validity or current evidence; inspect issues for each entry.',
+      'Works without configuration. Returns {tasks, nextAfter}: compact summaries, not full handoff text. Default limit 50, maximum 200; a 256 KiB content budget can shorten a page. Pass nextAfter as --after to continue in lexical ID order. Concurrent edits are not a snapshot. Use task show or context for a known task. Never selects work or validates current evidence.',
     examples: ['clinx task list', 'clinx task list --root ../delivery --json'],
   },
   'task show': {
-    usage: 'task show ID',
+    usage: 'task show ID [--limit N --after NAME]',
     summary:
       'Read a task agreement, revisions and latest handoff without validating current inputs',
-    options: [],
+    options: ['limit', 'after'],
     positionals: 3,
     details:
-      'Works without configuration or available source directories. Reads saved contract history and checkpoint issues only; it does not assess evidence applicability, execute commands or select a task.',
+      'Works without configuration or available source directories. Returns the current contract, latest checkpoint and one page of revisions in lexical filename order (default 50, maximum 200, 256 KiB revision budget). Use nextAfter with --after for more. Damaged or oversized revisions are reported individually; inspect the named saved file when needed. Does not assess evidence applicability or execute commands.',
     examples: ['clinx task show feature', 'clinx task show feature --json'],
   },
   'task revise': {
@@ -147,7 +156,7 @@ export const commands: Record<string, Command> = {
     options: ['record'],
     positionals: 3,
     details:
-      'Does not validate remote state or approvals. Listing exit zero does not assert that records are intact or current. Read integrity, localBinding and limitations for each record.',
+      'Saved attachments remain readable without valid configuration, a current task contract or source access; unavailable bindings are unknown. Does not validate remote state or approvals. Listing exit zero does not assert that records are intact or current. Read integrity, localBinding and limitations for each record.',
     examples: ['clinx evidence list feature --json'],
   },
   context: {
@@ -190,6 +199,27 @@ export const commands: Record<string, Command> = {
       'Receipt paths are relative to --root (or absolute inside that root), unlike --file imports. Does not combine receipts, observe remote state or grant approval. Stale or unknown applicability cannot support a current claim.',
     examples: ['clinx reconcile feature --receipt .clinx/runs/RUN/receipt.json --json'],
   },
+};
+
+export const commandGroups = {
+  'Start or troubleshoot': ['status', 'init', 'resources', 'example list', 'example copy'],
+  'Optional delivery records': [
+    'task list',
+    'task show',
+    'task add',
+    'task revise',
+    'task checkpoint',
+    'context',
+  ],
+  'Inspect and verify': [
+    'inspect',
+    'validate',
+    'verify',
+    'reconcile',
+    'evidence attach',
+    'evidence list',
+  ],
+  'Maintain installed Skills': ['skill status', 'skill update', 'skill remove'],
 };
 
 export function commandHelp(key = '') {
@@ -235,11 +265,19 @@ export function renderHelp(key = ''): string | null {
           ...c.examples.map((e) => `  ${e}`),
         ])
       : [
-          'Commands:',
-          ...entries.map((c) => `  ${c.usage}\n    ${c.summary}`),
+          ...(!key
+            ? Object.entries(commandGroups).flatMap(([group, names]) => [
+                `${group}:`,
+                ...names.map(
+                  (name) => `  ${commands[name]!.usage}\n    ${commands[name]!.summary}`,
+                ),
+                '',
+              ])
+            : ['Commands:', ...entries.map((c) => `  ${c.usage}\n    ${c.summary}`)]),
           '',
-          'Start: clinx init --agent codex --apply',
-          'Then ask your agent to use clinx-delivery with the PRD and project paths.',
+          'Start with your agent: give it the requirement; reuse known project context. The CLI is optional.',
+          'If you need workspace-local Skills: clinx init --agent codex --apply',
+          'Unsure about local setup? clinx status (no initialization required).',
           'Use clinx COMMAND --help for examples and safety boundaries.',
         ]),
     '',

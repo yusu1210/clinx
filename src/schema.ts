@@ -19,6 +19,25 @@ const relativePath = text.refine(
   'Use a relative path',
 );
 export const focusSchema = z.enum(['discover', 'contract', 'build', 'verify', 'learn']);
+const loopStopReasonSchema = z.enum([
+  'continue',
+  'fixed',
+  'no-new-high-value-issue',
+  'budget-exhausted',
+  'needs-review',
+  'blocked',
+]);
+const loopStateSchema = z.strictObject({
+  iteration: z.number().int().positive(),
+  hypothesis: text,
+  mechanism: text,
+  treatment: text,
+  plannedChecks: z.array(text).default([]),
+  observations: z.array(text).default([]),
+  unknowns: z.array(text).default([]),
+  nextAction: text,
+  stopReason: loopStopReasonSchema.default('continue'),
+});
 export const fileRefSchema = z.strictObject({ source: id.optional(), path: relativePath });
 export type FileRef = z.infer<typeof fileRefSchema>;
 const resultSchema = z.discriminatedUnion('format', [
@@ -107,6 +126,9 @@ export const checkpointInputSchema = z.strictObject({
   summary: text,
   next: text,
   blockers: z.array(text).default([]),
+  // Optional bounded-loop state. The external orchestrator owns iteration and
+  // authority; clinx only persists an input-bound, inspectable handoff.
+  loop: loopStateSchema.optional(),
 });
 export const checkpointSchema = z.strictObject({
   version: z.literal(2),
@@ -256,8 +278,8 @@ export function validateDefinition(config: VerificationDefinition): void {
     'source IDs',
   );
   unique(
-    config.checks.map((c) => c.id),
-    'check IDs',
+    config.checks.map((c) => c.id.toLowerCase()),
+    'check IDs (case-insensitive for portable artifact storage)',
   );
   for (const check of config.checks) {
     if (!config.sources.some((s) => s.id === check.source))

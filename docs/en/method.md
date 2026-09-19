@@ -28,6 +28,11 @@ For a first task, see [start from a requirement](cold-start.md). The
 [Skill](../../skills/clinx-delivery/SKILL.md) gives the agent a procedure. The optional
 CLI records agreements and local observations; it does not run the agent.
 
+Delivery learning and independent [knowledge work](knowledge.md) share one set of
+rules. Build, Capture, Organize and Maintain are knowledge intents, not another delivery
+stage machine. Preserve useful findings at their owner, test retrieval from the normal
+entry, and revalidate changed or conflicting claims before reuse.
+
 ## Establish meaning before relying on evidence
 
 Keep three sources distinct:
@@ -57,10 +62,43 @@ the nearest implementation and its call sites, including permission, bounds and
 failure semantics. Stop when the investigation supports the choice; an exhaustive
 repository inventory is not a prerequisite.
 
+Start navigation from the workspace's normal entry, including relevant existing tool
+bindings. For changed shared semantics, keep an impact record in the existing design:
+the current symbol or protocol and owner, incoming entries and downstream readers,
+old/new behavior, source evidence, and unresolved boundaries. Trace both the requested
+journey and existing consumers of the changed contract. A repository list or an index
+result alone does not show that the affected behavior is covered.
+
+Use that record to choose validation and, when authorized, independent source review.
+The reviewer challenges the original requirement and current sources, then findings
+return to the same proposal for correction or an explicit held decision. Follow the
+[design review reference](../../skills/clinx-delivery/references/design-review.md).
+This does not require another document set or CLI configuration. For a consequential
+shared change, an already verified low-cost relationship binding is part of the impact
+check; if no such binding exists, perform the equivalent candidate inventory with native
+search and source navigation.
+
 Classify each capability as **reuse, extend, compose, new or unknown**. A new product
 may reuse identity and storage; an existing service may need a new capability.
 Choose by semantic compatibility, ownership, data shape, authorization and operating
 cost. Incompatible reuse can be more expensive and less safe than a small new component.
+
+### Bound uncertainty without enumerating every case
+
+Choose investigation depth by consequence, uncertainty and recovery difficulty. Define
+what must always hold and which owner enforces it, then challenge that rule across
+relevant entry paths, representations and failures. Group equivalent cases only when
+their semantics support the same treatment. Use boundary/property tests, fault injection
+or a small state model when they can expose failures that example tests miss; a model
+checks its assumptions, not the entire live system.
+
+For consequential effects, trace backwards from the enforcing receiver to alternate
+callers and recovery paths. Preserve existing obligations as well as new behavior.
+An impact record supports a scoped coverage claim, not a proof of completeness. Keep
+remaining uncertainty tied to the dependent action and the evidence needed to resolve it.
+A reviewable design can retain external decisions and future runtime checks; those gaps
+still prevent the dependent implementation or release claim. Apply the same endpoint
+when grading the author and the reviewer.
 
 ## Make an actionable agreement
 
@@ -124,8 +162,9 @@ acceptable behavior. Escalate conflicts that require a product or operational de
 
 For asynchronous effects, separate accepted, running, terminal success/failure and
 unknown outcomes. Distinguish invalid input, transient failure and obsolete work.
-Use the provider's actual idempotency, retry and recovery contract; reconcile an
-unknown write before resubmission. There is no universal retry count or queue design.
+Use the provider's actual idempotency, retry and recovery contract: resolve an unknown
+write through result reconciliation or supported replay of the same operation, rather
+than submitting a new operation blindly. There is no universal retry count or queue design.
 See the [delivery reference](../../skills/clinx-delivery/references/delivery.md).
 
 ## Interpret evidence at its actual scope

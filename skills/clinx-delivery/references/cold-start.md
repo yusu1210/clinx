@@ -1,7 +1,9 @@
 # Start with a requirement and unfamiliar projects
 
-A PRD/file/link and repository URLs or paths are enough to begin investigation,
-not a guarantee of access or complete product decisions. Use normal engineering tools;
+A PRD/file/link and a known project context are enough to begin investigation,
+not a guarantee of access or complete product decisions. Resolve omitted locations
+through [project-context.md](project-context.md); ask only for a missing or ambiguous
+anchor, not for known repositories again. Use normal engineering tools;
 clinx configuration and an engineering map are not user-supplied prerequisites.
 
 ## Resolve the original inputs
@@ -10,11 +12,19 @@ Read the requirement and relevant attachments, distinguishing original intent,
 authorized changes and current implementation. If a meaningful source is inaccessible,
 identify the precise uncertainty; do not substitute a search summary for the PRD.
 
-For an existing checkout, inspect revision and dirty state. For a supplied repository
-URL, obtain a separate checkout within scope using existing tools; preserve explicit
-branch choices and existing directories. Read applicable instructions before executing
-project code. Follow relevant caller/dependency references, not the entire parent
-workspace. An inaccessible dependency's interface and runtime are different evidence.
+For an existing checkout, inspect revision and dirty state at the actual repository
+root. Record the observed root, branch/worktree, commit (or explicit unversioned
+result), dirty paths and observation time before using it in a design or handoff. Use
+repository-aware commands such as `git -C <source> rev-parse --show-toplevel`,
+`git -C <source> branch --show-current`, `git -C <source> rev-parse HEAD` and
+`git -C <source> status --short`; linked worktrees may not contain a `.git` directory.
+If a command fails, preserve the failure and mark that field unknown. Do not infer a
+repository, clean state or absence of source metadata from the coordination directory
+or from a missing `.git` entry. For a supplied repository URL, obtain a separate
+checkout within scope using existing tools; preserve explicit branch choices and
+existing directories. Read applicable instructions before executing project code.
+Follow relevant caller/dependency references, not the entire parent workspace. An
+inaccessible dependency's interface and runtime are different evidence.
 
 Choose one coordination location without imposing new files on each source. Reuse
 existing instructions and documents; missing maps or write access to a dependency

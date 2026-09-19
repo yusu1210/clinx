@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { cp, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, readdir, readFile, realpath, writeFile } from 'node:fs/promises';
 import { join, delimiter, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
@@ -51,6 +51,20 @@ assert.ok(pack.files.some((f) => f.path === 'templates/workspace/clinx.config.js
 assert.ok(pack.files.some((f) => f.path === 'skills/clinx-delivery/SKILL.md'));
 assert.ok(pack.files.some((f) => f.path === 'npm-shrinkwrap.json'));
 for (const path of [
+  'skills/clinx-knowledge/SKILL.md',
+  'skills/clinx-knowledge/LICENSE',
+  'skills/clinx-knowledge/references/knowledge.md',
+  'skills/clinx-knowledge/references/code-intelligence.md',
+  'skills/clinx-delivery/references/knowledge.md',
+  'docs/en/knowledge.md',
+  'docs/zh-CN/knowledge.md',
+  'evals/knowledge/prepare.mjs',
+  'evals/knowledge/scenario.mjs',
+  'evals/context/prepare.mjs',
+  'docs/en/project-context.md',
+  'docs/zh-CN/project-context.md',
+  'skills/clinx-knowledge/references/project-context.md',
+  'skills/clinx-delivery/references/project-context.md',
   'skills/clinx-delivery/references/delivery.md',
   'skills/clinx-delivery/references/runtime.md',
   'skills/clinx-delivery/references/collaboration.md',
@@ -214,10 +228,53 @@ const attachments = JSON.parse(
 );
 assert.equal(attachments.records[0].integrity, 'intact');
 assert.equal(attachments.records[0].localBinding, 'matches');
+const savedConfig = await readFile(join(fullstack, 'clinx.config.json'));
+await writeFile(join(fullstack, 'clinx.config.json'), '{broken');
+const historyWithoutConfig = JSON.parse(
+  run(binary, ['evidence', 'list', 'reading-list', '--root', fullstack], temp),
+);
+assert.equal(historyWithoutConfig.records[0].integrity, 'intact');
+assert.equal(historyWithoutConfig.records[0].localBinding, 'unknown');
+assert.equal(historyWithoutConfig.records[0].record.id, attachments.records[0].record.id);
+await writeFile(join(fullstack, 'clinx.config.json'), savedConfig);
 const prepared = JSON.parse(
   run(process.execPath, [join(installed, 'evals/prepare.mjs'), 'greenfield'], temp),
 );
 assert.equal(prepared.executed, false);
+const contextCase = JSON.parse(
+  run(process.execPath, [join(installed, 'evals/context/prepare.mjs'), 'relocated-project'], temp),
+);
+assert.ok(!contextCase.evaluator.startsWith(contextCase.workspace + '/'));
+assert.equal(
+  JSON.parse(await readFile(join(contextCase.workspace, 'checkouts/current/project.json'), 'utf8'))
+    .id,
+  'public-notices',
+);
+assert.ok(!(await readdir(contextCase.workspace)).includes('evaluator.json'));
+let knowledgeCase = JSON.parse(
+  run(process.execPath, [join(installed, 'evals/knowledge/prepare.mjs')], temp),
+);
+for (const checkpoint of [
+  'retrieval',
+  'behavior-change',
+  'new-consumer',
+  'unavailable-source',
+  'operational-change',
+  'historical-evidence',
+  'delivery',
+]) {
+  knowledgeCase = JSON.parse(
+    run(
+      process.execPath,
+      [join(installed, 'evals/knowledge/prepare.mjs'), '--after', knowledgeCase.evaluator],
+      temp,
+    ),
+  );
+  const record = JSON.parse(await readFile(knowledgeCase.evaluator));
+  assert.equal(record.checkpoint, checkpoint);
+  assert.equal(record.status, 'prepared-not-evaluated');
+  assert.ok(!knowledgeCase.evaluator.startsWith(knowledgeCase.workspace + '/'));
+}
 assert.deepEqual(await readdir(prepared.workspace), []);
 const cold = JSON.parse(
   run(process.execPath, [join(installed, 'evals/prepare.mjs'), 'cold-start', 'baseline'], temp),
@@ -259,6 +316,10 @@ assert.equal((await gradeBulkReset(bulk.workspace)).passed, false);
 const onboarding = await mkdtemp(join(tmpdir(), 'clinx-package-init-'));
 run(binary, ['--root', onboarding, 'init', '--agent', 'codex', '--apply'], temp);
 assert.ok((await readdir(join(onboarding, '.agents/skills/clinx-delivery'))).includes('SKILL.md'));
+assert.equal(
+  await readFile(join(onboarding, '.agents/skills/clinx-knowledge/SKILL.md'), 'utf8'),
+  await readFile(join(installed, 'skills/clinx-knowledge/SKILL.md'), 'utf8'),
+);
 assert.equal(
   await readFile(
     join(onboarding, '.agents/skills/clinx-delivery/references/collaboration.md'),
@@ -312,6 +373,12 @@ await assertLockedRuntime(join(prefix, 'lib/node_modules/clinx'));
 assert.equal(installedCommand(['--version']).trim(), manifest.version);
 assert.match(installedCommand(['task', 'add', '--help']), /Usage: clinx task add/);
 assert.match(installedCommand(['inspect'], unconfigured), /Workspace:/);
+assert.match(installedCommand(['status'], unconfigured), /acceptance not assessed/);
+const localStatus = JSON.parse(installedCommand(['status', '--json'], unconfigured));
+assert.equal(localStatus.configuration.state, 'absent');
+assert.equal(localStatus.hostDiscovery, 'not-observed');
+assert.equal(localStatus.acceptance, 'not-assessed');
+assert.deepEqual(await readdir(unconfigured), []);
 assert.equal(JSON.parse(installedCommand(['inspect', '--json'], unconfigured)).configured, false);
 const practice = join(temp, 'new user practice');
 assert.equal(
@@ -320,10 +387,11 @@ assert.equal(
   false,
 );
 installedCommand(['init', '--agent', 'codex', '--apply'], practice);
-assert.equal(
-  JSON.parse(installedCommand(['skill', 'status', '--json'], practice)).matchesPackage,
-  true,
-);
+const installedSkills = JSON.parse(installedCommand(['skill', 'status', '--json'], practice));
+assert.equal(installedSkills.matchesPackage, true);
+assert.equal(installedSkills.packageRoot, await realpath(join(prefix, 'lib/node_modules/clinx')));
+assert.equal(installedSkills.sameVersionDifferentAssets, false);
+assert.deepEqual(installedSkills.warnings, []);
 installedCommand(['skill', 'update', '--apply'], practice);
 installedCommand(['skill', 'remove', '--apply'], practice);
 assert.equal(JSON.parse(installedCommand(['skill', 'status', '--json'], practice)).managed, false);

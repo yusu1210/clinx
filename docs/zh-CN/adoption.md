@@ -52,9 +52,10 @@
 
 ## Skill 接入
 
-`init --agent codex --apply` 写入 `.agents/skills/clinx-delivery`；
-通用模式写入 `clinx/skills/clinx-delivery`，由用户明确读取或按宿主机制注册。
-两者都包含许可、`clinx/agent-entry.md` 和本地文件归属状态 `.clinx/install/state.json`。
+已有宿主或团队管理的 Skill 时直接复用，添加 CLI 记录不需要重新安装。
+采用 CLI 管理时，`init --agent codex --apply` 将 `clinx-delivery` 和 `clinx-knowledge`
+写入 `.agents/skills/`；通用模式写入 `clinx/skills/`，明确读取相关 SKILL.md 或按宿主机制注册。
+两种位置都包含许可、`clinx/agent-entry.md` 和本地文件归属状态 `.clinx/install/state.json`。
 去掉 `--apply` 可先预览；存在不同文件则停止，不覆盖。
 
 不自动生成地图、指南、任务或配置，不编辑全局设置或宿主指令，不热注册正在运行的宿主。

@@ -13,9 +13,16 @@ paths are workspace-relative unless specified.
 
 ## Adopt only the support needed
 
+Do not run this sequence for every request. If the Skill and native tools already
+serve the task, proceed without initialization or configuration. When local setup is
+unclear, `clinx status --json` combines installation, configuration and task summaries
+without selecting a task or fingerprinting source contents. `status ID` also checks
+that task's continuity; it does not run checks or assess acceptance. Inspect issues,
+not just exit zero. Host/team-provided Skills need no local installation record.
+
 `clinx init --root PROJECT --agent codex` previews Skill and entry files; `--apply`
 writes without overwriting conflicts. A separate preview invocation is optional.
-Generic mode uses `clinx/skills/clinx-delivery`; an existing installation retains its
+Both Skills are installed; generic mode uses `clinx/skills/`; an existing installation retains its
 recorded placement when `--agent` is omitted.
 Read `clinx/agent-entry.md`; existing host instructions are not edited. No project
 configuration, map, guide or task is generated. Their optional templates remain
@@ -44,6 +51,10 @@ source files or checks merely to initialize the CLI.
 For a multi-source task, use `sources` to name relevant source IDs. Include unchanged
 dependencies and consumers as well as modified sources; a check's cwd does not describe
 everything it reads. Omitting task `sources` conservatively binds every configured source.
+An existing knowledge catalog is navigation, not a reason to configure every project
+or bind every source to each task. Resolve relevant projects using
+[project-context.md](project-context.md), retaining a separate coordination root for
+concurrent deliveries needing different revisions of the same source.
 Revise the agreement when discovery changes that scope, not to hide failing evidence.
 Config and task context can reference original source-owned files with
 `{ "source": "service", "path": "docs/design.md" }`; omit `source` for workspace-local
@@ -66,12 +77,19 @@ Unsupported discovery does not block normal investigation or execution.
   A structurally valid agreement can still omit required behavior.
   All `--file` commands also accept `-` for piped JSON (8 MiB maximum); never ask the
   user to prepare a technical form when you can derive the agreement from current facts.
+  Reuse existing project configuration and canonical requirement/design references.
+  Pipe generated input when a separate import file has no lasting value. Do not repeat
+  `validate` immediately after a successful add/revise unless checking new information.
 - `clinx validate ID` checks structure and references, not command readiness.
 - `clinx context ID --focus build` restores the task, latest handoff and focused index.
+  Use it on a real handoff or relevant change, not after every tool call.
 - `clinx verify ID` previews checks, source selections and obligations.
   Review argv, invoked scripts, target and authority. `clinx verify ID --run` executes
   with inherited environment and OS permissions; it is not a sandbox. Declared
   external effects also require `--allow-external` and real task-specific authority.
+  Choose the claim needed for this action; do not run the same checks for multiple
+  claim labels just to demonstrate commands. Preview is useful for reviewing an unknown
+  plan, not an additional human approval step for every already-reviewed invocation.
 - `clinx reconcile ID --receipt .clinx/runs/RUN/receipt.json` interprets a prior run
   against current declared bindings without executing it again.
 - `clinx task checkpoint ID --file NOTE.json` preserves a useful handoff.

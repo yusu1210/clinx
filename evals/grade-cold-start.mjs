@@ -1,5 +1,6 @@
 // Evaluator only: never copy this oracle into an agent's raw task inputs.
-import { pathToFileURL } from 'node:url';
+import { pathToFileURL, fileURLToPath } from 'node:url';
+import { realpath } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { once } from 'node:events';
 import assert from 'node:assert/strict';
@@ -63,7 +64,11 @@ export async function grade(workspace) {
       'HTTP behavior only; inspect original tests, diff, actual browser, scope and handoff separately. This is not an agent-effectiveness result.',
   };
 }
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+if (
+  process.argv[1] &&
+  (await realpath(process.argv[1]).catch(() => null)) ===
+    (await realpath(fileURLToPath(import.meta.url)))
+) {
   if (process.argv.length !== 3) {
     console.error('Usage: node evals/grade-cold-start.mjs WORKSPACE');
     process.exitCode = 3;

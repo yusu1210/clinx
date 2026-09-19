@@ -93,3 +93,74 @@ test('changed confirmation context invalidates local bindings without interpreti
     );
   }
 });
+
+test('checkpoint can carry bounded loop state without becoming an approval state machine', async () => {
+  const { dir } = await agreementFixture();
+  const note = join(dir, 'loop-note.json');
+  await json(note, {
+    focus: 'verify',
+    state: 'handoff',
+    summary: 'One hypothesis tested; a review gate remains',
+    next: 'Resume only after the named reviewer resolves the gate',
+    blockers: ['Independent semantic review'],
+    loop: {
+      iteration: 2,
+      hypothesis: 'The existing policy owner can serve the new filter',
+      mechanism: 'Compose filtering after the authoritative eligibility call',
+      treatment: 'Run the API and console boundary checks',
+      plannedChecks: ['api-boundary', 'console-transport'],
+      observations: ['Local positive and negative cases passed'],
+      unknowns: ['Production authentication was not observed'],
+      nextAction: 'Obtain the independent review before another implementation round',
+      stopReason: 'needs-review',
+    },
+  });
+  const saved = cli(dir, 'task', 'checkpoint', 'change', '--file', note);
+  assert.equal(saved.status, 0, saved.err);
+  assert.equal(saved.out.checkpoint.note.loop.iteration, 2);
+  assert.equal(saved.out.checkpoint.note.loop.stopReason, 'needs-review');
+  const resumed = cli(dir, 'context', 'change');
+  assert.equal(resumed.status, 0, resumed.err);
+  assert.deepEqual(resumed.out.checkpoint.note.loop.unknowns, [
+    'Production authentication was not observed',
+  ]);
+  assert.equal(resumed.out.checkpoint.note.loop.stopReason, 'needs-review');
+});
+
+test('optional loop metadata does not impose a second execution lifecycle', async () => {
+  const { dir } = await agreementFixture();
+  const note = join(dir, 'progress.json');
+  const progress = {
+    focus: 'verify',
+    state: 'active',
+    summary: 'Local repair passed; provider guarantees remain unknown',
+    next: 'Read the provider contract',
+    blockers: [],
+  };
+  await json(note, progress);
+  const plain = cli(dir, 'task', 'checkpoint', 'change', '--file', note);
+  assert.equal(plain.status, 0, plain.err);
+  const loop = {
+    iteration: 4,
+    hypothesis: 'Local repair preserves retries',
+    mechanism: 'Check the affected boundary',
+    treatment: 'Repair local encoding',
+    observations: ['Local positive and negative checks passed'],
+    unknowns: ['Provider guarantees'],
+    nextAction: progress.next,
+    stopReason: 'fixed',
+  };
+  await json(note, { ...progress, loop });
+  const structured = cli(dir, 'task', 'checkpoint', 'change', '--file', note);
+  assert.equal(structured.status, 0, structured.err);
+  assert.equal(structured.out.checkpoint.sequence, plain.out.checkpoint.sequence + 1);
+  const resumed = cli(dir, 'context', 'change');
+  assert.equal(resumed.out.checkpoint.note.state, 'active');
+  assert.equal(resumed.out.checkpoint.note.next, progress.next);
+  assert.deepEqual(resumed.out.checkpoint.note.loop.unknowns, ['Provider guarantees']);
+  // A new host-owned loop can restart numbering without rewriting saved history.
+  await json(note, { ...progress, loop: { ...loop, iteration: 1, stopReason: 'continue' } });
+  const restarted = cli(dir, 'task', 'checkpoint', 'change', '--file', note);
+  assert.equal(restarted.status, 0, restarted.err);
+  assert.equal(restarted.out.checkpoint.sequence, structured.out.checkpoint.sequence + 1);
+});

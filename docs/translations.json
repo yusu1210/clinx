@@ -4,38 +4,38 @@
     {
       "source": "CHANGELOG.md",
       "translation": "CHANGELOG.zh-CN.md",
-      "sourceSha256": "95d02acb04a4f12f34c63c4c313b62dec7fb7f17272c9c6c258090aaf8bfae56",
-      "translationSha256": "ee6ddaf8d287a34e3b2324d8320a17887bf359d721ed3f76bf6c71c72da3c4fe"
+      "sourceSha256": "0402a0523c7931af09328a4f653399bf91bd715642608c2498e0b6efe5c3c8b1",
+      "translationSha256": "e07937e62cf68a6f1c8ba6fe1d4340d184e29f5c35b2a1b42d969709d36c268a"
     },
     {
       "source": "CONTRIBUTING.md",
       "translation": "CONTRIBUTING.zh-CN.md",
-      "sourceSha256": "ada488cb944607a407b4badb279607dd750f59ee4c6fd16a076a58ad4af455b2",
-      "translationSha256": "1896b2ae5068a77e4ddc701b519a707ce9a0aa2ea7ace20f8d6251afba143c27"
+      "sourceSha256": "70942ac62e9afdb629049867d3829b3613a42e57247f18aa0207bec8afc81995",
+      "translationSha256": "39156cc8e8ec8cc3e272b27415d89bf859bff6d8b60db3426ccc11ddb50001c2"
     },
     {
       "source": "docs/en/adoption.md",
       "translation": "docs/zh-CN/adoption.md",
-      "sourceSha256": "d568c77e43db2cedd49705ee59fca845f0e5565f987d16df9d0dea10602b0e76",
-      "translationSha256": "8e95b9380f23df8d82341814b602344eeecffe0c1c490d3b015c8f1068e0e3dc"
+      "sourceSha256": "42bba3e47c1e851e33238d059c1e139fe7575c0b1f52f44fd0e67f43b1e77d1e",
+      "translationSha256": "ed00b8f930cad502de8424957ffb227f8faa96f33f96410057e38816bb49aa1f"
     },
     {
       "source": "docs/en/architecture.md",
       "translation": "docs/zh-CN/architecture.md",
-      "sourceSha256": "bb3427251689406e739f84dd50e736179f29c52290e31aaeb13b8e00c679b62f",
-      "translationSha256": "13a12471dfb583d966e1b46d50a9aa7b8bb688c370ff160cb16b68f11e645fde"
+      "sourceSha256": "e5ed47a0c32fc5873414de34e33dd38243dc42cda36b84f14e12f667eff58d39",
+      "translationSha256": "799a06b01c2786705c9045e03086ac1e36e4f148d6088779fc34d8040a6b1db8"
     },
     {
       "source": "docs/en/cli.md",
       "translation": "docs/zh-CN/cli.md",
-      "sourceSha256": "d1e65782d5b6fa4115469c0170c95434a7d7918031d37df49ef29b68c8c778f5",
-      "translationSha256": "2e37485a8c951bd412965c9327090095462668cf973f30ecf55f4c2bd5ff26e9"
+      "sourceSha256": "8bdedc61baacec5e14fb6c95ffce7e2c6ca6acc5aeb2ea107e253b2f9fb2621d",
+      "translationSha256": "9d76d0d682cc7d92178f4ba8e19afced8835791413ba8b3b4989a95d285d1fd0"
     },
     {
       "source": "docs/en/cold-start.md",
       "translation": "docs/zh-CN/cold-start.md",
-      "sourceSha256": "189bb9cf9404ff6d85ad25ff120816b75338db57f15585c401751c8193bd2264",
-      "translationSha256": "d09cc53d1bcf522aac618ab613d7df725a14d612a7ab6b53271a2a584ae1f966"
+      "sourceSha256": "f7778ebcbffb50c745dbf5da3cb1a9eb88d1df136d25496d12447897cc4213b5",
+      "translationSha256": "f97262d004740ae226d49a5d439746fc2d99e9f2772bd8a4982ee7ca5811a9a1"
     },
     {
       "source": "docs/en/collaboration.md",
@@ -46,56 +46,74 @@
     {
       "source": "docs/en/evaluation.md",
       "translation": "docs/zh-CN/evaluation.md",
-      "sourceSha256": "f93f932ec0056f86894e846e637eeb161dd34c71e448f0ef2d19740efebf5310",
-      "translationSha256": "96de6248d004f5bda8704eeba538c5e5b5957aebc00d796767d9d20e41728f4a"
+      "sourceSha256": "a082e4f93a1bad1d06e9d6c00c9055fff77c4e4e214b7d36bef28585cadf1f43",
+      "translationSha256": "f692edca0c00af5a879ac3e65c9662cde6b375f12a50d655984febe7507366d7"
     },
     {
       "source": "docs/en/evidence.md",
       "translation": "docs/zh-CN/evidence.md",
-      "sourceSha256": "1c9539071065033f7081394a40d2a91afe1cc200c8489ef09656a734192ea6f8",
-      "translationSha256": "388c67ff1f6b691d724bcf9613dea6bff34b969a3472c06b9a5d6db1208874e4"
+      "sourceSha256": "2aaf7e7cb8689007ad60ae3ac04e216c0c9d73d7d2df3404151b8a751c19b39d",
+      "translationSha256": "bddfcaaf83d03cf65265a4c9e607644483958e0416a39205b22582ddee4c0cc1"
     },
     {
       "source": "docs/en/hands-on.md",
       "translation": "docs/zh-CN/hands-on.md",
-      "sourceSha256": "4556af21cc462f64c2cec3d635baacc1b8f008a1dc029cd3bf518e499564f3a2",
-      "translationSha256": "1a97250405d8752570028ed2cf528d855c463229edeff007b30d7da5ca1f15c6"
+      "sourceSha256": "77bc584849f7115f03cdc3a479c46687bb840f86f8e6a334d4c4c8634b655728",
+      "translationSha256": "f6b28347f7bc2291804ee28f00d79e8722d48c6d28bd05f17fde1164d1081461"
     },
     {
       "source": "docs/en/installation.md",
       "translation": "docs/zh-CN/installation.md",
-      "sourceSha256": "196bf9a84794a1894232e51e38c56b72c0b74ae5628514adccc6d5ea6b102f7d",
-      "translationSha256": "912a1a12bb3d224ce9162ba5044c8cd1cd68219e107b81f4564e8f5c67644e98"
+      "sourceSha256": "bff355a8bb61c982320e2fd541116b54ed9d9400769f13a4d2d098830f6500fc",
+      "translationSha256": "685c5c920e1bb85eb4dc71afa42099ecd16e2931b8b288fecf0cda3bcef34752"
+    },
+    {
+      "source": "docs/en/knowledge.md",
+      "translation": "docs/zh-CN/knowledge.md",
+      "sourceSha256": "c146d00f3a715fe9448380df85113fbc9fd61bfb6362c227295f9fbb3d7b41b1",
+      "translationSha256": "0ce85814ee23fbfdeb0a561b810e299c6aafe2c9de0b939e3590b98e89782bdb"
     },
     {
       "source": "docs/en/method.md",
       "translation": "docs/zh-CN/method.md",
-      "sourceSha256": "e8b9e2c937dabf90d5ad9286ff7dfbd939472b11ab9193331f6add4ec9876020",
-      "translationSha256": "a5b7dde296cccc50358be11579c6cac65bf85769f8e029579f1e2b20dd82d2f1"
+      "sourceSha256": "92b47531e70a1d0304e6398e2dd16e728a1baa23790581c3b86c0370910027cc",
+      "translationSha256": "5456a16c4e01d27acab2788c6cfb8e3d465d4bffe7772c5bd7f600c84b259ada"
+    },
+    {
+      "source": "docs/en/project-context.md",
+      "translation": "docs/zh-CN/project-context.md",
+      "sourceSha256": "e9e1c2e9f40c5b95a903f7c6d3b81a796af431d0bd1c0d9e87425b5d93ee9e2b",
+      "translationSha256": "de60e452b8c7a0054e622c7601c2d33fe870ec6a70c2db4c2c934fddb0de62e5"
     },
     {
       "source": "docs/en/README.md",
       "translation": "docs/zh-CN/README.md",
-      "sourceSha256": "f139ae2d62ca049998e422ef4976c8660c1e90b1dcb98c4c4d5bfa842b6aeedb",
-      "translationSha256": "2363e6f9f966ba9b0657e874714c2eaaaeb41cb3a315fb7bc24763f4be5e8139"
+      "sourceSha256": "b2ef24059ee07da2089954489c49da73abff8c75316c8b7a670355903666df66",
+      "translationSha256": "83692f552799c31d69d66f28710640ab836f927b1c4a3826ed758539d00ba024"
+    },
+    {
+      "source": "docs/en/recorded-delivery.md",
+      "translation": "docs/zh-CN/recorded-delivery.md",
+      "sourceSha256": "d472ae197420113486022c447de2c4cf7b590070c36b2ab92498b733e5d1f3da",
+      "translationSha256": "580635edbc5b1c58fbbed15b607fa279707eeb30580a5d386854285c07b573f2"
     },
     {
       "source": "docs/en/validation.md",
       "translation": "docs/zh-CN/validation.md",
-      "sourceSha256": "645612e58e57ad24778504662a9b1842c82a00e2fe807d4e894088ff8e9bef8f",
-      "translationSha256": "da340d08e207beaf4805b04d5005b75ddd58ae8f8669b7e8bbfc48087bec97bd"
+      "sourceSha256": "6239f0053eb785cae0796947ad4d97dd47cedd69cfb9b5c9c576605f92f4d3fb",
+      "translationSha256": "c98e125332f86c9341a4867af7c5d3ea48e861241eb500f41c3e4e58aa1eaeaf"
     },
     {
       "source": "docs/en/walkthrough.md",
       "translation": "docs/zh-CN/walkthrough.md",
-      "sourceSha256": "f6d7cf289c6b8e987ecf9f813f57ee7352853a44dac2464608deabbc4d5c0095",
-      "translationSha256": "39b5ff13221421fe7330da96d7e128bbf4bfc152736ec9b8561d9b2e1a6ae7be"
+      "sourceSha256": "ded83737d6b26c78dbeb6c7a15ba0f4cf639748c549f10d48ab2d045b1e7fe27",
+      "translationSha256": "6a0181790b4db0f8a0cc367b6e082f676d627649236c492dff667b06cfb5fab8"
     },
     {
       "source": "docs/en/workspace.md",
       "translation": "docs/zh-CN/workspace.md",
-      "sourceSha256": "e0bd51e21ebfffb61366b680b4a805e9cbe27fac4ecbb9e3232966ff5b3a7ce8",
-      "translationSha256": "ccb959994555d9f5d05695f25cb54c151b0d6816d093d82b9bb23e6c46709d9f"
+      "sourceSha256": "02317c627d0bd9177da55fc2257ba1aeb00ba11ecb0a90c4c16874f090635142",
+      "translationSha256": "bf070d35d91aed034cbd84da8db01bdef63e4dd21143394b2708e42bef5ae888"
     },
     {
       "source": "examples/maven-reactor/README.md",
@@ -124,8 +142,8 @@
     {
       "source": "README.md",
       "translation": "README.zh-CN.md",
-      "sourceSha256": "42ecefb098e1ccde58bb10a1f5fd9bde55ede9044d808b6e3ee8a54796e2ab89",
-      "translationSha256": "299e75b5669b47f5f6ba71303fb86720db8a879e5e864af0aa6347ad0db7a2d8"
+      "sourceSha256": "7c5293b31eb96caa218a7ab71f97ad270e9130b892d1d321c2a42acb6d6be018",
+      "translationSha256": "980cb989c479b7355830b49086328e9f5206eb8dbe8fb4060f0d30f5ef79c522"
     },
     {
       "source": "SECURITY.md",

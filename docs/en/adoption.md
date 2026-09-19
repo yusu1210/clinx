@@ -65,9 +65,11 @@ See [evaluation](evaluation.md) for outcome measurement and collection boundarie
 
 ## Local Skill discovery
 
-`init --agent codex --apply` installs under `.agents/skills/clinx-delivery`.
-Generic mode uses `clinx/skills/clinx-delivery`; explicitly read its SKILL.md or follow
-the host's registration mechanism. Both include the license and a small
+Reuse the host/team-managed Skill if available; adding CLI records does not require
+another installation. For CLI-managed copies, `init --agent codex --apply` installs
+`clinx-delivery` and `clinx-knowledge` under `.agents/skills/`.
+Generic mode uses `clinx/skills/`; explicitly read the relevant SKILL.md or follow
+the host's registration mechanism. Both placements include licenses and a small
 `clinx/agent-entry.md` and local ownership state at `.clinx/install/state.json`.
 Omit `--apply` for an optional preview; differing existing files abort without overwrite.
 

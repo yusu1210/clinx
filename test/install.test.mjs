@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { cp, mkdtemp, readFile, readdir, symlink, unlink } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { root, cli, put, json } from './helpers.mjs';
 import { sha256 } from '../dist/files.js';
 
@@ -155,6 +155,10 @@ test('unmanaged, corrupt, escaping, duplicate and symlinked installation records
     '../outside',
     '.agents/skills/clinx-delivery/../outside',
     '.agents/skills/clinx-delivery/./SKILL.md',
+    '.agents/skills/clinx-knowledge/../outside',
+    '.agents/skills/clinx-knowledge-other/SKILL.md',
+    '.agents/skills/clinx-knowledge/',
+    'clinx/skills/clinx-knowledge/SKILL.md',
   ]) {
     await json(join(dir, record), { ...original, files: [{ ...original.files[0], path }] });
     assert.equal(cli(dir, 'skill', 'remove', '--apply').status, 3);
@@ -210,4 +214,36 @@ test('write failures roll back completed changes without discarding original bac
   assert.equal(await readFile(join(dir, skill), 'utf8'), 'Earlier packaged skill\n');
   assert.deepEqual(await readFile(join(dir, record)), original);
   assert.equal(cli(dir, 'skill', 'update', '--apply').status, 0);
+});
+
+test('same-version asset drift identifies the selected CLI without confusing local edits', async () => {
+  const old = await simulatedPriorPackage();
+  const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
+  await json(join(old, 'package.json'), manifest);
+  const dir = await fresh();
+  assert.equal(runOld(old, dir).status, 0);
+  const before = await readFile(join(dir, record));
+  const status = cli(dir, 'skill', 'status').out;
+  assert.equal(status.packageRoot, resolve(root));
+  assert.equal(status.sameVersionDifferentAssets, true);
+  assert.equal(status.files.find((f) => f.path === skill).local, 'unchanged');
+  const preview = cli(dir, 'skill', 'update').out;
+  assert.equal(preview.sameVersionDifferentAssets, true);
+  assert.ok(preview.warnings.length);
+  assert.deepEqual(await readFile(join(dir, record)), before);
+  const text = spawnSync(
+    process.execPath,
+    [join(root, 'bin/clinx.mjs'), 'skill', 'update', '--root', dir],
+    { encoding: 'utf8' },
+  );
+  assert.equal(text.status, 0);
+  assert.ok(text.stdout.includes(resolve(root)));
+  assert.match(text.stdout, /same version but different assets/);
+  assert.equal(cli(dir, 'skill', 'update', '--apply').status, 0);
+  assert.equal(cli(dir, 'skill', 'status').out.sameVersionDifferentAssets, false);
+  await put(join(dir, skill), 'Local customization');
+  const edited = cli(dir, 'skill', 'status').out;
+  assert.equal(edited.matchesPackage, false);
+  assert.equal(edited.sameVersionDifferentAssets, false);
+  assert.equal(edited.files.find((f) => f.path === skill).local, 'modified');
 });

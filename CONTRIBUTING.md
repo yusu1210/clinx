@@ -117,7 +117,7 @@ tests compare installed runtime dependencies with this lock. Do not add a compet
 `package-lock.json` or change the lock solely to bypass a failed installation.
 
 `npm run bundle` creates a new ignored `artifacts/clinx-VERSION/` directory with the
-CLI tarball, standalone Skill archive and checksums; it does not upload them. Use
+CLI tarball, separate delivery and knowledge Skill archives and checksums; it does not upload them. Use
 `npm run bundle -- --output NEW_DIRECTORY` for another candidate. Never overwrite a
 reviewed candidate. Test that exact tarball without repacking:
 

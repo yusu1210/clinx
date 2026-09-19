@@ -5,7 +5,23 @@
 Skill 指导 Agent 工作；需要可重复的本地记录、执行证据或工作区 Skill 管理时再使用 CLI。
 两者都不要求业务工程更换语言、包管理器、构建系统或部署工具。
 
-## 安装 CLI
+## 默认：接入 Skill 后直接提需求
+
+保留完整且已审阅的 `skills/clinx-delivery` 或 `skills/clinx-knowledge` 目录，包括引用与许可；
+放到宿主支持的位置，或让 Agent 明确读取它的绝对 `SKILL.md` 路径。
+`bundle` 为两份 Skill 分别生成独立包；两者都自包含，可单独安装。见[知识工作](knowledge.md)。
+仅阅读 Skill 不需要 Node。通过宿主安装的副本沿用宿主的安装与更新机制，不由 clinx 的安装记录管理。
+避免多个同名副本竞争。方法论本身不绑定宿主。
+
+团队或宿主已有可用副本时直接复用，不重复初始化。没有副本时，让 Agent 读取已审阅源码中完整 Skill 的绝对路径即可开始；不需要先构建源码或安装 Node。首次连接可这样说：
+
+> 读取 `<已审阅源码绝对路径>/skills/clinx-delivery/SKILL.md`，并按需读取其引用。需求在 `<PRD>`，工程在 `<路径>`。实现并验证；不推送、不部署。
+
+后续在 Skill 可用的会话里直接表达需求与变化的限制。已知工程从当前上下文定位，缺失时才补工程或知识入口，见[上下文复用](project-context.md)。宿主提供安装能力时，可让它将完整 Skill 接入受支持的位置；新增安装仍遵守授权。独立知识问题可使用知识 Skill，不必先学习四种意图。
+
+个人宿主安装由宿主管理；团队版本化副本由团队评审更新；CLI 管理的工作区副本才使用 `clinx skill update`。选择一个维护方式，避免同名副本竞争。
+
+## 按需安装 CLI
 
 当前版本是源码/本地包预览版，尚未发布 npm 包。在本仓库公布经过核实的注册表身份前，
 不要仅按 `clinx` 这个名字下载包。GitHub 源码压缩包不等于可安装 CLI 包：后者包含编译后的
@@ -36,7 +52,7 @@ clinx --version
 ```
 
 运行前审阅源码与脚本；需要可复现性时固定已审阅提交。`bundle` 构建后在全新候选目录生成
-CLI 包、独立 Skill 压缩包和 `SHA256SUMS`，拒绝覆盖已有候选。维护者分发前应完成
+CLI 包、分别独立的交付与知识 Skill 压缩包和 `SHA256SUMS`，拒绝覆盖已有候选。维护者分发前应完成
 [发布检查](../../CONTRIBUTING.zh-CN.md#发布准备)。校验和检测字节变化，不证明发布者身份。
 这些命令不会发布 npm 包或创建 GitHub Release。
 
@@ -54,19 +70,24 @@ npm install --prefix /path/to/tools --ignore-scripts --no-save /path/to/clinx-0.
 ## 接入工作区
 
 单工程使用已有检出目录，多工程选择一个协调目录。让 Agent 从该目录开始；不逐一初始化兄弟仓库。
-安装 CLI 后执行：
+宿主或团队已提供 Skill 时跳过这一步；需要 CLI 管理工作区副本时执行：
 
 ```sh
 cd /path/to/workspace
 clinx init --agent codex --apply
-clinx skill status
 ```
 
 去掉 `--apply` 可先查看只读计划，预览不是必须执行的第一步。
 `--root DIRECTORY` 明确选择其他目录；CLI 不自动选择父工作区或最近任务。
+默认文本汇总新增文件，突出变更与冲突；`--json` 保留每个文件的完整细节。
 
-Codex 模式写入 `.agents/skills/clinx-delivery`；通用模式 `--agent generic`（新安装时的默认值）
-写入 `clinx/skills/clinx-delivery`，明确读取 `SKILL.md` 或按宿主支持的方式注册。
+接入或交接状态不清楚时，`clinx status` 无需初始化即可返回只读本地汇总；
+`clinx status TASK-ID` 额外检查指定任务的已存续接状态。两者都不观察宿主发现或证明验收通过，
+退出零仍须阅读组件问题。详见 [CLI 参考](cli.md)。
+
+Codex 模式把 `clinx-delivery` 和 `clinx-knowledge` 都安装到 `.agents/skills/`；
+通用模式 `--agent generic`（新安装时的默认值）写入 `clinx/skills/`，明确读取所选 `SKILL.md`
+或按宿主支持的方式注册。受管状态、更新与移除覆盖两份 Skill。
 已有受管安装省略 `--agent` 时，沿用记录中的位置。
 两种模式都会生成 `clinx/agent-entry.md`，并把本地状态写入 `.clinx/install/state.json`。
 已存在且内容相同的文件仍记录为用户所有，不被安装器接管；不同内容会阻止安装。
@@ -96,16 +117,9 @@ Agent 应复用既有事实，在确有帮助时补齐记录。把 `.clinx/` 加
 安装记录是本地归属信息，不应提交，也不要修改其中的哈希来消除冲突。
 没有该状态的检出会把已有 Skill 文件视为用户所有，不会静默接管。
 
-## 不使用 CLI，单独使用 Skill
-
-保留完整且已审阅的 `skills/clinx-delivery` 目录，包括引用与许可；放到宿主支持的位置，
-或让 Agent 明确读取它的绝对 `SKILL.md` 路径。`bundle` 生成的独立 Skill 包包含同一目录。
-仅阅读 Skill 不需要 Node。通过宿主安装的副本沿用宿主的安装与更新机制，不由 clinx 的安装记录管理。
-避免多个同名副本竞争。方法论本身不绑定宿主。
-
 ## 开始需求或体验案例
 
-把 PRD、工程路径、交付终点与确认点填入[首次请求](cold-start.md)交给 Agent，不要求用户准备技术 JSON。
+把 PRD、已知上下文或缺失的工程位置、交付终点与确认点放入[首次请求](cold-start.md)交给 Agent，不要求用户准备技术 JSON。
 CLI 本身不调用模型，也不会独立完成 PRD。
 
 在任意目录体验完整案例，目标父目录须已存在：
@@ -136,6 +150,11 @@ clinx skill update --apply
 `skill update` 使用当前 CLI 内置资源，不联网。预览可选。未改动的受管文件可以更新，
 缺失的受管文件可以恢复，已废弃的受管文件可以移除。本地修改过的受管文件会阻止写入，
 除非其内容已与新版包完全一致。用户所有的文件保持原样，因此更新后仍可能有 `matchesPackage: false`。
+状态和更新结果中的 `packageRoot` 标明当前 CLI 的资源位置。
+`sameVersionDifferentAssets` 比较包内资源与安装记录的基线，与本地编辑分开判断。
+出现警告表示相同版本号对应不同内容，不能判断哪份更新。开发源码与已安装 CLI 并存时，
+更新前应显式选择本次要使用的 CLI。
+
 工程定制宜放在工程自有指南，不直接修改共享 Skill。必须保留修改时明确合并；没有 `--force`。
 
 移除未改动的受管文件：

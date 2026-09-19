@@ -2,7 +2,8 @@
 
 [中文](../zh-CN/walkthrough.md)
 
-This walkthrough uses an existing project and an [installed CLI](installation.md).
+This agent/maintainer reference uses an existing project and an [installed CLI](installation.md).
+It is not a sequence the user must execute for every requirement.
 Run from the selected workspace, or pass its explicit `--root` from elsewhere:
 
 ```sh
@@ -34,15 +35,15 @@ Read candidate origins and existing guides. This reads local files but does not
 execute commands, check readiness, create task directories or change the project.
 
 For a typo or a local low-risk fix, use the Skill and ordinary tools. No init or JSON
-contract is necessary. To install the workspace-local Skill:
+contract is necessary. Reuse an available Skill; only to install a workspace-local copy:
 
 ```sh
 clinx init --root /path/to/project --agent codex --apply
 ```
 
 Omit `--apply` if you want a read-only preview first. Read `clinx/agent-entry.md`;
-decide whether an entry belongs in existing host instructions. Add `.clinx/` and
-`.clinx/` to existing private-output ignore rules.
+decide whether an entry belongs in existing host instructions. Add `.clinx/`
+to existing private-output ignore rules.
 init installed the Skill and entry with a file-ownership record, not a configured
 project. The agent now prepares configuration if
 records are useful; it does not ask the user to fill a technical form. Configure
@@ -76,8 +77,6 @@ a referenced local file instead of copying its rules into several documents.
 
 ```sh
 clinx task add --root /path/to/project --file /path/to/proposal.json
-clinx validate TASK-ID --root /path/to/project
-clinx context TASK-ID --root /path/to/project --focus build
 ```
 
 The CLI validates and preserves this record. It does not decide whether the design
@@ -89,11 +88,13 @@ The agent uses the existing editor, terminal, browser and approved enterprise to
 clinx does not spawn a model or advance a stage on its behalf.
 
 ```sh
-clinx verify TASK-ID --root /path/to/project
 clinx verify TASK-ID --root /path/to/project --run
 ```
 
-Read the preview's argv, scripts and side effects first. The run response includes
+Run directly when the selected argv, scripts, inputs and side effects are already
+reviewed and authorized. If they are unfamiliar or materially changed, omit `--run`
+to preview them first; preview is not a mandatory second invocation for every run.
+The run response includes
 a receipt path and verdict. Inspect `verdict.checks` for the exact failed/unresolved
 check, reason and raw log paths. Repair the real cause within scope, not the result
 file. The required browser or remote integration may remain unverified even when
@@ -115,9 +116,19 @@ Prepare a note like the [checkpoint example](../../skills/clinx-delivery/referen
 
 ```sh
 clinx task checkpoint TASK-ID --root /path/to/project --file /path/to/note.json
-clinx task list --root /path/to/project
+```
+
+In a fresh session, restore the known task directly:
+
+```sh
 clinx context TASK-ID --root /path/to/project
 ```
+
+Use `clinx task list` only when the intended task is unknown; follow `nextAfter`
+with `--after` if another page is needed. If configuration or current sources are
+unavailable, `clinx task show TASK-ID` reads the saved agreement and handoff without
+claiming current applicability. Saving a checkpoint does not require immediately
+listing or restoring it.
 
 A fresh agent uses the task contract and note to find the next safe action, checks
 current source and any running process, and reads only relevant references. It must

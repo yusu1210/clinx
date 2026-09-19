@@ -1,7 +1,7 @@
 # Working on clinx
 
 clinx supports AI-native full-stack engineering through a portable methodology,
-an agent Skill, and an optional task/context/evidence CLI. The method and Skill work without the CLI. It is not an
+portable agent Skills, and an optional task/context/evidence CLI. The method and Skills work without the CLI. It is not an
 environment builder, agent runtime, sandbox, deployment platform, or proof that
 requirements are complete.
 
@@ -11,9 +11,13 @@ requirements are complete.
 - `src/install.ts` owns Skill file installation, ownership, upgrades and recovery.
 - `src/commands.ts` owns command help; `src/output.ts` owns text/JSON presentation and errors.
 - `src/resources.ts` locates packaged assets and copies original examples, never project scaffolds.
+- `src/status.ts` combines local setup and task diagnostics without inferring host discovery or acceptance.
 - `src/inspect.ts` owns bounded static command discovery, not runtime readiness.
 - `src/evidence.ts` owns local observation attachments, never claim promotion or remote truth.
 - `skills/clinx-delivery` owns portable agent procedures; disclose detail progressively.
+- `skills/clinx-knowledge` owns knowledge work and the shared knowledge/navigation references.
+  Edit its references, run `npm run skills:sync`, and keep both Skills self-contained.
+  The build rejects divergent delivery copies; do not maintain two rule sets.
 - `npm run check` runs type checks, tests, and repository hygiene checks.
 - Review changed English/Chinese guide pairs against actual behavior before updating
   `docs/translations.json`; a matching hash is not proof of translation accuracy.

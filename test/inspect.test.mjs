@@ -6,6 +6,27 @@ import { join } from 'node:path';
 import { cli, put, json, fixture } from './helpers.mjs';
 const empty = () => mkdtemp(join(tmpdir(), 'clinx-inspect-'));
 
+test('inspect offers bounded uninspected child hints without following links or reading child code', async () => {
+  const dir = await empty();
+  await json(join(dir, 'service/package.json'), { scripts: { test: 'do-not-read-or-run' } });
+  await put(join(dir, 'viewer/README.md'), 'do-not-read-child');
+  await put(join(dir, '.hidden/secret'), 'secret');
+  await put(join(dir, 'node_modules/dependency'), 'dependency');
+  await symlink('service', join(dir, 'linked'));
+  const result = cli(dir, 'inspect');
+  assert.deepEqual(result.out.locations, [
+    { path: 'service', inspected: false },
+    { path: 'viewer', inspected: false },
+  ]);
+  assert.deepEqual(result.out.candidates, []);
+  assert.equal(result.out.locationsTruncated, false);
+  assert.doesNotMatch(JSON.stringify(result.out), /do-not-read|secret|linked/);
+  for (let i = 0; i < 40; i++) await put(join(dir, `project-${i}/README.md`), 'entry');
+  const bounded = cli(dir, 'inspect');
+  assert.equal(bounded.out.locations.length, 32);
+  assert.equal(bounded.out.locationsTruncated, true);
+});
+
 test('inspect empty project without initialization or mutation', async () => {
   const dir = await empty();
   const r = cli(dir, 'inspect');

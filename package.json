@@ -1,7 +1,7 @@
 {
   "name": "clinx",
   "version": "0.2.0-dev.0",
-  "description": "AI-native full-stack engineering: a methodology, portable skill, and optional CLI for agent-led, verified software delivery.",
+  "description": "AI-native full-stack engineering: a methodology, portable skills, and optional CLI for agent-led, verified software delivery.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yusu1210/clinx.git"
@@ -36,6 +36,7 @@
     "dist/commands.js",
     "dist/output.js",
     "dist/resources.js",
+    "dist/status.js",
     "dist/evidence.js",
     "dist/files.js",
     "dist/inspect.js",
@@ -51,6 +52,7 @@
     "dist/commands.js.map",
     "dist/output.js.map",
     "dist/resources.js.map",
+    "dist/status.js.map",
     "dist/evidence.js.map",
     "dist/files.js.map",
     "dist/inspect.js.map",
@@ -80,7 +82,8 @@
     "CHANGELOG.zh-CN.md"
   ],
   "scripts": {
-    "build": "tsc && node scripts/schemas.mjs",
+    "build": "node scripts/sync-skills.mjs && tsc && node scripts/schemas.mjs",
+    "skills:sync": "node scripts/sync-skills.mjs --write",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test test/*.test.mjs",
     "test:coverage": "npm run build && node --test --experimental-test-coverage --test-coverage-include='dist/*.js' --test-coverage-include='bin/*.mjs' test/*.test.mjs",

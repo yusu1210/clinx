@@ -2,6 +2,36 @@
 
 [中文](../zh-CN/architecture.md)
 
+## System objective
+
+clinx exists to help an agent deliver the requested engineering outcome reliably within
+the user's authority and the project's real constraints. Completing a stage, writing a
+record, calling a particular tool or obtaining agreement between agents is not the
+outcome. Correct behavior, preserved obligations, recoverability and truthful claims are
+constraints; investigation, review, execution and maintenance cost are optimized only
+after those constraints are met.
+
+The system therefore joins four interfaces rather than imposing a second engineering
+platform:
+
+1. **Input:** the user request and decisions, current source and the project's normal
+   entrypoints. It identifies whether this run ends at a reviewable proposal, an
+   implementation, integration evidence, release readiness or an observed release.
+2. **Investigation:** the requested journey, existing readers and writers of changed
+   meaning, and the lifecycle of affected state and effects. Navigation tools produce
+   candidates; source, contracts and runtime observations establish meaning.
+3. **Decision:** consequential choices retain their basis, old and new treatment, a
+   rejecting observation and any unresolved boundary with the dependent action held.
+4. **Feedback:** implementation evidence or an independent source challenge returns a
+   counterexample to the same proposal or change. The affected decision is corrected and
+   rechecked; reusable learning returns to its existing owner.
+
+Portable Skills own this procedure. Projects own their source facts, commands, tool
+bindings and acceptance. The host owns conversation, goals, agent execution and enforced
+permissions. The optional CLI preserves bounded continuity and evidence without deciding
+semantic completeness. Evaluation compares observed outcomes and total cost under
+controlled conditions; it does not reward a prescribed transcript or tool count.
+
 ## Ownership
 
 ```text
@@ -18,7 +48,14 @@ Host agent + clinx-delivery Skill -----> existing code/browser/enterprise tools
                   `-- check execution -> observations -> applicability -> claim
 ```
 
-The Skill directs engineering attention. The CLI contains no model calls, provider
+The delivery Skill directs engineering attention. Independent knowledge work uses
+`clinx-knowledge`; delivery learning and knowledge work share the same ownership,
+retrieval and revalidation rules. Useful findings return to maintained tests, tools,
+decisions or guides, where the next task can find and recheck them. Code-intelligence
+indexes are optional, replaceable navigation aids, not authorities for intended behavior.
+See [knowledge work](knowledge.md).
+
+The CLI contains no model calls, provider
 SDK, conversational planner, environment installer or automatic phase progression.
 Enterprise adapters are project-owned command/procedure configurations, not plugins
 that must implement a universal corporate API.
@@ -36,6 +73,7 @@ The clinx source repository is not the workspace template for a user's applicati
 ```text
 clinx/
   skills/clinx-delivery/    portable instructions and progressively loaded references
+  skills/clinx-knowledge/   knowledge entry and canonical shared knowledge/navigation rules
   src/                     optional CLI implementation
   bin/                     executable entrypoint
   npm-shrinkwrap.json      one dependency lock for development and CLI distribution
@@ -58,8 +96,10 @@ clinx/
 inputs for an independent delivery exercise. Keep evaluators and solutions out of
 candidate task inputs. Neither directory contains production qualification results.
 Root README, contribution, security and changelog files remain standard repository
-entrypoints. The Skill's instructions are maintained in one place; host-specific display
-metadata does not change its method or require that host.
+entrypoints. Each Skill is self-contained. Shared knowledge references are maintained in
+`clinx-knowledge` and synchronized into delivery with `npm run skills:sync`; the build
+rejects divergent copies. Host-specific display metadata does not change the method or
+require that host.
 
 ## User workspace
 
@@ -69,24 +109,27 @@ It need not be a Git repository. Sources retain their own code, domain facts and
 procedures; a workspace map links those owners instead of copying their documentation.
 `workspace.ts` resolves sources and file references; `task.ts` owns task records and
 continuity; `install.ts` owns optional Skill file installation and lifecycle.
+`status.ts` composes read-only local diagnostics, isolating component failures without
+inferring host discovery, automatic task selection or acceptance. Only an explicitly
+selected task triggers continuity fingerprinting.
 `commands.ts` owns discoverable command help, `output.ts` presents one result as text
 or JSON, and `resources.ts` locates packaged assets and copies examples into new
 directories without executing them. None plans or schedules agents.
 
-| Artifact                              | Owner and meaning                                                                    |
-| ------------------------------------- | ------------------------------------------------------------------------------------ |
-| `.clinx/install/state.json`           | Local Skill placement, version, baseline hashes and ownership; not an attestation    |
-| `.clinx/install/backups/UUID/`        | Original files and installation state retained before managed replacement/removal    |
-| `clinx.config.json`                   | Workspace: explicit source roots/inputs, context routing, reviewed check definitions |
-| Existing maps and guides              | Maintained by their owners: source facts, navigation and operating procedures        |
-| Optional workspace map or guide       | Cross-source navigation and coordination procedures; links to existing owners        |
-| `clinx/tasks/ID/contract.json`        | Task: outcome, scope, invariants, decisions, authority, obligations                  |
-| Contract `context` references         | Task: local design content included in the contract binding                          |
-| `checkpoints/NNNNNNNN.json`           | Immutable handoff note with input digests; not a task-completion flag                |
-| `revisions/*.json`                    | Previous JSON contract and revision reason/digests; no code rollback                 |
-| `.clinx/runs/UUID/receipt.json`       | Local execution record; not signed or independently attested                         |
-| Sibling stdout/stderr/XML             | Bounded private evidence artifacts retained for inspection                           |
-| `.clinx/evidence/ID/UUID/record.json` | Observer assertion and copied artifacts, bound at capture time; never a verdict      |
+| Artifact                              | Owner and meaning                                                                      |
+| ------------------------------------- | -------------------------------------------------------------------------------------- |
+| `.clinx/install/state.json`           | Local Skill placement, version, baseline hashes and ownership; not an attestation      |
+| `.clinx/install/backups/UUID/`        | Original files and installation state retained before managed replacement/removal      |
+| `clinx.config.json`                   | Workspace: explicit source roots/inputs, context routing, reviewed check definitions   |
+| Existing maps and guides              | Maintained by their owners: source facts, navigation and operating procedures          |
+| Optional workspace map or guide       | Cross-source navigation and coordination procedures; links to existing owners          |
+| `clinx/tasks/ID/contract.json`        | Task: outcome, scope, invariants, decisions, authority, obligations                    |
+| Contract `context` references         | Task: local design content included in the contract binding                            |
+| `checkpoints/NNNNNNNN.json`           | Immutable handoff note with input digests; optional bounded-loop state; not completion |
+| `revisions/*.json`                    | Previous JSON contract and revision reason/digests; no code rollback                   |
+| `.clinx/runs/UUID/receipt.json`       | Local execution record; not signed or independently attested                           |
+| Sibling stdout/stderr/XML             | Bounded private evidence artifacts retained for inspection                             |
+| `.clinx/evidence/ID/UUID/record.json` | Observer assertion and copied artifacts, bound at capture time; never a verdict        |
 
 Delivery-record Zod definitions in `src/schema.ts` are the model source. `npm run build` generates
 JSON Schemas. CLI validation adds cross-reference, uniqueness and filesystem checks;
@@ -143,6 +186,11 @@ The receipt also binds its selected claim: changing `--claim` does not promote a
 narrow run into broader acceptance, even when some checks overlap.
 
 Tasks and raw runs are separate: a handoff can be useful without verified completion.
+For repeated improvement, the external Goal/orchestrator owns the loop budget,
+authority and continuation decision. A checkpoint's optional `loop` object records
+the iteration hypothesis, treatment, planned checks, observations, unknowns, next
+action and stop reason so a fresh agent can resume without replaying stale reasoning.
+clinx does not run an agent or silently advance this loop.
 Revision creates a new current contract and retains the old one. It does not delete
 old receipts or force all work back to stage zero. Current reconciliation determines
 whether a historical receipt still applies. No `mark-complete` or `force-pass` exists.
@@ -183,8 +231,10 @@ explicit checkpoint advances past its sequence and preserves the damaged file.
 Record access is separate from source-root resolution: unavailable roots leave
 current bindings unknown, while history remains readable. Retired source/check references
 also keep structurally valid contracts, handoffs and historical observations readable;
-revise the contract against current definitions before new work. Invalid workspace
-configuration or corrupt contract structure remains a command error. Operations that capture
+revise the contract against current definitions before new work. `task list` and
+`task show` do not require configuration. `evidence list` checks saved archives even
+without valid configuration or a readable current contract, leaving local binding unknown.
+Commands that need the current configuration or contract still reject invalid inputs. Operations that capture
 new bindings or execute checks require available inputs. See [recovery](cli.md#recovery).
 
 ## Result adapters

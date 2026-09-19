@@ -12,6 +12,7 @@ import { init, manageSkill } from './install.js';
 import { commands, commandHelp, renderHelp } from './commands.js';
 import { CliError, errorResult, renderError, renderResult } from './output.js';
 import { resources, exampleCatalog, copyExample } from './resources.js';
+import { status } from './status.js';
 
 export const help = renderHelp()!;
 
@@ -61,6 +62,8 @@ export async function main(argv: string[]): Promise<number> {
         receipt: { type: 'string' },
         record: { type: 'string' },
         to: { type: 'string' },
+        limit: { type: 'string' },
+        after: { type: 'string' },
         apply: { type: 'boolean' },
         run: { type: 'boolean' },
         'allow-external': { type: 'boolean' },
@@ -126,12 +129,33 @@ export async function main(argv: string[]): Promise<number> {
         'Unexpected positional arguments',
         `Usage: clinx ${definition.usage}`,
       );
-    if (values.root !== undefined && !values.root.trim())
+    for (const [option, value] of Object.entries(values))
+      if (typeof value === 'string' && !value.trim())
+        throw new CliError(
+          'USAGE',
+          `--${option} must not be blank`,
+          `Omit --${option} to use its default, or supply a valid value.`,
+        );
+    if (values.limit !== undefined && !/^(?:[1-9]|[1-9][0-9]|1[0-9]{2}|200)$/.test(values.limit))
       throw new CliError(
         'USAGE',
-        '--root must name a directory',
-        'Omit --root to use the invoking cwd.',
+        '--limit must be an integer from 1 to 200',
+        `Run clinx ${key} --help.`,
       );
+    if (
+      command === 'status' &&
+      sub !== undefined &&
+      (values.limit !== undefined || values.after !== undefined)
+    )
+      throw new CliError(
+        'USAGE',
+        'Pagination is not used with a selected status task',
+        'Omit --limit and --after when providing a task ID.',
+      );
+    const page = {
+      ...(values.limit === undefined ? {} : { limit: Number(values.limit) }),
+      ...(values.after === undefined ? {} : { after: values.after }),
+    };
     if (definition.options.includes('file')) required(values.file, '--file');
     if (key === 'task revise') required(values.reason, '--reason');
     if (['context', 'verify', 'reconcile'].includes(key)) required(sub, 'task ID');
@@ -146,7 +170,9 @@ export async function main(argv: string[]): Promise<number> {
       );
     let result: unknown;
     let exit = 0;
-    if (command === 'inspect') {
+    if (command === 'status') {
+      result = await status(root, sub, page);
+    } else if (command === 'inspect') {
       result = await inspect(root);
     } else if (command === 'init') {
       const agent = values.agent;
@@ -171,9 +197,11 @@ export async function main(argv: string[]): Promise<number> {
           ? exampleCatalog.map(({ path: _path, ...example }) => example)
           : await copyExample(required(extra, 'example name'), required(values.to, '--to'));
     } else if (key === 'task list') {
-      result = await listTasks(root);
+      result = await listTasks(root, page);
     } else if (key === 'task show') {
-      result = await showTask(root, required(extra, 'task ID'));
+      result = await showTask(root, required(extra, 'task ID'), page);
+    } else if (key === 'evidence list') {
+      result = await listEvidence(root, required(extra, 'task ID'), values.record);
     } else {
       const p = await openWorkspace(root);
       if (command === 'validate') {
@@ -192,14 +220,14 @@ export async function main(argv: string[]): Promise<number> {
         result = await context(
           p,
           required(sub, 'task ID'),
-          values.focus ? focusSchema.parse(values.focus) : undefined,
+          values.focus !== undefined ? focusSchema.parse(values.focus) : undefined,
         );
       } else if (command === 'evidence') {
-        const id = required(extra, 'task ID');
-        result =
-          sub === 'list'
-            ? await listEvidence(p, id, values.record)
-            : await addEvidence(p, id, await readInput(required(values.file, '--file')));
+        result = await addEvidence(
+          p,
+          required(extra, 'task ID'),
+          await readInput(required(values.file, '--file')),
+        );
       } else if (command === 'task') {
         const input = await readInput(required(values.file, '--file'));
         if (sub === 'add') result = await addTask(p, input);

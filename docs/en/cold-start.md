@@ -5,7 +5,8 @@
 For a copyable project, agent request, confirmation and CLI session, start with the
 [hands-on tutorial](hands-on.md). This guide adapts that workflow to your own inputs.
 
-Give the agent the requirement and repository URLs or local paths. The agent can
+Give the agent the requirement. Reuse the current project or known knowledge entry;
+supply repository URLs or local paths only when they cannot be resolved. The agent can
 discover the relevant code and tools; you do not need to prepare a project map,
 technical plan, task JSON, or platform IDs. It still needs access and authority
 for the actions the task requires.
@@ -16,23 +17,17 @@ First [connect the Skill](installation.md), or give the agent the absolute path 
 a complete reviewed Skill folder. No CLI configuration is needed to start.
 
 ```text
-Use the installed clinx-delivery Skill and its relevant references.
-Requirement: <description, file, or URL>
-Repositories: <URLs or local paths>
-Implement the requirement and verify actual behavior. Check current code, tests,
-owners and affected consumers before choosing what to change. Run the smallest
-complete path using the project's tools, diagnose failures and re-test.
-Discover the required project facts yourself; do not ask me to prepare maps or CLI
-configuration. Keep records only when they help verification or later work.
-Honor agreed confirmation points. Ask me about material decisions or access you
-cannot resolve from the project.
-Do not change global tools or credentials, write to shared systems, push or deploy
-without authorization. Report how to use and stop the result, what you observed,
-and what remains unverified.
+Use clinx for <requirement file or description> in the current product context.
+Confirm the key design with me, then implement and verify locally.
+Do not push or deploy. Show me how to use the result and any unverified gaps.
 ```
 
-Once the Skill is discoverable, later requests need only the requirement,
-repositories, and relevant constraints. The agent follows the
+The Skill already supplies the investigation, reuse, runtime verification and handoff
+instructions. Do not repeat them in every prompt. The design confirmation above is a
+choice for this task, not a mandatory gate for every change; state your actual boundaries.
+
+Once the Skill and context entry are discoverable, later requests need only new intent
+and relevant changed constraints. The agent follows the
 [cold-start procedure](../../skills/clinx-delivery/references/cold-start.md), reading other
 references only when needed. The CLI itself does not fetch PRDs, clone repositories,
 invoke a model or run this workflow.
@@ -42,6 +37,15 @@ investigate and prepare the decision, then wait before implementing. See
 [collaboration](collaboration.md) for other confirmation arrangements.
 
 ## What happens next
+
+Known-project reuse, new machines, multiple worktrees, knowledge outages, read-only
+sources and twelve everyday scenarios are covered in [context reuse](project-context.md).
+The agent resolves existing facts before asking; missing or materially ambiguous inputs
+still require a focused question.
+
+Repository names, check definitions, task IDs, configuration and receipt paths are
+agent-handled details, not required user inputs. Keep them inspectable. Product
+tradeoffs, unavailable credentials and held approvals cannot be hidden or fabricated.
 
 For consequential work, the agent can fill a concise [task brief](../../templates/workspace/clinx/task-brief.md)
 from discovered facts. A conversation or existing design is equally valid; this is

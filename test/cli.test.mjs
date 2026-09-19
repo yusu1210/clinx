@@ -70,6 +70,9 @@ test('default output is readable and JSON is explicit, including errors', async 
   assert.equal(human.status, 0, human.stderr);
   assert.match(human.stdout, /Workspace:/);
   assert.match(human.stdout, /PREVIEW — no files written/);
+  assert.match(human.stdout, /Files: \d+ create/);
+  assert.match(human.stdout, /clinx-delivery and clinx-knowledge/);
+  assert.doesNotMatch(human.stdout, /references\/delivery\.md/);
   const machine = run(dir, ['init', '--agent', 'codex', '--json']);
   assert.equal(JSON.parse(machine.stdout).applied, false);
   assert.deepEqual(await readdir(dir), []);
@@ -151,7 +154,16 @@ test('terminal control characters are escaped without altering machine data', as
   const human = run(dir, ['task', 'list']);
   assert.doesNotMatch(human.stdout, /\x1b/);
   assert.match(human.stdout, /\\u001b/);
-  assert.equal(JSON.parse(run(dir, ['task', 'list', '--json']).stdout)[0].title, 'title\x1b[2J');
+  assert.equal(
+    JSON.parse(run(dir, ['task', 'list', '--json']).stdout).tasks[0].title,
+    'title\x1b[2J',
+  );
+  const status = run(dir, ['status']);
+  assert.equal(status.status, 0, status.stderr);
+  assert.match(status.stdout, /acceptance not assessed/);
+  assert.doesNotMatch(status.stdout, /\x1b/);
+  assert.match(status.stdout, /\\u001b/);
+  assert.equal(JSON.parse(run(dir, ['status', '--json']).stdout).tasks[0].title, 'title\x1b[2J');
 });
 test('resources locate installed assets and roots never silently select a parent', async () => {
   const dir = await fixture();
@@ -160,7 +172,8 @@ test('resources locate installed assets and roots never silently select a parent
   assert.equal(result.status, 3);
   assert.match(result.stderr, /No clinx.config.json/);
   const resources = JSON.parse(run(dir, ['resources', '--json']).stdout);
-  assert.equal(resources.skill, join(root, 'skills/clinx-delivery'));
+  assert.equal(resources.skills.delivery, join(root, 'skills/clinx-delivery'));
+  assert.equal(resources.skills.knowledge, join(root, 'skills/clinx-knowledge'));
   assert.equal(run(join(dir, 'nested'), ['validate', '--root', '..']).status, 0);
 });
 

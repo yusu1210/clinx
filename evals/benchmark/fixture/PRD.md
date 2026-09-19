@@ -13,6 +13,9 @@ Required behavior:
   be able to switch tenant or region with query parameters.
 - Update the existing console client so it can request a tier.
 - Preserve compatibility for callers that do not use the new filter.
+- The policy project is a separately owned, read-only dependency for this task.
+  Reuse its current eligibility interface; do not change its source or tests.
+  Implement the feature in the API and console projects.
 - Use the current projects and their existing capabilities. Do not add persistence,
   another service, deployment automation, or unrelated analytics work.
 - Run the relevant existing tests and verify the real HTTP path.

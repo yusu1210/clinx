@@ -6,7 +6,25 @@ Use the Skill to guide the agent. Add the CLI when you want repeatable local rec
 verification receipts or workspace-local Skill management. Neither requires changing
 the business project's language, package manager, build system or deployment tools.
 
-## Install the CLI
+## Default: connect the Skill and give the task
+
+Keep the complete reviewed `skills/clinx-delivery` or `skills/clinx-knowledge` folder, including its references
+and license, in a host-supported location, or ask the agent to read its absolute
+`SKILL.md` path. Each standalone Skill archive from `bundle` has its corresponding folder.
+Both are self-contained and can be installed independently. See [knowledge work](knowledge.md).
+No Node runtime is needed merely to read the Skill. Follow the host's installation
+and update mechanism for such a copy; it is not managed by clinx's installation record.
+Avoid competing copies with the same name. The method itself remains host-independent.
+
+Reuse an available host/team copy instead of initializing again. Without one, ask the agent to read the absolute path of the complete Skill in a reviewed checkout; no source build or Node installation is needed. For the first connection:
+
+> Read `<absolute-reviewed-checkout>/skills/clinx-delivery/SKILL.md` and relevant references. Requirement: `<PRD>`. Projects: `<paths>`. Implement and verify; do not push or deploy.
+
+Once the Skill is available in the session, state the requirement and changed constraints normally. Resolve known projects through the current context; provide a project or knowledge anchor only when missing. See [context reuse](project-context.md). If the host provides installation, it can connect the complete Skill through its supported mechanism within authority. Independent knowledge questions can use the knowledge Skill without learning its four intents.
+
+Host installations follow host management; team-versioned copies follow team review; only CLI-managed workspace copies use `clinx skill update`. Choose one owner and avoid competing copies.
+
+## Add the CLI when needed
 
 The current version is a source/local-package preview, not an npm registry release.
 Do not use a package fetched only by the name `clinx` until this repository announces
@@ -42,7 +60,7 @@ clinx --version
 
 Review the checkout and scripts before running them; pin the reviewed revision for
 reproducibility. `bundle` builds and creates a new candidate directory with the CLI
-package, a standalone Skill archive and `SHA256SUMS`. It refuses to overwrite an
+package, separate delivery and knowledge Skill archives and `SHA256SUMS`. It refuses to overwrite an
 existing candidate. Maintainers should run the [release checks](../../CONTRIBUTING.md#release-readiness)
 before distributing it. Checksums detect changed bytes, not publisher authenticity.
 No command above publishes a package or creates a GitHub release.
@@ -64,21 +82,28 @@ use clinx. Source development remains separate: contributors can run
 
 Choose the existing checkout for a single project, or a coordination directory for
 several sources. Open the agent in that directory; do not initialize every sibling
-repository. After installing the CLI:
+repository. Skip this step when the Skill is already available through the host or
+team. For a CLI-managed workspace copy:
 
 ```sh
 cd /path/to/workspace
 clinx init --agent codex --apply
-clinx skill status
 ```
 
 Omit `--apply` to inspect a read-only plan first. It is optional, not a mandatory
 two-command confirmation protocol. `--root DIRECTORY` explicitly selects a different
-directory; no parent workspace or latest task is selected automatically.
+directory; no parent workspace or latest task is selected automatically. Human output
+summarizes additions and highlights changes/conflicts; `--json` retains every file detail.
 
-The Codex placement is `.agents/skills/clinx-delivery`. Generic placement
-(`--agent generic`, the default for a new installation) is `clinx/skills/clinx-delivery`; read its
-`SKILL.md` explicitly or register it through the host's supported mechanism.
+When setup or a handoff is unclear, `clinx status` gives a read-only local summary
+without initialization. Use `clinx status TASK-ID` for that task's saved continuity.
+Neither observes host discovery or certifies acceptance; component issues must still
+be read even when the command exits zero. See the [CLI reference](cli.md).
+
+Both `clinx-delivery` and `clinx-knowledge` are installed under `.agents/skills/` in
+Codex mode. Generic placement (`--agent generic`, the default for a new installation)
+is under `clinx/skills/`; read the selected `SKILL.md` explicitly or register it through
+the host's supported mechanism. Managed status, update and removal cover both Skills.
 Omitting `--agent` for an existing managed installation keeps its recorded placement.
 Both modes add `clinx/agent-entry.md` and local state at `.clinx/install/state.json`. Existing identical
 files are recorded as user-owned, not claimed by the installer. Conflicting files
@@ -115,18 +140,9 @@ ownership metadata; do not commit it or edit its hashes to make a conflict disap
 A checkout without that state treats existing Skill files as user-owned instead of
 silently adopting them.
 
-## Use the Skill without the CLI
-
-Keep the complete reviewed `skills/clinx-delivery` folder, including its references
-and license, in a host-supported location, or ask the agent to read its absolute
-`SKILL.md` path. The standalone Skill archive from `bundle` has this same folder.
-No Node runtime is needed merely to read the Skill. Follow the host's installation
-and update mechanism for such a copy; it is not managed by clinx's installation record.
-Avoid competing copies with the same name. The method itself remains host-independent.
-
 ## Start a requirement or try a case
 
-Give the agent the [first-task request](cold-start.md) with the PRD, source paths,
+Give the agent the [first-task request](cold-start.md) with the PRD, known context or missing source locations,
 desired endpoint and confirmation points. The user does not prepare technical JSON.
 The CLI does not invoke a model or complete a PRD on its own.
 
@@ -141,7 +157,7 @@ clinx init --agent codex --apply
 
 Then follow the [hands-on guide](hands-on.md). Copying only writes the public example
 to a previously absent directory; it does not execute it or install dependencies.
-`clinx resources` locates installed guides, schemas, templates and the Skill.
+`clinx resources` locates installed guides, schemas, templates and both Skills.
 Example copying preserves executable wrappers, skips known local installation/history,
 environment and generated-output paths, and rejects symlinks. It is bounded to 512
 entries and 32 MiB total (8 MiB per file). These filters are not a general secret scanner.
@@ -163,6 +179,12 @@ preview is optional. Unchanged managed files can be replaced, missing managed fi
 restored, and retired managed files removed. A locally modified managed file blocks
 the write unless it already exactly matches the new package. User-owned files remain
 untouched; `matchesPackage: false` can remain after an update because of such files.
+Status and update results report `packageRoot`, the selected CLI's asset location.
+`sameVersionDifferentAssets` compares packaged assets with the recorded installation
+baseline, independently of local edits. A warning means the same version label names
+different content; it does not identify which copy is newer. When using a development
+checkout alongside an installed CLI, select the intended CLI explicitly before updating.
+
 Keep project customizations in project-owned guidance rather than editing the shared
 Skill. When edits must remain, reconcile them deliberately; there is no `--force`.
 

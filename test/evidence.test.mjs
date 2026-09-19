@@ -93,6 +93,63 @@ test('an unreadable current input makes attachment applicability unknown', async
   assert.equal(r.out.records[0].integrity, 'intact');
 });
 
+test('saved attachments survive absent, invalid and symlinked current configuration', async () => {
+  const f = await setup();
+  const saved = add(f).out;
+  const configPath = join(f.dir, 'clinx.config.json');
+  const original = await readFile(configPath);
+  const outside = await fixture();
+  const secret = join(outside, 'private.json');
+  await put(secret, 'private-content-must-not-be-read');
+  await unlink(configPath);
+  const assertHistory = () => {
+    const result = list(f);
+    assert.equal(result.status, 0, result.err);
+    const entry = result.out.records[0];
+    assert.equal(entry.record.id, saved.record.id);
+    assert.equal(entry.integrity, 'intact');
+    assert.equal(entry.localBinding, 'unknown');
+    assert.equal(entry.remoteState, 'not-checked');
+    assert.match(entry.reasons.join(' '), /Cannot establish current local inputs/);
+    assert.doesNotMatch(JSON.stringify(result.out), /private-content-must-not-be-read/);
+    assert.equal(add(f).status, 3);
+    return result;
+  };
+  assertHistory();
+  assert.ok(!(await readdir(f.dir)).includes('clinx.config.json'));
+  await put(configPath, '{"secret":"private-content-must-not-be-read"');
+  assertHistory();
+  await json(configPath, { version: 1 });
+  assertHistory();
+  await unlink(configPath);
+  await symlink(secret, configPath);
+  assertHistory();
+  await unlink(configPath);
+  await put(configPath, original);
+  assert.equal(list(f).out.records[0].localBinding, 'matches');
+});
+
+test('missing or corrupt current contracts do not hide failed historical observations', async () => {
+  const f = await setup();
+  await json(f.file, { ...observation(), outcome: 'fail', summary: 'Receiver rejected the write' });
+  const saved = add(f).out;
+  const path = join(f.dir, 'clinx/tasks/change/contract.json');
+  await unlink(path);
+  for (const corrupt of [false, true]) {
+    if (corrupt) await put(path, '{broken');
+    const result = cli(f.dir, 'evidence', 'list', 'change', '--record', saved.record.id);
+    assert.equal(result.status, 0, result.err);
+    assert.equal(result.out.records[0].integrity, 'intact');
+    assert.equal(result.out.records[0].localBinding, 'unknown');
+    assert.equal(result.out.records[0].record.observation.outcome, 'fail');
+    assert.equal(add(f).status, 3);
+  }
+  assert.equal(await readFile(path, 'utf8'), '{broken');
+  const artifact = join(f.dir, dirname(saved.path), saved.record.artifacts[0].path);
+  await put(artifact, 'tampered');
+  assert.equal(list(f).out.records[0].integrity, 'invalid');
+});
+
 test('attachments reject unknown obligations, unsupported metadata and future observations', async () => {
   const f = await setup();
   for (const change of [
@@ -218,7 +275,7 @@ test('attachment APIs refresh a retained Workspace instead of trusting its old c
   const config = JSON.parse(await readFile(join(f.dir, 'clinx.config.json'), 'utf8'));
   config.checks[0].timeoutMs = 1000;
   await json(join(f.dir, 'clinx.config.json'), config);
-  assert.equal((await listEvidence(cached, 'change')).records[0].localBinding, 'changed');
+  assert.equal((await listEvidence(f.dir, 'change')).records[0].localBinding, 'changed');
   const second = await addEvidence(cached, 'change', observation());
   assert.notEqual(
     second.record.capturedInputs.definitionDigest,

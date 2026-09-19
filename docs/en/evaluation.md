@@ -51,7 +51,22 @@ explicit sibling inputs, interrupted execution, conflicting initialization and t
 revision continuity. CI definitions are supplied; a checked-in workflow is not proof
 that hosted CI has already run.
 
+The standard suite also checks benchmark preparation safety, a relocated CLI runtime,
+committed scope violations, confirmation-review binding, drift ownership, grader
+timeouts and missing-result accounting. These deterministic tests make no model calls.
+
 ## Agent evaluation protocol
+
+For wrong-knowledge safety, fresh-session retrieval and longitudinal drift, use the
+[knowledge exercise](../../evals/knowledge/README.md). It supplies raw inputs and
+review criteria across capture, retrieval, changed behavior, new consumers, unavailable
+source, configuration-only drift, resurfacing historical evidence and subsequent
+implementation, not an automatic semantic grade. Retired conclusions remain under review
+at later checkpoints; missing semantic review is unknown, not a pass. The preparation
+command advances into isolated copies with preserved guidance and evaluator snapshots.
+These are dependent checkpoints of one scenario, not independent samples. Separate knowledge effects from
+code-intelligence effects; keep native search and language tools available in graph
+comparison arms. A successful knowledge exercise is not a comparative delivery result.
 
 Use [evals/scenarios.json](../../evals/scenarios.json) with a fixed host/model, same input
 checkout, equivalent tools and an isolated working directory per run. Run each task
@@ -175,7 +190,58 @@ failures. A small pilot identifies failure modes, not statistical superiority.
 Check outcome quality before counting reduced tool calls as efficiency. A process
 that "saves time" by omitting the necessary final-consumer validation has not improved.
 
+### Separate repair from first-pass performance
+
+Define the evaluated unit before running it: an author's first draft or the complete
+delivery loop, including review and repair. If internal review is part of the method,
+permit and budget it consistently across comparison arms; a no-delegation draft trial
+does not measure that whole loop. Keep internal feedback separate from withheld final
+acceptance. Report first-draft and final outcomes separately, retaining all repair cost;
+feeding acceptance findings back to the author does not erase the original failure or
+make the repaired result a fresh unseen trial.
+
+Calibrate reviewers to the agreed endpoint before grading. A design-only task may
+identify external decisions and runtime checks that hold implementation or release;
+their acknowledged absence is not itself a new design defect. A missed reachable
+effect, contradictory rule or unsupported readiness claim is a defect. Require the
+finding's premise, source, counterexample, consequence and affected endpoint; reconcile
+disagreements instead of treating a severity label as evidence. Preserve original
+reports and record any adjudication separately. Repeated clean reviews support only
+their inspected scope, not completeness or independent task diversity.
+
+Freeze the complete treatment, including referenced Skill files, prompts and available
+tools, not only the Skill entrypoint. Keep a file manifest per revision. Compare input
+content as well as hashes when captures contain expiring URLs; removing URLs for a text
+comparison does not verify linked pages or images.
+
+A corrected proposal or targeted recheck measures recovery on an exposed case, not the
+revised Skill's first-pass success. Keep those runs separate from full fresh-session runs;
+charge the original investigation, review and repair to total cost. After tuning on a
+case, retain it as a regression and use held-out tasks for a generalization claim.
+Repeated sessions on the same PRD do not supply independent task diversity. An evaluator
+that already knows the answer must disclose that exposure, even in a new session.
+
+When both clinx and a graph may explain a result, use a matched 2×2 comparison:
+native, native + graph, clinx, clinx + graph. Keep native tools available throughout.
+Then compare the full Skill with a shorter version, or optional CLI availability with
+Skill alone, only where that factor addresses the observed failure. Predeclare the
+acceptance criteria, cost measure, unacceptable regressions and stopping rule; report
+uncertainty rather than choosing a winner from one successful run.
+
 ### Keep collection distinct from outcomes
+
+The [context exercises](../../evals/context/README.md) prepare seven path-free requests
+with known, moved, wrong, ambiguous or unavailable projects and read-only dependencies.
+Evaluate fresh-session selection and source use separately from fixture integrity;
+the preparation script does not run agents or establish effectiveness.
+
+Evaluate friction across first use, a second task in the same project, multi-project
+work, a small fix, a fresh-session handoff and unavailable tools/access. Record
+human-required actions separately from agent tool calls, repeated investigation,
+documents maintained and reruns. Moving a form from the user to the agent is not a
+cost reduction by itself. Check that optional setup is actually skipped, known facts
+are reused only when applicable, and reduced calls preserve independent acceptance.
+Do not claim measured savings from shorter instructions or deterministic CLI tests alone.
 
 Skill invocation counts, user reactions, AI-written code share and stage/gate progress
 can diagnose adoption or friction; none is an independent delivery-quality or efficiency

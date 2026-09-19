@@ -1,0 +1,4 @@
+interface:
+  display_name: 'clinx knowledge'
+  short_description: 'Build and maintain source-backed engineering knowledge'
+  default_prompt: 'Use $clinx-knowledge to investigate the requested engineering questions, reconcile existing guidance and retain useful knowledge with its owner.'

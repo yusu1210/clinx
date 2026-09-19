@@ -88,7 +88,7 @@ npm 发布明确获准前保留 `private: true`。
 依赖变更需审查版本和安全公告；包测试会核对安装后的运行时依赖与锁文件一致。
 不要另建竞争的 `package-lock.json`，也不要只为绕过安装失败而修改锁文件。
 
-`npm run bundle` 在新的、已忽略的 `artifacts/clinx-VERSION/` 目录生成 CLI 包、独立 Skill 包
+`npm run bundle` 在新的、已忽略的 `artifacts/clinx-VERSION/` 目录生成 CLI 包、分别独立的交付与知识 Skill 包
 和校验和，不上传。需要另一份候选时用 `npm run bundle -- --output NEW_DIRECTORY`，
 不覆盖已审阅候选。直接验收该 tarball，不重新打包：
 

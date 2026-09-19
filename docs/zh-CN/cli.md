@@ -5,40 +5,47 @@
 先[安装 CLI](installation.md)。`clinx --help` 列命令，`clinx task add --help`
 或 `clinx help task add` 查看该命令的输入与示例。默认输出可读文本，在终端和管道中保持一致；
 机器消费显式加 `--json`，帮助与版本也支持。错误写 stderr；JSON 错误含 `error`、`code`、
-`hint`，Schema 错误另含字段级 `issues`。未知或用错位置的选项报错。不交互提问，不使用 ANSI 颜色或遥测。
+`hint`，Schema 错误另含字段级 `issues`。未知、用错位置或显式空白的选项值报错；
+需要默认行为时省略该选项。不交互提问，不使用 ANSI 颜色或遥测。
 `--root` 选择已有目录，默认是调用 cwd，不向父目录自动查找。
 
-| 命令                                                            | 作用                                                |
-| --------------------------------------------------------------- | --------------------------------------------------- |
-| `resources`                                                     | 定位安装包内 Skill、模板、Schema、指南与案例，只读  |
-| `example list`                                                  | 列出公开案例与工具前提                              |
-| `example copy NAME --to DIRECTORY`                              | 只向新目录复制案例，不执行或安装依赖                |
-| `inspect`                                                       | 有界只读候选，不初始化、不执行                      |
-| `init [--agent generic\|codex]`                                 | 预览 Skill、许可与入口                              |
-| `init ... --apply`                                              | 安装 Skill、许可与入口，记录文件归属；冲突停止      |
-| `skill status`                                                  | 对照记录、本地与内置 Skill，不查注册表或宿主        |
-| `skill update [--apply]`                                        | 预览/更新受管文件，保留用户文件并备份替换内容       |
-| `skill remove [--apply]`                                        | 预览/移除未改动受管文件并备份，不删任务与非受管文件 |
-| `task add --file PATH`                                          | 验证并保存显式任务约定                              |
-| `task list`                                                     | 列出任务与最近检查点，不自动选任务                  |
-| `task revise ID --file PATH --reason TEXT`                      | 保留旧约定，应用完整替换                            |
-| `task checkpoint ID --file PATH`                                | 追加输入绑定的续接说明                              |
-| `evidence attach ID --file PATH`                                | 复制已审阅的本地观察附件，不批准验收                |
-| `evidence list ID [--record UUID]`                              | 检查附件字节及本地变化，不查询远端                  |
-| `context ID [--focus discover\|contract\|build\|verify\|learn]` | 返回约定、最近检查点、变化和相关索引                |
-| `validate [ID]`                                                 | 验证配置、源根及可选任务引用，不运行项目命令        |
-| `verify ID [--claim NAME]`                                      | 预览所需检查与外部条件                              |
-| `verify ID --run [--allow-external]`                            | 执行已审阅、已获授权的命令，保存本地记录            |
-| `reconcile ID --receipt PATH [--claim NAME]`                    | 对当前输入重核旧记录，不重新执行                    |
+| 命令                                                            | 作用                                                 |
+| --------------------------------------------------------------- | ---------------------------------------------------- |
+| `resources`                                                     | 定位安装包内 Skill、模板、Schema、指南与案例，只读   |
+| `status [ID]`                                                   | 汇总本地接入与任务；仅对明确任务检查续接状态，不执行 |
+| `example list`                                                  | 列出公开案例与工具前提                               |
+| `example copy NAME --to DIRECTORY`                              | 只向新目录复制案例，不执行或安装依赖                 |
+| `inspect`                                                       | 有界只读候选，不初始化、不执行                       |
+| `init [--agent generic\|codex]`                                 | 预览 Skill、许可与入口                               |
+| `init ... --apply`                                              | 安装 Skill、许可与入口，记录文件归属；冲突停止       |
+| `skill status`                                                  | 对照记录、本地与内置 Skill，不查注册表或宿主         |
+| `skill update [--apply]`                                        | 预览/更新受管文件，保留用户文件并备份替换内容        |
+| `skill remove [--apply]`                                        | 预览/移除未改动受管文件并备份，不删任务与非受管文件  |
+| `task add --file PATH`                                          | 验证并保存显式任务约定                               |
+| `task list [--limit N --after NAME]`                            | 分页列出精简任务摘要，不自动选任务                   |
+| `task show ID [--limit N --after NAME]`                         | 无需配置，读取已存约定、最近交接与一页修订历史       |
+| `task revise ID --file PATH --reason TEXT`                      | 保留旧约定，应用完整替换                             |
+| `task checkpoint ID --file PATH`                                | 追加输入绑定的续接说明                               |
+| `evidence attach ID --file PATH`                                | 复制已审阅的本地观察附件，不批准验收                 |
+| `evidence list ID [--record UUID]`                              | 检查附件字节及本地变化，不查询远端                   |
+| `context ID [--focus discover\|contract\|build\|verify\|learn]` | 返回约定、最近检查点、变化和相关索引                 |
+| `validate [ID]`                                                 | 验证配置、源根及可选任务引用，不运行项目命令         |
+| `verify ID [--claim NAME]`                                      | 预览所需检查与外部条件                               |
+| `verify ID --run [--allow-external]`                            | 执行已审阅、已获授权的命令，保存本地记录             |
+| `reconcile ID --receipt PATH [--claim NAME]`                    | 对当前输入重核旧记录，不重新执行                     |
 
 `--file` 相对调用 shell 的 cwd，可从项目外导入；`--file -` 读取完整管道 JSON，上限 8 MiB，
 拒绝交互式终端输入。`--to` 也相对调用 cwd，父目录须已存在；执行记录路径相对 `--root`。
 源根可使用绝对路径或相对 `--root` 的路径，包括显式兄弟工程；检查 cwd 限于该源，报告路径限于检查 cwd。
 不展开模板、glob 或 shell 插值。
-命令原样保留空字符串和空白参数，程序名必须非空白。argv 含 1–128 个字符串，
+配置中的检查 argv 原样保留空字符串和空白参数，程序名必须非空白。argv 含 1–128 个字符串，
 每项最多 16,384 字符，禁止 NUL。
+检查 ID 忽略大小写后仍须唯一，以适配区分和不区分大小写的文件系统；执行前即验证此约束。
 
 ## 输入与初始化
+
+`resources --json` 返回 `skills.delivery` 与 `skills.knowledge` 路径。
+初始化与受管更新/移除覆盖两份 Skill；任一完整目录均可独立使用。
 
 init 不生成配置、地图、指南或任务；按需使用[模板](../../templates/workspace)和 Skill。
 缺少配置不应阻碍普通研发。初始化不覆盖现有文件；Skill 更新按记录基线替换受管文件，
@@ -78,7 +85,29 @@ init 不生成配置、地图、指南或任务；按需使用[模板](../../tem
 代码出现后再声明相应输入；也可以先用普通交接。不为满足 Schema 创建占位源码、
 虚构检查或把生成的执行记录作为输入。
 
+## 无需初始化的本地状态
+
+`clinx status` 汇总 CLI 版本、受管 Skill、可选配置和一页任务摘要，不对源内容计算指纹，
+也不按最近时间猜测当前任务。`clinx status ID` 只读取指定任务并比较已存输入绑定，
+不读取其他任务历史；分页选项仅用于不指定 ID 的情况。
+缺失或损坏的组件尽可能独立报告。退出零表示返回快照，仍应查看 `issues` 及各任务的问题；
+配置有效不等于源可访问或工程就绪。
+配置 Schema 问题在 `issues[].fields` 中保留字段路径和原因，文本与 JSON 均可定位，
+不回显输入文档内容。
+文本输出列出 Skill 缺失、修改及与包不一致的文件。任务摘要显示已存交接状态；
+指定任务后还显示摘要与阻塞原因。这些是需要复核的历史说明，不是当前批准，
+也不证明当时的阻碍仍然存在。
+
+不运行初始化、安装、工程命令、审批检查或远端查询。未由 CLI 管理的 Skill 可能已经由
+宿主或团队提供，`hostDiscovery` 始终是 `not-observed`；即使输入一致，`acceptance`
+仍是 `not-assessed`。按需用于排障或续接，不要求每次任务前执行。
+
 ## 静态调查
+
+无配置时，`locations` 最多列出 32 个直接子目录线索，最多访问 256 个目录条目；
+导航提示略过点目录和常见生成目录，不跟随符号链接、不读取子目录内容。
+提示不是声明源，也不决定证据排除范围；`locationsTruncated` 标明枚举不完整。
+需要调查相关子目录时再显式选择其路径。
 
 `inspect` 在没有配置时读取选定根目录，有配置时读取显式源。
 返回文档/清单路径与哈希、命令候选、来源、审阅说明和解析/访问诊断。
@@ -182,10 +211,43 @@ SIGKILL、系统崩溃或恶意进程脱离会话不保证完整清理。
 旧检查已移除或旧方案路径已迁移，不阻止有效的新约定替换；新约定仍须引用当前检查
 和可读、未越界的文件，旧约定损坏或身份不符仍会拒绝。保留原 JSON，不重建旧引用字节；
 具体见[修订绑定](architecture.md#输入绑定与恢复)。CLI 不回滚代码。
-`task list` 读取约定定义与交接，不核验当前检查适用性；列出的任务可能需要修订后
+任务 ID 匹配 `^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$`，标识
+`clinx/tasks/<id>/contract.json`。标题可以使用用户的语言，不是唯一键。
+`task add` 拒绝已有约定，`task revise` 不允许更改 ID。
+仅修改标题也会改变任务摘要，使此前匹配的交接和证据绑定发生变化。
+推荐风格与可移植性限制见[任务命名](workspace.md#为检索与续接命名任务)，不要求迁移已有合法 ID。
+
+`task list` 返回 `{tasks, nextAfter}`，包含标题、模式、检查点序号/时间、焦点/状态和问题，
+不展开完整交接，也不核验当前检查适用性；列出的任务可能需要修订后
 才能验证、执行或采集新记录。
 查看每项 `issues`：损坏任务目录和符号链接单独报告，不隐藏健康任务；普通杂项文件不视为任务。
 列表退出零只表示枚举成功，不表示每条记录有效。
+只有任务文档的目录也可能没有 CLI 约定。缺失约定诊断保留这一事实，
+不推断它是从未创建还是后来丢失。可以通过工作区文档入口继续任务，
+或恢复原本应存在的约定；不要为消除诊断创建占位记录。
+CLI 不从 Markdown 文件推断任务标题、验收或完成状态。
+
+检查点可以包含用于有界改进 loop 的可选 `loop` 对象：`iteration`、可证伪的
+`hypothesis`、`mechanism`、`treatment`、`plannedChecks`、`observations`、
+`unknowns`、`nextAction` 和 `stopReason`。Goal 或其他外部编排器负责 loop 的预算、
+权限和是否继续；clinx 只把记录绑定到当前任务输入，并通过 `context`/`task show`
+暴露。它不会调用另一个 Agent，也不会偷偷重试 `needs-review` 门或创建第二套工作流。
+loop 字段仅为描述性元数据，不是强制执行的流程状态机。局部修复可以为 `fixed`，
+整体任务仍保持 active；外部新一轮 loop 可以重新编号。不可变检查点序号保留历史。
+普通的 `summary`、`next` 和 `blockers` 已可留存续接信息；结构化 loop 元数据可选，
+不证明交付改善，也不提供继续执行的权限。
+
+`task list` 和不指定任务的 `status` 默认每页 50 条，`--limit` 可取 1–200；
+256 KiB 内容预算可能使页面提前结束。把 `nextAfter` 传给 `--after NAME` 读取下一页，
+直到返回 null。原样传递游标；异常磁盘名称会编码，避免损坏条目使翻页无法继续。
+按 ID 字典序而非最近时间排列，顺序读取、限制内存中的名称数量；
+文件系统并发变化不构成一致性快照。已知任务不必先列举，直接 `context ID`；
+配置不可用时用 `task show ID`。
+
+`task show` 返回当前约定、完整的最近交接及一页修订历史。其 `--limit` 与 `--after`
+用于按文件名字典序翻页；默认 50 条、最多 200 条，修订内容预算为 256 KiB。
+损坏、不可读或超出预算的修订分别记入 `issues`，不隐藏健康记录；超大记录保留在磁盘，
+按报告路径直接查看。翻页与诊断不会修复、删除或批准历史。
 
 `task list` 不依赖配置或源根可用性。配置有效时，源根不可用不隐藏已有上下文、附件或回执：
 `context` 报告源错误，`evidence list` 将本地绑定标为未知，`reconcile` 返回未知适用性。
@@ -194,6 +256,9 @@ SIGKILL、系统崩溃或恶意进程脱离会话不保证完整清理。
 执行或采集新记录前须恢复访问。
 已移除的源或检查引用也不隐藏历史观察或交接，只将当前适用性保留为未知；
 新工作开始前，按当前配置修订约定。
+
+即使配置无效或当前约定不可读，`evidence list` 仍可检查已存附件的身份与完整性，
+并将本地绑定标为未知、说明原因。它不重建缺失约定，也不授予恢复操作的权限。
 
 最新检查点损坏、不可读或身份不符时，`context` 返回 `reconcile-required`，
 `changes` 中给出诊断且 `checkpoint: null`，不偷偷回退到更早记录。

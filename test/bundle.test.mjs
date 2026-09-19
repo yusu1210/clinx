@@ -30,7 +30,7 @@ test('release bundles preserve exact packaged Skill bytes and never overwrite a 
       const [hash, file] = line.split('  ');
       return { hash, file };
     });
-  assert.equal(files.length, 2);
+  assert.equal(files.length, 3);
   assert.deepEqual(
     (await readdir(destination)).sort(),
     [...files.map(({ file }) => file), 'SHA256SUMS'].sort(),
@@ -43,7 +43,6 @@ test('release bundles preserve exact packaged Skill bytes and never overwrite a 
       hash,
     );
   const cli = join(destination, files.find(({ file }) => file.endsWith('.tgz')).file);
-  const skill = join(destination, files.find(({ file }) => file.endsWith('.tar.gz')).file);
   const list = (archive) => {
     const result = run('tar', ['-tzf', archive]);
     assert.equal(result.status, 0, result.stderr);
@@ -53,18 +52,24 @@ test('release bundles preserve exact packaged Skill bytes and never overwrite a 
       .filter((path) => !path.endsWith('/'))
       .sort();
   };
-  const expected = list(cli)
-    .filter((path) => path.startsWith('package/skills/clinx-delivery/'))
-    .map((path) => path.slice('package/skills/'.length));
-  assert.deepEqual(list(skill), expected);
-  assert.ok(expected.includes('clinx-delivery/LICENSE'));
-  assert.ok(expected.includes('clinx-delivery/references/cli.md'));
-  for (const path of expected) {
-    const a = run('tar', ['-xOf', cli, 'package/skills/' + path]);
-    const b = run('tar', ['-xOf', skill, path]);
-    assert.equal(a.status, 0, a.stderr);
-    assert.equal(b.status, 0, b.stderr);
-    assert.equal(a.stdout, b.stdout, path);
+  for (const name of ['clinx-delivery', 'clinx-knowledge']) {
+    const skill = join(
+      destination,
+      files.find(({ file }) => file.startsWith(name + '-') && file.endsWith('.tar.gz')).file,
+    );
+    const expected = list(cli)
+      .filter((path) => path.startsWith(`package/skills/${name}/`))
+      .map((path) => path.slice('package/skills/'.length));
+    assert.deepEqual(list(skill), expected);
+    assert.ok(expected.includes(name + '/LICENSE'));
+    assert.ok(expected.includes(name + '/references/knowledge.md'));
+    for (const path of expected) {
+      const a = run('tar', ['-xOf', cli, 'package/skills/' + path]);
+      const b = run('tar', ['-xOf', skill, path]);
+      assert.equal(a.status, 0, a.stderr);
+      assert.equal(b.status, 0, b.stderr);
+      assert.equal(a.stdout, b.stdout, path);
+    }
   }
   const repeated = run(process.execPath, [script, '--output', destination]);
   assert.notEqual(repeated.status, 0);

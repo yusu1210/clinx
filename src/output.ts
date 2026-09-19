@@ -1,6 +1,7 @@
 import { ZodError } from 'zod';
 import type { init } from './install.js';
 import type { inspect } from './inspect.js';
+import type { status } from './status.js';
 
 export class CliError extends Error {
   constructor(
@@ -42,6 +43,70 @@ function lines(value: unknown, depth = 0): string[] {
 }
 
 export function renderResult(command: string, root: string, result: unknown): string {
+  if (command === 'status') {
+    const data = result as Awaited<ReturnType<typeof status>>;
+    const skills = data.skills;
+    const managed = skills && 'managed' in skills && skills.managed;
+    return [
+      'LOCAL STATUS — no checks executed; acceptance not assessed',
+      `Workspace: ${terminalText(data.root)}`,
+      `CLI: ${terminalText(data.version)}`,
+      `Skills: ${!skills ? 'could not inspect' : managed ? 'local installation recorded' : 'no local ownership record (host/team Skills may still be available)'}`,
+      ...(skills && 'matchesPackage' in skills
+        ? [
+            `Bundled Skill bytes match: ${skills.matchesPackage}`,
+            ...skills.warnings.map((warning) => `Warning: ${terminalText(warning)}`),
+            ...(skills.files ?? [])
+              .filter((file) => file.local !== 'unchanged' || !file.matchesPackage)
+              .map(
+                (file) =>
+                  `  ${file.local}: ${terminalText(file.path)}${file.owned ? '' : ' (user-owned)'}; package match: ${file.matchesPackage}`,
+              ),
+            ...(!skills.matchesPackage
+              ? ['Review clinx skill status before updating; preserve local customizations.']
+              : []),
+          ]
+        : []),
+      'Host Skill discovery: not observed by this CLI',
+      `Configuration: ${data.configuration.state} (not required for Skill use)`,
+      `${data.requestedTask ? 'Requested task records' : 'Saved tasks on this page'}: ${data.tasks.length}`,
+      ...(data.nextAfter
+        ? [
+            `More tasks: repeat status with --after ${terminalText(data.nextAfter)} (or use task list).`,
+          ]
+        : []),
+      ...data.tasks.flatMap((task) => [
+        `  ${terminalText(task.id)} — ${terminalText(task.title ?? '(no readable CLI contract)')}`,
+        ...(task.checkpoint
+          ? [`    saved handoff: ${task.checkpoint.state}; focus: ${task.checkpoint.focus}`]
+          : []),
+        ...task.issues.map((issue) => `    issue: ${terminalText(issue.error)}`),
+      ]),
+      ...(data.selected
+        ? [
+            `Selected task: ${terminalText(data.selected.task.id)}; continuity: ${data.selected.continuity}`,
+            ...data.selected.changes.map((change) => `  change: ${terminalText(change)}`),
+            ...(data.selected.checkpoint
+              ? [
+                  `Saved summary: ${terminalText(data.selected.checkpoint.note.summary)}`,
+                  ...data.selected.checkpoint.note.blockers.map(
+                    (blocker) => `  saved blocker (recheck): ${terminalText(blocker)}`,
+                  ),
+                  `Saved next action (recheck before acting): ${terminalText(data.selected.checkpoint.note.next)}`,
+                ]
+              : []),
+          ]
+        : []),
+      ...data.issues.map(
+        (issue) =>
+          `Issue (${terminalText(issue.component)}): ${terminalText(issue.message)}\n${(issue.fields ?? []).map((field) => `  ${terminalText(field.path)}: ${terminalText(field.message)}\n`).join('')}  ${terminalText(issue.hint)}`,
+      ),
+      '',
+      terminalText(data.next),
+      'Use --json for details. This snapshot does not certify source access, approvals or delivery.',
+      '',
+    ].join('\n');
+  }
   if (['init', 'skill update', 'skill remove'].includes(command)) {
     const data = result as Awaited<ReturnType<typeof init>>;
     const conflicts = data.files.filter((file) => file.status === 'conflict').length;
@@ -49,13 +114,27 @@ export function renderResult(command: string, root: string, result: unknown): st
       `${data.applied ? 'APPLIED' : 'PREVIEW — no files written'}: ${command}`,
       `Workspace: ${terminalText(data.root)}`,
       `CLI package: ${terminalText(data.origin.version)} | Recorded Skill version: ${terminalText(data.installedVersion ?? 'none')}`,
+      `Package root: ${terminalText(data.packageRoot)}`,
+      ...data.warnings.map((warning) => `Warning: ${terminalText(warning)}`),
       '',
-      ...data.files.map(
-        (file) =>
-          `  ${file.status.padEnd(10)} ${terminalText(file.path)}${file.owned ? '' : ' (user-owned)'}`,
-      ),
+      `Files: ${Object.entries(
+        data.files.reduce<Record<string, number>>((counts, file) => {
+          counts[file.status] = (counts[file.status] ?? 0) + 1;
+          return counts;
+        }, {}),
+      )
+        .map(([state, count]) => `${count} ${state}`)
+        .join(', ')}`,
+      `Skill folders: ${data.agent === 'codex' ? '.agents/skills/' : 'clinx/skills/'}clinx-delivery and clinx-knowledge; entry: clinx/agent-entry.md`,
+      ...data.files
+        .filter((file) => ['conflict', 'update', 'remove', 'missing'].includes(file.status))
+        .map(
+          (file) =>
+            `  ${file.status.padEnd(10)} ${terminalText(file.path)}${file.owned ? '' : ' (user-owned)'}`,
+        ),
       '',
       `Ownership record: ${data.installationRecord}`,
+      'Use --json for the complete per-file plan and ownership.',
       ...(data.backup ? [`Original files retained: ${terminalText(data.backup)}`] : []),
       ...(conflicts ? [`${conflicts} conflict(s) must be resolved before writing.`] : []),
       ...(!data.applied
@@ -84,6 +163,20 @@ export function renderResult(command: string, root: string, result: unknown): st
         `  ${terminalText(candidate.source)} / ${candidate.purpose}: argv ${terminalText(JSON.stringify(candidate.command))}`,
         `    cwd: ${terminalText(candidate.cwd)}; origin: ${terminalText(candidate.origin.path)} (${terminalText(candidate.origin.key)})`,
       ]),
+      ...(data.locations.length
+        ? [
+            'Nearby directories (not inspected; select only those relevant to the request):',
+            ...data.locations.map((item) => `  ${terminalText(item.path)}`),
+          ]
+        : []),
+      ...(data.locationsTruncated
+        ? ['Directory hints truncated; this is not a complete inventory.']
+        : []),
+      ...(!data.candidates.length
+        ? [
+            'No command candidates at the selected root(s). Continue with project guidance and relevant source directories; this does not mean no tools or tests exist.',
+          ]
+        : []),
       '',
       'Candidates are not verified, authorized or ready to run. Read definitions, hooks and targets first.',
       'Use --json for hashes, per-candidate review notes and full inspection limits.',

@@ -16,6 +16,13 @@ an exhaustive inventory or reuse an incompatible capability merely because it ex
 Inspect alternate paths that can violate this task's invariants, such as cached/direct
 reads or synchronous/background writes. An unchanged consumer may still need testing.
 
+When changing a shared predicate, data kind or producer contract, use
+[code-intelligence.md](code-intelligence.md) before declaring the impact understood.
+Enumerate callers/readers with a suitable available graph, language tool or bounded
+source search; then verify material semantics in source. Retain consumer, consequence
+and verification gap in the existing design. A reviewed main path or a known repository
+list does not establish coverage of alternate entries. Tool use itself is not coverage.
+
 For a genuinely new capability, establish the actors, allowed actions, observable
 effects, failure behavior and relevant quality constraints. Use the project's existing
 stack and constraints; an empty repository does not imply a new platform. Ask about
@@ -26,9 +33,24 @@ Keep a concise agreement: outcome, scope/non-goals, invariants and owners, accep
 observations, important decisions and authority. Freeze enough meaning to act, not
 every file and algorithm. Long reasoning can be referenced; do not duplicate a rule
 across requirement, plan, implementation notes and machine status.
+For consequential choices, use [design-review.md](design-review.md) to retain the
+reviewable design, distinguish its baseline from progress and check final conformance.
+For a multi-part requirement, retain concise, independently testable outcomes while
+investigating, including consumers outside the main execution path. Group routine
+changes without losing explicit behaviors or exceptions. Keep defaults distinct from
+bounds and unspecified values. Before confirmation, reconcile the proposed scope and
+verification with these outcomes and the original input; make omissions, deferred
+work and missing owners explicit. Reuse the task note rather than adding a template.
 When confirmation is required, resolve the named decision before its held action;
 use [collaboration.md](collaboration.md). Technical agreement does not authorize a
 different delivery endpoint or bypass project approval rules.
+
+For sustained improvement, let the host own execution and budgets. Keep the question
+under test, distinguishing evidence and next action in the existing task note.
+Continue useful authorized work; stop at the actual confirmation or access boundary.
+A repaired issue or saved note does not establish completion of the wider task.
+Recheck affected acceptance after changes. No additional loop schema or CLI setup is
+needed; see [continuity.md](continuity.md) for resumption.
 
 ## Resolve assumptions that can change the outcome
 

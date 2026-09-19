@@ -20,21 +20,28 @@ Skill 不是可执行程序；CLI 不调用模型、不会自己开发或部署�
 
 ## 1. 准备本地案例
 
-需要已有 Node.js 22.16+、macOS/Linux shell 和[已安装 CLI](installation.md)。
-案例没有第三方依赖，从安装包复制原始输入：
+先一次性[接入 Skill](installation.md)。在已审阅的 clinx 源码目录向 Agent 发送：
+
+```text
+把 evals/fixtures/noticeboard 复制到新的本地工作目录，不覆盖已有内容，告诉我绝对路径。
+使用这个源码目录中的 skills/clinx-delivery/SKILL.md。
+先检查原始 API 测试并启动原始应用让我体验，不要修改案例。结束时只停止你启动的进程。
+```
+
+Agent 负责准备副本和基线。运行这个案例需要 Node.js 22.16+，但没有第三方依赖；
+Skill 本身既不依赖 Node，也不依赖 CLI。如果使用[已安装 CLI](installation.md)
+而非源码，等价的复制命令是：
 
 ```sh
 clinx_demo=$(mktemp -d)
 clinx example copy noticeboard --to "$clinx_demo/noticeboard"
-clinx init --root "$clinx_demo/noticeboard" --agent codex --apply
 printf '%s\n' "$clinx_demo/noticeboard"
 ```
 
 记住打印的工作区绝对路径，让 Agent 从这里开始。只复制原始工程，不包含评测器或完成后的答案。
 临时目录用于隔离体验，不适合保存长期工作。你的真实需求应使用自己的受控工作目录。
 
-若只体验 Skill，可改为从已审阅源码把 `evals/fixtures/noticeboard` 复制到新目录，
-向 Agent 提供源码内 `skills/clinx-delivery/SKILL.md` 的绝对路径，无需构建 CLI 或运行评测器。
+复用已可用的 Skill；尚未接入时参考安装指南。后续添加任务记录不需要再次安装 Skill。
 
 ```text
 noticeboard/
@@ -48,11 +55,12 @@ noticeboard/
 API 与页面一致，`total` 和列表一致，保留顺序和既有接口，调用方不能伪造当前时间。
 不增加调度器、数据库、身份系统或部署平台。
 
-先体验改动前的系统：
+以下命令由 Agent 执行；想自行复现基线时再使用。将路径换成实际副本位置，不依赖之前的 shell 变量：
 
 ```sh
-npm --prefix "$clinx_demo/noticeboard/service" run test:api
-node "$clinx_demo/noticeboard/service/src/main.mjs"
+clinx_case=/absolute/path/to/noticeboard
+npm --prefix "$clinx_case/service" run test:api
+node "$clinx_case/service/src/main.mjs"
 ```
 
 打开终端打印的 URL。初始页面会显示 `Welcome` 和已经过期的 `An old event`，
@@ -122,126 +130,11 @@ Agent 应运行最终代码，并给出实际 URL、测试命令与结果。你�
 交付至少应能回答：改了哪些工程、复用了什么、怎么运行和停止、哪些原始要求有实际证据、
 哪些仍未验证。这不是要求另填一套表，而是让你能够接手结果。
 
-## 4. 为同一需求使用 CLI
+## 4. 后续任务与续接
 
-如果一次对话已经交付，跳过这节即可。长任务、多人交接、跨工程改动或需要检查记录时，
-让 Agent 准备并解释配置；下面提供可直接核对的完整起点。
+如果本次对话已交付，不必再补一套 CLI 记录。需要中断或交接时，让 Agent 保存足够的上下文；新会话中说“继续这个需求”，并提供工程位置即可。多个任务可能匹配时才确认是哪一个。
 
-沿用步骤 1 安装的 CLI 和同一个 shell 中的变量：
-
-```sh
-clinx inspect --root "$clinx_demo/noticeboard/service"
-clinx skill status --root "$clinx_demo/noticeboard"
-```
-
-`inspect` 只读候选命令，不执行。`skill status` 检查步骤 1 安装的文件，不判断工程就绪或宿主发现。
-前面仅使用 Skill、此时才加入 CLI 的用户，可用 `clinx init --agent codex --apply --root WORKSPACE` 接入。
-让 Agent 把 `.clinx/` 加入项目私密输出忽略规则。
-程序消费命令结果时显式加 `--json`。
-
-让 Agent 创建并审阅 `noticeboard/clinx.config.json`：
-
-```json
-{
-  "version": 1,
-  "name": "noticeboard",
-  "sources": [
-    { "id": "service", "path": "service", "inputs": ["src", "test", "package.json"] },
-    { "id": "viewer", "path": "viewer", "inputs": ["public"] }
-  ],
-  "checks": [
-    {
-      "id": "api-tests",
-      "source": "service",
-      "description": "Execute the reviewed HTTP test suite",
-      "command": ["node", "--test", "--test-reporter=junit", "test/api.test.mjs"],
-      "result": { "format": "junit", "from": "stdout", "minTests": 1 }
-    }
-  ]
-}
-```
-
-这里的 JUnit 是 Node 输出的通用测试报告格式，不是要求使用 Java。其他工程使用自己的测试工具；
-CLI 也支持只看退出状态的 `exit-code` 结果，但它不声称执行了测试。详见[结果格式](cli.md)。
-这个起点只防止零测试；调查真实测试名称后，可增加 `expectedTests` 和恰当的最小数量。
-CLI 不判断测试断言是否充分，不要把“测试命令通过”命名成“产品需求全部满足”。
-
-再让 Agent 创建案例根目录下的 `proposal.json`：
-
-```json
-{
-  "version": 1,
-  "id": "scheduled-notices",
-  "title": "Scheduled public notices",
-  "outcome": "The API and existing board show only notices visible at server time",
-  "mode": "implementation",
-  "scope": ["Service visibility rules, API tests and existing viewer integration"],
-  "authority": [
-    "Local implementation and verification after the requested design confirmation; no publication"
-  ],
-  "context": [{ "path": "PRD.md", "why": "Original acceptance requirements" }],
-  "defaultClaim": "local-checks",
-  "claims": ["local-checks", "local-product"],
-  "obligations": [
-    {
-      "id": "api-suite",
-      "description": "The selected HTTP test suite runs at least one passing test without failures",
-      "claims": ["local-checks", "local-product"],
-      "checks": ["api-tests"]
-    },
-    {
-      "id": "product-acceptance",
-      "description": "Review PRD coverage and observe the current browser journey",
-      "claims": ["local-product"],
-      "external": "Review actual assertions against the PRD and operate the final browser through normal, reload, empty, error and recovery states. Record observations and gaps."
-    }
-  ]
-}
-```
-
-`authority` 记录实际约定，不提供权限或伪造批准。把额外确认条件写进真实方案和约定，不能靠这个例子代替。
-审阅后运行：
-
-```sh
-clinx task add --root "$clinx_demo/noticeboard" --file "$clinx_demo/noticeboard/proposal.json"
-clinx validate scheduled-notices --root "$clinx_demo/noticeboard"
-clinx context scheduled-notices --root "$clinx_demo/noticeboard" --focus verify
-clinx verify scheduled-notices --root "$clinx_demo/noticeboard"
-clinx verify scheduled-notices --root "$clinx_demo/noticeboard" --run
-clinx verify scheduled-notices --root "$clinx_demo/noticeboard" --claim local-product --run
-```
-
-预览不执行检查；`--run` 才执行并保存 `.clinx/runs/` 下的回执与日志。
-成功的默认检查应支持 `local-checks`，但最后一条仍返回退出码 2：CLI 不能自动判定浏览器与 PRD 审阅项。
-这不是要求 Agent 停工，也不是说已经做过的浏览器观察无效；交付时分别报告原生观察和机器聚合结果。
-保留观察附件的方法见[证据附件](evidence.md)，附件不会变成人工审批或自动“绿灯”。
-
-## 5. 中断后怎么继续
-
-让 Agent 在需要交接时创建 `resume.json`，填写真实状态，例如：
-
-```json
-{
-  "focus": "verify",
-  "state": "handoff",
-  "summary": "API suite passed; browser verification is not yet performed. No owned service remains running.",
-  "next": "Start the service, operate the browser acceptance states, stop the owned process and report observations.",
-  "blockers": []
-}
-```
-
-仅在这些内容属实时保存；已完成浏览器验证就记录实际结果，不照抄未完成状态。
-
-```sh
-clinx task checkpoint scheduled-notices --root "$clinx_demo/noticeboard" --file "$clinx_demo/noticeboard/resume.json"
-clinx context scheduled-notices --root "$clinx_demo/noticeboard"
-```
-
-在新对话中给 Agent Skill 路径、案例目录与任务 ID，要求读取当前上下文，确认输入变化和授权后继续。
-若要核对旧检查，执行 `clinx reconcile scheduled-notices --root <案例目录> --receipt <实际回执路径>`。
-`--receipt` 原样粘贴 `verify` 返回的 `receipt` 路径；相对路径基于 `--root`，不是 shell 当前目录。
-旧回执能说明当时发生什么，但源码、需求或检查定义变了，就不能直接支持当前版本；
-Agent 应定位变化并重跑受影响验证，而不是自动重放发布等外部动作。
+需要可复查记录时，Agent 按[同一案例的记录与续接](recorded-delivery.md)准备配置、验收映射和检查点。用户不必手填 JSON、复制回执路径或逐条执行命令。运行与授权边界仍须实际核验。
 
 ## 换成你的需求
 
@@ -250,7 +143,8 @@ Agent 应定位变化并重跑受影响验证，而不是自动重放发布等�
 先确认角色、数据寿命和交付目标，再尽早跑通提交→服务校验→保存→刷新读回的切片。
 不要复制现成答案再称为从零开发。想先看成品体感，可单独运行[阅读清单示例](../../examples/reading-list/README.zh-CN.md)。
 
-**既有查询或批量操作需求**：把你的 PRD 和所有相关工程给 Agent，核对现有查询、展示与写入能力。
+**既有查询或批量操作需求**：把 PRD 给 Agent，复用已知工程上下文；无法定位时才补位置。
+见[上下文复用](project-context.md)。核对现有查询、展示与写入能力。
 重点由实际语义决定：过滤和总数归属、清空字段的真实编码、批量上限、响应丢失后的重试效果，
 都要追到接收方验证；不是把本教程的时间过滤硬套进去。可用[原始批量需求](../../evals/fixtures/bulk-reset/PRD.md)练习。
 

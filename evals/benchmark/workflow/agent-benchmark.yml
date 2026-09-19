@@ -12,11 +12,11 @@ on:
       repeats:
         description: Independent repeats per arm (1-5)
         required: true
-        default: "1"
+        default: '1'
       model:
         description: Codex model; empty uses the action default
         required: false
-        default: ""
+        default: ''
       effort:
         description: Reasoning effort
         required: true
@@ -75,7 +75,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
-          node-version: "22.16.0"
+          node-version: '22.16.0'
           cache: npm
       - run: npm ci
       - run: npm run build
@@ -119,7 +119,7 @@ jobs:
           prompt-file: benchmark-prompt.md
           model: ${{ inputs.model }}
           effort: ${{ inputs.effort }}
-          permission-profile: ":workspace"
+          permission-profile: ':workspace'
           safety-strategy: drop-sudo
       - name: Record end time, final message and runtime
         env:
@@ -192,7 +192,7 @@ jobs:
           prompt-file: benchmark-prompt.md
           model: ${{ inputs.model }}
           effort: ${{ inputs.effort }}
-          permission-profile: ":workspace"
+          permission-profile: ':workspace'
           safety-strategy: drop-sudo
       - name: Record phase-two end and final message
         if: matrix.scenario != 'campaign-cross-repo'
@@ -243,20 +243,34 @@ jobs:
         run: exit 1
 
   aggregate:
-    needs: grade
+    needs: [matrix, grade]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        continue-on-error: true
         with:
           pattern: result-*
           path: ${{ runner.temp }}/results
           merge-multiple: true
-      - run: node evals/benchmark/scripts/aggregate.mjs "$RUNNER_TEMP/results"
+      - name: Retain every planned run, including missing results
+        env:
+          MATRIX: ${{ needs.matrix.outputs.matrix }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { mkdir, writeFile } from 'node:fs/promises';
+          import { join } from 'node:path';
+          const directory = join(process.env.RUNNER_TEMP, 'results');
+          await mkdir(directory, { recursive: true });
+          await writeFile(join(directory, 'run-plan.json'), JSON.stringify(JSON.parse(process.env.MATRIX).include));
+          NODE
+          node evals/benchmark/scripts/aggregate.mjs "$RUNNER_TEMP/results"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: benchmark-summary
-          path: ${{ runner.temp }}/results/aggregate.json
+          path: |
+            ${{ runner.temp }}/results/aggregate.json
+            ${{ runner.temp }}/results/run-plan.json
           if-no-files-found: error
           retention-days: 30

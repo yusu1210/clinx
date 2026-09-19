@@ -4,25 +4,18 @@
     {
       "id": "campaign-cross-repo",
       "purpose": "Discovery / existing capability / rule ownership / unchanged consumer",
-      "turns": 1,
-      "hiddenChecks": 11
+      "turns": 1
     },
     {
       "id": "campaign-resume-drift",
       "purpose": "Fresh-agent continuation after relevant policy drift plus unrelated analytics drift",
-      "turns": 2,
-      "hiddenChecks": 11
+      "turns": 2
     },
     {
       "id": "campaign-confirmation",
       "purpose": "Design confirmation boundary, then implementation without release authority",
-      "turns": 2,
-      "hiddenChecks": 11
+      "turns": 2
     }
   ],
-  "arms": [
-    "baseline",
-    "skill",
-    "skill-cli"
-  ]
+  "arms": ["baseline", "skill", "skill-cli"]
 }

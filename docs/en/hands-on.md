@@ -24,13 +24,22 @@ the investigation actually requires, then review important boundaries.
 
 ## 1. Prepare the local project
 
-Use an existing Node.js 22.16+, a macOS/Linux shell and an [installed CLI](installation.md).
-The example has no third-party dependencies. Copy its raw inputs from the package:
+Connect the [Skill](installation.md) once. In a reviewed clinx checkout, ask the agent:
+
+```text
+Copy evals/fixtures/noticeboard into a new local working directory without overwriting
+anything. Tell me its absolute path. Use skills/clinx-delivery/SKILL.md from this
+checkout. Inspect the initial API tests and start the original app so I can see it.
+Do not change the example yet. Stop only the process you started when we finish.
+```
+
+The agent prepares the copy and baseline. Running this example needs Node.js 22.16+
+but no third-party dependencies; the Skill itself needs neither Node nor the CLI.
+If using an [installed CLI](installation.md) instead of a checkout, the equivalent copy is:
 
 ```sh
 clinx_demo=$(mktemp -d)
 clinx example copy noticeboard --to "$clinx_demo/noticeboard"
-clinx init --root "$clinx_demo/noticeboard" --agent codex --apply
 printf '%s\n' "$clinx_demo/noticeboard"
 ```
 
@@ -38,9 +47,8 @@ Keep the printed workspace path and open your agent there. This copies only the 
 projects, not the evaluator or a completed answer. The temporary directory isolates this exercise,
 not durable work. Use a controlled working directory for your real requirements.
 
-For Skill-only practice, instead copy `evals/fixtures/noticeboard` from a reviewed
-source checkout into a new directory and give the agent the absolute path of the
-checkout's `skills/clinx-delivery/SKILL.md`. No CLI build or evaluator is required.
+Reuse an already available Skill. If one is not available, follow the installation
+guide; adding task records later does not require installing the Skill again.
 
 ```text
 noticeboard/
@@ -55,11 +63,13 @@ unbounded, invalid dates and reversed windows hidden. API and page must agree; t
 must match items, retaining order and interfaces. Callers cannot spoof the clock.
 Do not add a scheduler, database, identity system or deployment platform.
 
-Experience the initial system:
+The agent runs these commands; use them yourself only if you want to repeat the baseline.
+Replace the path with the actual copy location (no previous shell variables required):
 
 ```sh
-npm --prefix "$clinx_demo/noticeboard/service" run test:api
-node "$clinx_demo/noticeboard/service/src/main.mjs"
+clinx_case=/absolute/path/to/noticeboard
+npm --prefix "$clinx_case/service" run test:api
+node "$clinx_case/service/src/main.mjs"
 ```
 
 Open the printed URL. The initial page shows `Welcome` and the expired `An old event`,
@@ -137,138 +147,11 @@ The handoff should make clear which projects changed, what was reused, how to ru
 stop, which original requirements have observations, and what remains unverified.
 This is usable handoff information, not another mandatory form.
 
-## 4. Use the CLI for this same task
+## 4. Continue or hand off
 
-Skip this section if a single conversation already delivered the work. For long tasks,
-handoffs, cross-project changes or retained check records, ask the agent to prepare and
-explain configuration. The following is a complete starting point you can inspect.
+If this conversation delivers the result, do not add CLI records afterward merely to complete a workflow. For interruption or handoff, have the agent retain enough context; in a fresh session say “continue this requirement” and provide the project location. Ask which task only when several could match.
 
-Use the same installed CLI and shell variables as step 1:
-
-```sh
-clinx inspect --root "$clinx_demo/noticeboard/service"
-clinx skill status --root "$clinx_demo/noticeboard"
-```
-
-`inspect` reads command candidates without executing them. `skill status` checks the
-files installed in step 1, not project readiness or host discovery. Skill-only users
-can connect with `clinx init --agent codex --apply --root WORKSPACE` if now adding the
-CLI. Let the agent add `.clinx/` to the project's private-output ignore rules. Use
-`--json` for structured command results.
-
-Ask the agent to create and review `noticeboard/clinx.config.json`:
-
-```json
-{
-  "version": 1,
-  "name": "noticeboard",
-  "sources": [
-    { "id": "service", "path": "service", "inputs": ["src", "test", "package.json"] },
-    { "id": "viewer", "path": "viewer", "inputs": ["public"] }
-  ],
-  "checks": [
-    {
-      "id": "api-tests",
-      "source": "service",
-      "description": "Execute the reviewed HTTP test suite",
-      "command": ["node", "--test", "--test-reporter=junit", "test/api.test.mjs"],
-      "result": { "format": "junit", "from": "stdout", "minTests": 1 }
-    }
-  ]
-}
-```
-
-JUnit here is an interchange report emitted by Node, not a Java requirement. Other
-projects use their own test tools. The CLI also supports `exit-code` results, which record
-exit status without claiming that tests ran; see [result formats](cli.md). This starting
-point only rejects zero tests. After inspecting actual test names, add `expectedTests`
-and an appropriate minimum. The CLI cannot judge assertion coverage: do not name
-“test command passed” as “all product requirements satisfied.”
-
-Then ask the agent to create `proposal.json` in the example root:
-
-```json
-{
-  "version": 1,
-  "id": "scheduled-notices",
-  "title": "Scheduled public notices",
-  "outcome": "The API and existing board show only notices visible at server time",
-  "mode": "implementation",
-  "scope": ["Service visibility rules, API tests and existing viewer integration"],
-  "authority": [
-    "Local implementation and verification after the requested design confirmation; no publication"
-  ],
-  "context": [{ "path": "PRD.md", "why": "Original acceptance requirements" }],
-  "defaultClaim": "local-checks",
-  "claims": ["local-checks", "local-product"],
-  "obligations": [
-    {
-      "id": "api-suite",
-      "description": "The selected HTTP test suite runs at least one passing test without failures",
-      "claims": ["local-checks", "local-product"],
-      "checks": ["api-tests"]
-    },
-    {
-      "id": "product-acceptance",
-      "description": "Review PRD coverage and observe the current browser journey",
-      "claims": ["local-product"],
-      "external": "Review actual assertions against the PRD and operate the final browser through normal, reload, empty, error and recovery states. Record observations and gaps."
-    }
-  ]
-}
-```
-
-`authority` records the actual agreement; it does not grant access or fabricate approval.
-Put additional confirmation conditions in the real proposal/agreement, not this example.
-After review:
-
-```sh
-clinx task add --root "$clinx_demo/noticeboard" --file "$clinx_demo/noticeboard/proposal.json"
-clinx validate scheduled-notices --root "$clinx_demo/noticeboard"
-clinx context scheduled-notices --root "$clinx_demo/noticeboard" --focus verify
-clinx verify scheduled-notices --root "$clinx_demo/noticeboard"
-clinx verify scheduled-notices --root "$clinx_demo/noticeboard" --run
-clinx verify scheduled-notices --root "$clinx_demo/noticeboard" --claim local-product --run
-```
-
-Preview does not execute checks; `--run` executes and saves receipts/logs under
-`.clinx/runs/`. A successful default check should support `local-checks`. The last
-command still returns exit 2 because the CLI cannot automatically decide the browser
-and PRD-review obligation. This does not tell the agent to stop or invalidate actual
-browser observations: report native observations and machine aggregation separately.
-See [evidence attachments](evidence.md) for retaining observations, which do not become
-approval or an automatic passing verdict.
-
-## 5. Resume after interruption
-
-At a useful handoff, ask the agent to create `resume.json` with actual status, for example:
-
-```json
-{
-  "focus": "verify",
-  "state": "handoff",
-  "summary": "API suite passed; browser verification is not yet performed. No owned service remains running.",
-  "next": "Start the service, operate the browser acceptance states, stop the owned process and report observations.",
-  "blockers": []
-}
-```
-
-Save this only if it is true. If browser verification is complete, record its results
-instead of copying an unfinished state.
-
-```sh
-clinx task checkpoint scheduled-notices --root "$clinx_demo/noticeboard" --file "$clinx_demo/noticeboard/resume.json"
-clinx context scheduled-notices --root "$clinx_demo/noticeboard"
-```
-
-In a new conversation, provide the Skill path, example directory and task ID. Ask the
-agent to read current context, check changed inputs and authority, then continue. To
-inspect an old check, use `clinx reconcile scheduled-notices --root <example-directory> --receipt <actual-receipt-path>`.
-Paste the `receipt` path returned by `verify` unchanged; a relative receipt path is
-resolved against `--root`, not your shell's current directory.
-An old receipt describes its historical run; changed code, requirements or definitions
-cannot be treated as currently supported. Diagnose changes and rerun affected checks,
-without automatically replaying publication or other external actions.
+When inspectable records help, the agent uses [records and resumption for this case](recorded-delivery.md) to prepare configuration, acceptance mappings and checkpoints. Users need not fill JSON, copy receipt paths or run each command. Execution and authority still need real verification.
 
 ## Apply this to your project
 
@@ -279,7 +162,8 @@ data lifetime and delivery endpoint, then run submission → server validation �
 refresh/read-back early. Do not copy a finished answer and call it greenfield development.
 To experience a completed product separately, run the [reading-list example](../../examples/reading-list/README.md).
 
-**Existing query or bulk-operation work:** provide your PRD and related projects,
+**Existing query or bulk-operation work:** provide your PRD and reuse known project context;
+add project locations only when they cannot be resolved. See [context reuse](project-context.md),
 then inspect existing query, presentation and write capabilities. Actual semantics
 determine the focus: ownership of filtering and counts, reset encoding, batch limits
 and lost-response retries must be checked at their receivers. Do not transplant this

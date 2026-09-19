@@ -4,6 +4,33 @@
 
 ## Unreleased
 
+- Longitudinal knowledge exercises preserve actual guidance across isolated checkpoints,
+  detect protected-input changes and cover new consumers, unavailable sources, configuration
+  drift, resurfacing history and later implementation. Knowledge rules separate support
+  from recheck scope, preserve canonical ownership and propagate corrections through retrieval.
+- Paginated task summaries and revision history, isolated damaged records, direct
+  selected-task status and field-level diagnostics. Blank options and case-colliding
+  check IDs fail before execution.
+- Text status exposes Skill drift and saved blockers. Attachment history remains
+  inspectable when current configuration or contracts are missing or invalid, without
+  implying current applicability or allowing new capture.
+- Benchmark controls use evaluator-owned source baselines, bounded grader processes,
+  explicit semantic review and planned-run accounting. Isolated CLI runtimes include
+  their locked production dependencies; preparation never removes existing output.
+- Shared project-context resolution: reuse known business/project identities, local
+  bindings and task scope; handle missing anchors, relocation and ambiguous copies.
+  Seven original context exercises prepare path-free requests for independent review.
+- Script entry detection resolves filesystem aliases so packaged exercises and checks
+  do not silently skip execution from symlinked paths.
+- Skill-first entry and a runnable tutorial separated from optional CLI record details;
+  agents reuse setup and prepare technical records only when useful.
+- Grouped command help, compact installation output and read-only `status [ID]` diagnostics;
+  bounded child-directory hints make unconfigured multi-project inspection actionable.
+- Independent engineering knowledge Skill with shared delivery rules for provenance,
+  retrieval, contradictions and correction; optional code-intelligence usage boundaries.
+- Both Skills install with ownership protection and ship as separate standalone archives.
+  A synthetic knowledge exercise separates capture, fresh-session retrieval and maintenance.
+
 - Installed-command onboarding, command-specific help, readable default output and
   explicit `--json` for automation; bounded piped JSON inputs and actionable errors.
 - Recorded Skill ownership with safe updates, recoverable removal and conflict protection.

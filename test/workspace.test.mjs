@@ -66,7 +66,7 @@ test('unavailable source roots preserve history while current execution remains 
   await put(join(dir, 'clinx.config.json'), '{');
   const tasks = cli(dir, 'task', 'list');
   assert.equal(tasks.status, 0, tasks.err);
-  assert.equal(tasks.out[0].id, 'change');
+  assert.equal(tasks.out.tasks[0].id, 'change');
   assert.equal(cli(join(dir, 'missing-project'), 'task', 'list').status, 3);
 });
 
@@ -169,7 +169,7 @@ test('task addition is validated, not an overwrite', async () => {
   t.id = 'second';
   await json(input, t);
   assert.equal(cli(dir, 'task', 'add', '--file', input).status, 0);
-  assert.equal(cli(dir, 'task', 'list').out.length, 2);
+  assert.equal(cli(dir, 'task', 'list').out.tasks.length, 2);
 });
 test('task addition freezes the current source set when sources are omitted', async () => {
   const dir = await fixture();
@@ -305,7 +305,7 @@ test('obsolete check references remain discoverable and can be revised against c
   assert.equal(cli(dir, 'validate', 'change').status, 3);
   const listed = cli(dir, 'task', 'list');
   assert.equal(listed.status, 0, listed.err);
-  assert.equal(listed.out[0].id, 'change');
+  assert.equal(listed.out.tasks[0].id, 'change');
   const next = contract();
   next.obligations[0].checks = ['replacement'];
   const file = join(dir, 'proposal.json');
@@ -429,12 +429,12 @@ test('a damaged checkpoint is visible without blocking discovery or an explicit 
   const listing = cli(dir, 'task', 'list');
   assert.equal(listing.status, 0, listing.err);
   assert.deepEqual(
-    listing.out.map((t) => t.id),
+    listing.out.tasks.map((t) => t.id),
     ['broken', 'change', 'healthy', 'link'],
   );
-  assert.equal(listing.out.find((t) => t.id === 'healthy').issues.length, 0);
+  assert.equal(listing.out.tasks.find((t) => t.id === 'healthy').issues.length, 0);
   for (const id of ['broken', 'change', 'link'])
-    assert.equal(listing.out.find((t) => t.id === id).issues.length, 1);
+    assert.equal(listing.out.tasks.find((t) => t.id === id).issues.length, 1);
   const context = cli(dir, 'context', 'change');
   assert.equal(context.status, 0, context.err);
   assert.equal(context.out.continuity, 'reconcile-required');

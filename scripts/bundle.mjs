@@ -41,15 +41,18 @@ for (const file of pack.files) {
     throw new Error(
       'Source changed while bundling: ' + file.path + '; prepare a new candidate after inspection',
     );
-  if (file.path.startsWith('skills/clinx-delivery/')) {
+  if (/^skills\/clinx-(delivery|knowledge)\//.test(file.path)) {
     const path = join(stage, file.path.slice('skills/'.length));
     await mkdir(dirname(path), { recursive: true, mode: 0o700 });
     await writeFile(path, content, { flag: 'wx', mode: 0o600 });
   }
 }
-const skillArchive = `clinx-delivery-${manifest.version}.tar.gz`;
-run('tar', ['-czf', join(destination, skillArchive), '-C', stage, 'clinx-delivery']);
-const files = [pack.filename, skillArchive];
+const files = [pack.filename];
+for (const name of ['clinx-delivery', 'clinx-knowledge']) {
+  const archive = `${name}-${manifest.version}.tar.gz`;
+  run('tar', ['-czf', join(destination, archive), '-C', stage, name]);
+  files.push(archive);
+}
 const checksums = await Promise.all(
   files.map(
     async (file) =>

@@ -4,6 +4,10 @@ The general capability is finding and preserving useful engineering facts, not
 requiring every project to adopt the same files. Separate domain rules from platform
 procedures: a rule can apply through multiple tools; a tool serves many domains.
 
+Use [project-context.md](project-context.md) to reuse business-to-project navigation,
+resolve local checkouts and choose current task scope. A known context should remove
+repeated input, not create a second project registry or permanent permission claim.
+
 ## Choose a coordination location, not a repository scaffold
 
 Use the existing checkout for one repository. For a cross-repository task, choose a
@@ -47,30 +51,16 @@ Missing necessary meaning, access or authority still blocks the dependent action
 
 ## Keep knowledge where the next task can use it
 
-Reuse an existing map or guide first. When one is missing and recurring discovery
-is costly, create a compact source-backed artifact after investigating the current
-task. The packaged project templates are optional drafting aids, not prerequisites.
+Follow [knowledge.md](knowledge.md) for investigation, canonical homes, provenance,
+retrieval and correction. Reuse existing maps and guides; optional project templates
+are drafting aids, not prerequisites. Preserve discoveries that materially help the
+next task: a compatible capability and its limits, an easy-to-miss registration path,
+or a verified build/test procedure. No useful new learning means no new artifact.
+Do not remove a useful capability merely to reduce file count.
 
-| Knowledge                        | Canonical home                                      | Useful content                                                                       |
-| -------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| System navigation                | Existing map, or a new small map                    | Relevant capabilities, entries, rule/state owners, consumers, tests and source links |
-| Repeatable execution             | Existing tool Skill/guide, or a focused local guide | Command/cwd, setup, identity/target, effects, result interpretation and recovery     |
-| Business invariant               | Its current owner and regression tests              | Meaning and cases that can violate it                                                |
-| Task decisions and operation IDs | Task contract/handoff                               | Scope, choices, observations, blockers and next action                               |
-
-Do not copy code into a parallel knowledge database. Refresh facts when relevant
-source or procedures change. A map is navigation, not proof of current behavior.
-Distinguish observed implementation from authoritative intended behavior; resolve
-material conflicts with the relevant owner instead of automatically preferring either.
-A documented command is not proof that it ran. No useful new knowledge means no new
-document is necessary. Conversely, a useful general capability is not removed merely
-to reduce file count.
-
-Preserve discoveries that materially shorten the next task: a compatible capability
-and its limits, an easy-to-miss registration path, or a verified build/test procedure.
-Include source/revision or last observation and what change would require rechecking.
-Keep unconfirmed assumptions separate. Prefer a small correction to an existing owner
-over leaving reusable facts only in a long task log or creating a duplicate manual.
+When structural or semantic navigation would help, use
+[code-intelligence.md](code-intelligence.md) to select and interpret existing tools.
+Neither a generated map nor an index establishes current behavior or intended rules.
 
 ## Resolve shared guidance before composing it
 
