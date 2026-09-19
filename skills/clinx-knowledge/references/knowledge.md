@@ -42,6 +42,15 @@ or store one machine's directory as a portable team fact.
 | Capability, entry, consumer and ownership navigation   | Existing small system map                    |
 | Task-only choice, operation ID or temporary workaround | Task record                                  |
 
+Before adding a recurring prose reminder, consider an existing test, type, contract,
+linter or tool when it can enforce the owner's stable rule faithfully at lower total
+cost. Check that it rejects a relevant violation and accepts supported behavior; account
+for maintenance and false alarms. A completion-time check cannot prevent an irreversible
+effect that already occurred: preventive enforcement belongs before that effect at its
+owner. Keep rationale, navigation, volatile policy and qualified observations in their
+appropriate form. These are alternative homes, not a ladder; automation creates neither
+business authority nor permission to add a new control.
+
 Keep source-local knowledge with its existing owner. A workspace map should link
 cross-source ownership and contracts, not duplicate repository internals. For read-only
 sources, retain revision-qualified observations or proposed corrections at an authorized

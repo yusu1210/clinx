@@ -1,6 +1,6 @@
 # Reading list: a runnable full-stack slice
 
-[中文](README.zh-CN.md)
+[简体中文](README.zh-CN.md)
 
 A local example: a reader recommends a book, a librarian
 marks it read, and the saved state survives a server restart. It contains a browser

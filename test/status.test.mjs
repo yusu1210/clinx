@@ -135,3 +135,31 @@ test('text status exposes local Skill changes and saved blockers without treatin
   assert.equal(cli(dir, 'status', 'change').out.selected.continuity, 'inputs-match');
   assert.ok(!(await readdir(join(dir, '.clinx'))).includes('runs'));
 });
+
+test('text status exposes failed observer assertions safely without deciding acceptance', async () => {
+  const dir = await fixture();
+  await put(join(dir, 'trace.txt'), 'synthetic failure');
+  await json(join(dir, 'observation.json'), {
+    obligations: ['behavior'],
+    observedAt: '2026-01-01T00:00:00.000Z',
+    observer: 'fixture',
+    method: 'tool',
+    target: { identity: 'local', revision: 'fixture' },
+    outcome: 'fail',
+    summary: 'Consumer failed\u001b[2J',
+    artifacts: [{ path: 'trace.txt', description: 'fixture' }],
+  });
+  assert.equal(
+    cli(dir, 'evidence', 'attach', 'change', '--file', join(dir, 'observation.json')).status,
+    0,
+  );
+  const result = spawnSync(process.execPath, [bin, '--root', dir, 'status', 'change'], {
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /observer fail/);
+  assert.match(result.stdout, /Consumer failed\\u001b/);
+  assert.doesNotMatch(result.stdout, /\u001b/);
+  assert.match(result.stdout, /artifacts and applicability not checked/);
+  assert.match(result.stdout, /acceptance not assessed/);
+});

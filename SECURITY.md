@@ -1,6 +1,6 @@
 # Security model
 
-[中文](SECURITY.zh-CN.md)
+[简体中文](SECURITY.zh-CN.md)
 
 clinx is a local methodology-support tool, **not a sandbox or an attestation system**.
 Review a repository, its config, scripts and Skill instructions before executing them.

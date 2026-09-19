@@ -11,6 +11,9 @@ For a relevant procedure, record:
   which built outputs they reuse and how to establish those outputs are applicable.
 - Actual target and effects, authorization, and how to observe the result.
 - Completion, failure and unknown states; logs/artifacts and safe recovery.
+- For a required tool, the owning rule, applicable scope, permitted fallback and
+  what remains unmet when unavailable. For navigation indexes, covered sources,
+  verified query, freshness/update limits and unsupported edges.
 - A concrete consumer observation, correlation/operation identity, and stop condition;
   distinguish stopping new work from recovering in-flight or completed effects.
 - For a running process, start, observe and stop instructions with ownership.

@@ -2,7 +2,10 @@
 
 [English](../en/cli.md)
 
-先[安装 CLI](installation.md)。`clinx --help` 列命令，`clinx task add --help`
+本篇定义命令输入、输出、限制和恢复行为。需要按步骤操作时阅读 [CLI 操作流程](walkthrough.md)；
+安装及 Skill 文件管理见[接入指南](installation.md)。
+
+`clinx --help` 列命令，`clinx task add --help`
 或 `clinx help task add` 查看该命令的输入与示例。默认输出可读文本，在终端和管道中保持一致；
 机器消费显式加 `--json`，帮助与版本也支持。错误写 stderr；JSON 错误含 `error`、`code`、
 `hint`，Schema 错误另含字段级 `issues`。未知、用错位置或显式空白的选项值报错；
@@ -155,6 +158,10 @@ init 不生成配置、地图、指南或任务；按需使用[模板](../../tem
 方法不要求 JUnit 或任何测试框架。CLI 目前只解释退出状态和严格子集的 JUnit XML；
 跨语言执行不等于支持所有原生报告格式。
 
+```json
+{ "format": "exit-code" }
+```
+
 `{ "format": "exit-code" }` 适用于退出状态能表达实际断言的已审阅命令，
 例如编译器、Schema 校验或原生测试。它保存 stdout/stderr，但不解析用例数、跳过状态、
 原生 JSON/TAP 或设备结果。需通过原工具确认选择与失败语义：任务已受理、零用例、
@@ -218,8 +225,10 @@ SIGKILL、系统崩溃或恶意进程脱离会话不保证完整清理。
 不能把它改名为正式回执或据此推断成功，应保留未知结果供诊断。
 写入与读取采用相同的每文件 8 MiB 限额；多文件运行不是事务。
 
-`.clinx/write.lock` 保存 PID 与时间。崩溃后确认该进程身份及没有其他写者，
-才能手动移除那一个锁；不自动抢锁，PID 存在不证明身份。不同工作区根不是共享锁域。
+`.clinx/write.lock` 保存 PID、时间和唯一随机标识。释放前，clinx 核对文件身份及字节；
+若其他进程或用户替换了该路径，则保留当前锁并报告清理未完成。崩溃后确认该进程身份及
+没有其他写者，才能手动移除那一个锁；不自动抢锁，PID 存在不证明身份。
+不同工作区根不是共享锁域。
 
 `context` 返回 `no-checkpoint`、`inputs-match` 或 `reconcile-required`，
 不重放、不选任务、不检查远端或进程存活。修订要提供完整约定和原因。

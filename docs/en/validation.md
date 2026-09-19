@@ -1,6 +1,6 @@
 # Reproduce verification
 
-[中文](../zh-CN/validation.md)
+[简体中文](../zh-CN/validation.md)
 
 Run from a reviewed checkout using existing Node.js 22.16+ and npm on macOS/Linux:
 

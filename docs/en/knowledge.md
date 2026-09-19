@@ -148,25 +148,17 @@ consumers, transitive impact or hard-to-follow boundaries; semantic explanations
 help with unfamiliar terminology. Small local changes do not require building an index.
 
 The packaged [usage reference](../../skills/clinx-knowledge/references/code-intelligence.md)
-keeps capability selection and evidence limits independent of provider names. For a
-maintainer considering a tool trial, these are candidates, not certified integrations:
+keeps capability selection and evidence limits independent of provider names. When
+evaluating a code index, graph, language server or generated domain view, start from
+the question it must answer. Check its supported languages, repository boundaries,
+index inputs, update behavior, query limits, storage location and maintenance cost.
+Use generated explanations for navigation, then verify consequential relationships
+against source and behavior. Inspect any proposed instruction, hook or repository write
+before enabling it.
 
-- **GitNexus:** inspect its process-flow, framework context and impact capabilities
-  when they address the question. Check index cost, warnings and cross-service limits;
-  use index-only mode and external/private storage where the installed version supports them.
-- **codebase-memory-mcp:** check symbol and call-path tools against current receiver
-  types. Resolve qualified names before tracing; distinguish index generation from a
-  status response that merely reports current HEAD. For repeated queries, compare one
-  persistent stdio session with repeated process startup. Verify persistence before
-  relying on any claimed runtime-graph import.
-- **Understand Anything or generated domain views:** use explanations for navigation;
-  verify root/worktree and refresh behavior for behavior-only changes. Inspect proposed
-  instruction/hook writes before adopting a generator.
-- **Existing LSP, SCIP, IDE or enterprise navigation:** reuse working bindings and
-  confirm build/dependency coverage. Precise symbols alone do not prove runtime activation.
-
-These examples are adoption hypotheses, not a ranking or measured delivery gains.
-Read the selected tool's current help; clinx does not install or configure it.
+clinx does not certify, install or configure a particular provider. Product names and
+capabilities change faster than this guide, so maintain a team-specific choice with the
+tool's current documentation and an observed compatibility check.
 
 For the chosen version, establish the actual root/worktree, indexed inputs, update
 result, query limits and missing coverage. Read its help and relevant project bindings.

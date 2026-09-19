@@ -165,7 +165,7 @@ export const commands: Record<string, Command> = {
     options: ['focus'],
     positionals: 2,
     details:
-      'Requires configuration but preserves readable history when source inputs are unavailable. No automatic task selection, command replay, remote observation or approval. Reconcile relevant changes before reusing earlier results.',
+      'Requires configuration but preserves readable history when source inputs are unavailable. Includes bounded observation metadata (64 entries, 64 KiB per record, 256 KiB total); artifacts and applicability are not checked. Use evidence list to inspect relevant UUIDs. No automatic task selection, command replay, remote observation or approval. Reconcile relevant changes before reusing earlier results.',
     examples: ['clinx context feature --focus build', 'clinx context feature --json'],
   },
   validate: {

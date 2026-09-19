@@ -14,6 +14,7 @@ import {
   readJson,
   canonical,
   findExecutable,
+  withLock,
   MAX_TASK_ENTRIES,
 } from '../dist/files.js';
 import { openWorkspace } from '../dist/workspace.js';
@@ -300,6 +301,19 @@ test('new-file publication is bounded, exclusive and leaves no temporary files o
   const names = await readdir(dir);
   assert.ok(!names.includes('oversized'));
   assert.ok(!names.some((name) => name.endsWith('.tmp')));
+});
+
+test('a writer never removes a lock that replaced its own lock path', async () => {
+  const dir = await fixture();
+  const lock = join(dir, '.clinx/write.lock');
+  await assert.rejects(
+    withLock(dir, async () => {
+      await rm(lock);
+      await put(lock, 'later writer');
+    }),
+    /lock ownership changed.*retained/s,
+  );
+  assert.equal(await readFile(lock, 'utf8'), 'later writer');
 });
 
 test('a write interrupted before publication never exposes partial bytes as a final record', async (t) => {

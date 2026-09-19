@@ -1,18 +1,21 @@
 # Architecture and boundaries
 
-[中文](../zh-CN/architecture.md)
+[简体中文](../zh-CN/architecture.md)
+
+This page is the implementation boundary reference for maintainers and integrators.
+For normal use, start with [the first-task guide](cold-start.md) or the
+[CLI reference](cli.md). The sections below explain ownership, saved records,
+input binding, execution semantics, and known limits.
 
 ## System objective
 
-clinx exists to help an agent deliver the requested engineering outcome reliably within
-the user's authority and the project's real constraints. Completing a stage, writing a
-record, calling a particular tool or obtaining agreement between agents is not the
-outcome. Correct behavior, preserved obligations, recoverability and truthful claims are
-constraints; investigation, review, execution and maintenance cost are optimized only
-after those constraints are met.
+clinx helps an agent deliver the requested engineering result within the user's authority
+and the project's constraints. Progress markers—finishing a stage, writing a record,
+calling a tool, or reaching agreement between agents—do not establish that result.
+The result must preserve existing obligations, support recovery where required, and be
+reported honestly. Only then does it make sense to optimize investigation and execution cost.
 
-The system therefore joins four interfaces rather than imposing a second engineering
-platform:
+The design connects four boundaries:
 
 1. **Input:** the user request and decisions, current source and the project's normal
    entrypoints. It identifies whether this run ends at a reviewable proposal, an
@@ -123,7 +126,7 @@ directories without executing them. None plans or schedules agents.
 | `clinx.config.json`                   | Workspace: explicit source roots/inputs, context routing, reviewed check definitions        |
 | Existing maps and guides              | Maintained by their owners: source facts, navigation and operating procedures               |
 | Optional workspace map or guide       | Cross-source navigation and coordination procedures; links to existing owners               |
-| `clinx/tasks/ID/contract.json`        | Task: outcome, scope, invariants, decisions, authority, obligations                         |
+| `clinx/tasks/ID/contract.json`        | Task: outcome, scope, invariants, decisions, authority; optional verification plan          |
 | Contract `context` references         | Task: local design content included in the contract binding                                 |
 | `checkpoints/NNNNNNNN.json`           | Immutable handoff note with input digests; legacy metadata remains readable; not completion |
 | `revisions/*.json`                    | Previous JSON contract and revision reason/digests; no code rollback                        |
@@ -204,13 +207,26 @@ today's bytes. Version referenced designs in their existing repository if their 
 contents must be recoverable. Corrupt or misidentified contracts require explicit
 repair; revision is not a force-overwrite path.
 
+A successful contract rename is the revision commit point. If replacement fails,
+cleanup removes this attempt's history only when the original contract remains
+unchanged and the history inode and bytes still match. Changed records and uncertain
+replacement outcomes (including I/O errors) retain history. Cleanup failures report the original failure and paths
+for inspection. This handles caught failures, not crashes or power loss. The byte
+comparison before rename is best effort, not atomic compare-and-swap: pause external
+editors during revision. The lock coordinates only participating clinx writers.
+
 `evidence.ts` retains optional reviewed observation attachments outside the verdict
-path. It checks artifact integrity and local capture-time binding, not the target's
+path. Attachments require declared obligations; a continuity-only task must first
+add a verification plan through `task revise`. It checks artifact integrity and local capture-time binding, not the target's
 actual revision or remote freshness. Historical failures are not overwritten by new
 passes. See [evidence](evidence.md) for size, privacy and interpretation limits.
+Task context and selected status use its bounded metadata index for discovery;
+this does not check artifact bytes, local applicability or remote state, and does
+not participate in continuity or verdict decisions. Explicit inspection remains separate.
 
-Writes use an exclusive workspace lock. New files are written and synced to a private
-same-directory temporary file, then published with an exclusive hard link; record
+Writes use an exclusive workspace lock. Its unique identity is checked before release,
+so an older process never removes a replacement lock at the same path. New files are
+written and synced to a private same-directory temporary file, then published with an exclusive hard link; record
 discovery does not select temporary names. Existing destinations are not replaced.
 Writes enforce the same 8 MiB per-file bound as reads. This requires a filesystem
 supporting hard links; there is no unsafe overwrite fallback or full power-loss guarantee.
@@ -288,6 +304,12 @@ entries. It does not substitute a canonical target that might change tool behavi
 - No browser automation implementation or enterprise endpoint is embedded. Use the
   host's tools and local guide; external obligations remain unresolved in CLI verdicts.
 - Models are versioned and strict. Internal JavaScript modules are not a public SDK.
+  During the current development preview, task format 1 supports an omitted verification
+  plan. Current readers accept older full-plan tasks; older readers may reject newer
+  continuity-only tasks even though both say version 1. Use the reader shipped with
+  the writer or a reviewed newer reader. Do not change a version number or invent
+  claims to bypass validation. A stable release needs an explicit reader/writer
+  compatibility policy before extending this format further.
 
 ## Implementation choices
 

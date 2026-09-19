@@ -1,10 +1,14 @@
+import { canonical, validatePlan, validateProvenance, same } from './identity.mjs';
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
 const dir = resolve(process.argv[2] ?? '.');
 const arms = ['baseline', 'skill', 'skill-cli'];
 const allowedScenarios = ['campaign-cross-repo', 'campaign-resume-drift', 'campaign-confirmation'];
-const plan = JSON.parse(await readFile(join(dir, 'run-plan.json'), 'utf8'));
+const declared = JSON.parse(await readFile(join(dir, 'run-plan.json'), 'utf8'));
+// Legacy arrays are fixture diagnostics only, never formal comparisons.
+const experiment = Array.isArray(declared) ? null : validatePlan(declared).experiment;
+const plan = experiment ? declared.runs : declared;
 if (!Array.isArray(plan) || !plan.length)
   throw new Error('run-plan.json must contain the predeclared scenario/arm/rep entries');
 const names = new Set();
@@ -34,6 +38,9 @@ for (const entry of plan) {
       ![true, false, null].includes(result.passed)
     )
       throw new Error('Result identity or verdict does not match the planned run');
+    if (experiment) validateProvenance(result, entry, experiment);
+    else if (result.provenance)
+      throw new Error('Formal result requires its versioned experiment plan');
     if (result.evaluation === 'operational-failure') {
       if (
         result.passed !== null ||
@@ -72,6 +79,46 @@ for (const entry of plan) {
       reason: String(error),
     });
   }
+}
+// Hashes bind evaluator-controlled bytes; they are not a security attestation.
+// Refuse to pool changed inputs within one treatment, or mixed/unknown runtimes.
+if (experiment) {
+  const runtimeVersions = new Set();
+  const hostVersions = new Set();
+  for (const r of runs.filter((r) => r.result))
+    for (const version of Object.values(r.result.runtime ?? {}))
+      if (version) runtimeVersions.add(version);
+  for (const r of runs.filter((r) => r.result))
+    for (const host of Object.values(r.result.host ?? {}))
+      if (host) hostVersions.add(canonical(host));
+  for (const r of runs.filter((r) => r.result)) {
+    const phases = r.scenario === 'campaign-cross-repo' ? ['phase1'] : ['phase1', 'phase2'];
+    const peers = runs.filter((p) => p.result && p.scenario === r.scenario && p.arm === r.arm);
+    const inputs = peers.map((p) => ({
+      input: p.result.provenance.inputSha256,
+      prompt: p.result.provenance.promptSha256,
+    }));
+    const sharedInputs = new Set(
+      runs
+        .filter((p) => p.result && p.scenario === r.scenario)
+        .map((p) => p.result.provenance.baseInputSha256),
+    );
+    let reason;
+    if (sharedInputs.size > 1) reason = 'Base inputs differ across treatment arms';
+    else if (inputs.some((p) => !same(p, inputs[0])))
+      reason = 'Prepared inputs differ within a treatment';
+    else if (runtimeVersions.size > 1)
+      reason = 'Observed Codex runtimes differ across the experiment';
+    else if (phases.some((p) => !r.result.runtime?.[p]))
+      reason = 'Observed Codex runtime is missing';
+    else if (hostVersions.size > 1) reason = 'Observed runner images differ across the experiment';
+    else if (phases.some((p) => !r.result.host?.[p])) reason = 'Observed runner image is missing';
+    if (reason) {
+      r.state = 'invalid';
+      r.reason = reason;
+    }
+  }
+  for (const r of runs) if (r.state === 'invalid') r.result = null;
 }
 const scenarios = [...new Set(plan.map((r) => r.scenario))].sort();
 const summary = [];
@@ -139,6 +186,8 @@ for (const scenario of scenarios) {
 const output = {
   version: 2,
   generatedAt: new Date().toISOString(),
+  experiment,
+  purpose: experiment ? 'formal-comparison' : 'fixture-diagnostics-only',
   planned: runs.length,
   records: runs.map(({ result: _result, ...record }) => record),
   unexpectedFiles,

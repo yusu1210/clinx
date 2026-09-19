@@ -100,6 +100,15 @@ test('language navigation and removal cannot be hidden by refreshing translation
   await assert.rejects(checkTranslations(root), /inventory changed/);
 });
 
+test('paired guides keep the same code-block sequence', async () => {
+  const root = await fixture();
+  await put(join(root, 'README.md'), '[中文](README.zh-CN.md)\n```sh\nclinx status\n```\n');
+  await assert.rejects(translationSnapshot(root), /Code-block mismatch/);
+  await put(join(root, 'README.zh-CN.md'), '[English](README.md)\n```sh\nclinx status\n```\n');
+  await json(join(root, 'docs/translations.json'), await translationSnapshot(root));
+  assert.equal(await checkTranslations(root), 1);
+});
+
 test('language directories pair nested guides and reject orphan or flat guides', async () => {
   const root = await fixture();
   await put(join(root, 'docs/en/tutorial/first.md'), '[中文](../../zh-CN/tutorial/first.md)');

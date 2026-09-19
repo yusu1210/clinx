@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "id": "observe-job",
+  "title": "Interpret platform observations without false completion",
+  "outcome": "Exercise an original synthetic adapter and retain the unverified real-target boundary",
+  "mode": "implementation",
+  "scope": ["Local HTTP observation example"],
+  "defaultClaim": "local",
+  "claims": ["local", "integration"],
+  "obligations": [
+    {
+      "id": "adapter-contract",
+      "description": "Interpret native job states, target/build identity and case results",
+      "claims": ["local", "integration"],
+      "checks": ["adapter-tests"]
+    },
+    {
+      "id": "target-behavior",
+      "description": "Actual requested behavior in the identified deployed build",
+      "claims": ["integration"],
+      "external": "Requires an authorized real target and independently reviewed acceptance; the loopback fixture does not supply either"
+    }
+  ]
+}

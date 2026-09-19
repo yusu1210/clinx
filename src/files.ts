@@ -227,8 +227,13 @@ export async function makePrivateDir(root: string, path: string): Promise<string
 export async function withLock<T>(root: string, action: () => Promise<T>): Promise<T> {
   const dir = await makePrivateDir(root, '.clinx');
   const lock = join(dir, 'write.lock');
+  const value = JSON.stringify({
+    pid: process.pid,
+    createdAt: new Date().toISOString(),
+    nonce: randomUUID(),
+  });
   try {
-    await writeNew(lock, JSON.stringify({ pid: process.pid, createdAt: new Date().toISOString() }));
+    await writeNew(lock, value);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'EEXIST')
       throw new Error(
@@ -236,9 +241,34 @@ export async function withLock<T>(root: string, action: () => Promise<T>): Promi
       );
     throw error;
   }
+  const identity = await lstat(lock);
+  let result: T | undefined;
+  let failure: unknown;
   try {
-    return await action();
-  } finally {
-    await unlink(lock);
+    result = await action();
+  } catch (error) {
+    failure = error;
   }
+  let cleanupFailure: unknown;
+  try {
+    // A user may remove a stale lock while this process is still running and a
+    // later writer may then acquire the same path. Never unlink that writer's lock.
+    const current = await lstat(lock);
+    if (
+      current.dev !== identity.dev ||
+      current.ino !== identity.ino ||
+      !(await readBounded(lock)).equals(Buffer.from(value))
+    )
+      throw new Error('Write lock ownership changed; the current lock was retained');
+    await unlink(lock);
+  } catch (error) {
+    cleanupFailure = error;
+  }
+  if (cleanupFailure)
+    throw new Error(
+      `${failure ? String(failure) + '; ' : ''}write lock cleanup incomplete: ${String(cleanupFailure)}. Inspect .clinx/write.lock before retrying.`,
+      { cause: failure ?? cleanupFailure },
+    );
+  if (failure) throw failure;
+  return result as T;
 }

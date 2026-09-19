@@ -73,6 +73,19 @@ if (reason || !result)
     metrics: {},
     diagnostics: output,
   };
+// Attach evaluator metadata even when the grader crashes or times out. Requested
+// model/configuration and the observed CLI version are distinct evidence.
+result.provenance = meta?.provenance ?? null;
+result.runtime = {};
+result.host = {};
+for (const phase of scenario === 'campaign-cross-repo' ? ['phase1'] : ['phase1', 'phase2']) {
+  result.runtime[phase] = await readFile(join(run, `${phase}-codex-version.txt`), 'utf8')
+    .then((s) => s.trim() || null)
+    .catch(() => null);
+  result.host[phase] = await readFile(join(run, `${phase}-host.json`), 'utf8')
+    .then((s) => JSON.parse(s))
+    .catch(() => null);
+}
 await writeFile(join(run, 'grade.json'), JSON.stringify(result, null, 2) + '\n');
 console.log(JSON.stringify(result, null, 2));
 process.exitCode =

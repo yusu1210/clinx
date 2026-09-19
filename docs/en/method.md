@@ -1,12 +1,16 @@
 # The clinx full-stack engineering method
 
-[中文](../zh-CN/method.md)
+[简体中文](../zh-CN/method.md)
 
 Start with what the user needs to happen, then inspect the code and tools that
 produce that result. A change may touch one component or several. Include a UI,
 service, database, or deployment only when the requirement calls for it. The method
 applies to new projects, existing systems, and work that combines new and reused
 capabilities.
+
+This page explains the decisions behind the method. To begin a real task, use
+[start from a requirement](cold-start.md); to follow a runnable example, use the
+[hands-on tutorial](hands-on.md).
 
 ## Five questions to revisit during the work
 
@@ -24,8 +28,7 @@ Revisit these questions when new evidence changes the plan; they are not fixed
 approval stages. A review request ends with findings unless implementation is
 also requested. A requested release needs its own authority and observation.
 
-For a first task, see [start from a requirement](cold-start.md). The
-[Skill](../../skills/clinx-delivery/SKILL.md) gives the agent a procedure. The optional
+The [Skill](../../skills/clinx-delivery/SKILL.md) gives the agent a procedure. The optional
 CLI records agreements and local observations; it does not run the agent.
 
 Delivery learning and independent [knowledge work](knowledge.md) share one set of
@@ -107,6 +110,13 @@ decisions, authority and acceptance-to-evidence mapping. A conversation can suff
 for small work. Use an existing design or a [task brief](../../templates/workspace/clinx/task-brief.md)
 when persistence helps; reference detailed reasoning instead of copying it.
 
+Choose agreement depth by changed meaning, uncertainty and consequence. Local reversible
+work within settled rules may stay conversational. Changed shared semantics need reviewable
+owner, consumer and compatibility decisions. Consequential state/effects need explicit
+properties and recovery semantics, including the assumptions behind required progress.
+Existing contracts can already supply this evidence; domain names and repository counts
+do not mandate a new document or approval. See [agreement depth](../../skills/clinx-delivery/references/delivery.md#choose-agreement-depth-from-the-changed-meaning).
+
 An invariant must be falsifiable: a filtered total describes the same set as the
 returned rows before pagination; client input cannot override server identity;
 retrying the same operation cannot duplicate an irreversible effect. “Correct and
@@ -170,6 +180,9 @@ See the [delivery reference](../../skills/clinx-delivery/references/delivery.md)
 ## Interpret evidence at its actual scope
 
 An observation supports a claim relative to its inputs, target and assertion.
+Evidence types are complementary, not a ladder: a production trace does not replace a
+missing authorization requirement or a consumer compatibility check. Select observations
+for the actual claim and endpoint; a design need not execute a held production action.
 The CLI keeps these questions separate:
 
 | Question       | Meaning                                                        |
@@ -229,6 +242,12 @@ Keep stable rules with their domain owner, repeatable failures in regression tes
 reusable operations in an existing tool or guide, and task-specific reasoning in the
 task. Maps should point to maintained truth. Retain sources, limits and conditions
 for rechecking; create no new artifact when it would add no useful knowledge.
+
+For recurring stable rules, prefer a faithful existing executable check when its total
+cost is lower than repeated interpretation. Validate both violations and supported behavior;
+place preventive checks before the effect. Rationale, navigation and volatile policies may
+remain prose. Mechanical checks do not create authority. Invest in durable navigation when
+reuse or a necessary handoff justifies upkeep; a one-off task needs no new knowledge project.
 
 Measure improvement through correct delivery, fewer omissions and false completion,
 recovery quality, and total human/agent cost on comparable tasks. Evaluate optional

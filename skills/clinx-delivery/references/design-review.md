@@ -5,6 +5,20 @@ state, compatibility, security, capacity or recovery, or when a design review is
 requested. A large repository, multiple files or multiple services alone does not
 establish that a new design decision or approval is needed.
 
+## Choose the question that could change the design
+
+| Current uncertainty                            | Start with                                                                                                         |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Shared rule, protocol or consumer meaning      | [Affected behavior](#establish-the-affected-behavior): candidate references, current owners and consumer semantics |
+| Guard placement or alternate entry             | [Receiver and projections](#trace-the-receiver-and-projections): first effect and reachable bypass                 |
+| Lost response, retry or permission change      | [Recovery and authority](#establish-recovery-and-authority): provider guarantees and outstanding obligations       |
+| Competing actors or required eventual progress | [State properties](#challenge-state-properties): shared enforcement, transitions and failure assumptions           |
+
+Choose the lowest-cost available evidence that distinguishes plausible explanations;
+expand the scope if it reveals a missing owner or path. The routes are not an exhaustive
+risk classification. [Stop at the evidenced boundary](#stop-at-the-evidenced-boundary);
+an explicit blocker permits handoff, not a claim that the blocked behavior is verified.
+
 ## Retain the decision, not a document set
 
 Before implementing consequential choices, retain a concise design in the existing
@@ -72,6 +86,8 @@ its meaning. Compare the resulting groups with the proposed change and validatio
 scope. Material groups without a treatment remain open; do not silently drop them
 when turning investigation into a concise design.
 
+### Trace the receiver and projections
+
 For a consequential effect, reverse-trace its enforcing receiver to alternate entry
 paths, including applicable retries, scheduled recovery and older callers. Check where
 the guard runs relative to the first side effect; a new entry's validation does not
@@ -79,6 +95,8 @@ protect another caller of the same receiver. For changed read semantics, trace e
 material projection or adapter back to its authoritative state. Group paths only when
 source or contract evidence supports the same treatment, and retain exceptions.
 Use the existing impact record; no additional matrix or fixed fields are required.
+
+### Establish recovery and authority
 
 When permissions change, distinguish actions whose authority differs, such as creating
 new work and managing existing obligations. An unavailable permission response cannot
@@ -88,6 +106,8 @@ reconciliation contract. Record how an outstanding obligation remains recoverabl
 a worker stops retrying. Do not require a new operation ledger when an existing owner
 already provides that guarantee.
 
+### Challenge state properties
+
 For a hard invariant such as mutual exclusion, at-most-once effect or mandatory
 authorization, identify the authority and serialization point shared by every competing
 actor. Define acquisition/commit/release or equivalent transitions, failure and timeout
@@ -95,11 +115,14 @@ semantics, recovery after interruption, and an observation that can reject the i
 A preflight query followed by a separate write is not enforcement; when no shared
 authority exists, hold the dependent effect and name the owner or decision needed.
 
+### Stop at the evidenced boundary
+
 The investigation is sufficient for a proposed slice when its required behaviors and
 material candidate paths have an evidenced treatment or an explicit held boundary.
 An unsearched area is unknown, not “unchanged”; naming repositories, matching keywords,
-or adding a generic “check consumers” item does not establish coverage. Do not expand
-into unrelated systems once the decision is supported.
+or adding a generic “check consumers” item does not establish coverage. Resolve available, decision-changing checks before acting on their premises. Keep
+unavailable evidence tied to the dependent action; continue unaffected authorized work.
+Do not expand into unrelated systems once the decision is supported.
 
 ## Give reviewers the choices that matter
 

@@ -1,11 +1,25 @@
 # Task evidence attachments
 
-[中文](../zh-CN/evidence.md)
+[简体中文](../zh-CN/evidence.md)
 
 Retain reviewed files from browser journeys, native tools or target observations
 alongside CLI run receipts. This is an optional local archive, not a remote
 verifier, human approval mechanism, signature or route to force a claim through.
 An attachment preserves failures as well as successes.
+
+`context ID` and selected `status ID` include an `evidence` index so resumption can
+discover saved observations without being given their paths. It retains conflicting
+assertions and original limitations; it does not select the latest pass. Discovery
+reads metadata only: `integrity`, `localBinding` and `remoteState` are `not-checked`.
+Use `evidence list ID --record UUID` to check the relevant archive and current local
+binding before reuse. A failed observation does not disappear when local checks pass.
+
+This index visits at most 64 directory entries, accepts metadata files up to 64 KiB
+and reads up to 256 KiB of metadata. Oversized, malformed, missing and linked records
+are reported individually; enumeration beyond the limit sets `truncated`. Enumeration
+is not ordered by time and concurrent changes are not a snapshot. A partial index is
+not a complete history or an empty set of failures. No artifacts or remote state are
+read, no command is executed, and discovery never changes continuity or claim decisions.
 
 ## Record a real observation
 
@@ -99,6 +113,11 @@ before making a delivery statement; a narrow local pass cannot hide failed integ
 If an existing authorized tool deterministically validates the target and behavior,
 register its real check/result format instead. Do not synthesize passing JUnit from
 a human assertion. Attachments help traceability while keeping lower trust visible.
+
+The runnable [platform observation example](../../examples/platform-observation/README.md)
+exercises business envelopes, target/build correlation, terminal states and case results
+through a synthetic HTTP fixture. It connects native tests, attachments, resumption and
+source drift while leaving actual platform acceptance unresolved.
 
 ## Close the delivery, not just the CLI verdict
 

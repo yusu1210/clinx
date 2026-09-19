@@ -1,10 +1,14 @@
 # Evaluation: implementation evidence versus agent effectiveness
 
-[中文](../zh-CN/evaluation.md)
+[简体中文](../zh-CN/evaluation.md)
 
-A one-run-per-arm pilot is recorded below. It checks that the protocol is runnable,
-not whether the Skill improves agent outcomes. The existing deterministic tests
-validate the CLI and evaluation fixtures.
+This page separates two questions: whether the implementation behaves as documented,
+and whether the method or Skills improve agent outcomes. The repository has extensive
+deterministic implementation tests and one small protocol pilot. It does not yet have
+enough controlled runs to claim a general improvement in quality, speed, or cost.
+
+Maintainers can use the sections below to reproduce checks, run controlled comparisons,
+and report results without turning a successful fixture into a product claim.
 
 ## 2026-09-13 bulk-reset pilot
 
@@ -230,6 +234,24 @@ Freeze the complete treatment, including referenced Skill files, prompts and ava
 tools, not only the Skill entrypoint. Keep a file manifest per revision. Compare input
 content as well as hashes when captures contain expiring URLs; removing URLs for a text
 comparison does not verify linked pages or images.
+
+Separate an instruction treatment from a native runtime treatment. An instruction
+comparison keeps the host, model and execution tools fixed and varies the method files.
+A tool-availability comparison keeps the method fixed and varies whether an optional
+local tool is present. A native orchestrator comparison includes that product's own
+model selection, scheduler, setup and external integrations; report it as a whole-system
+treatment instead of pooling it with the instruction comparison. If the native runtime
+requires a new global installation, identity, network service or shared effect, retain
+that setup cost or unavailability. Following its exported instructions manually can
+test the method, but is not evidence that its runtime executed.
+
+Prepare candidate dependencies before timing from the same lock and reviewed bytes.
+Use evaluator-controlled immutable copies or isolated caches so concurrent setup cannot
+mutate a shared cache differently for each arm. Predeclare a symmetric fallback when
+preparation fails. Registry, cache and host failures are operational observations, not
+candidate correctness failures. An evaluator may later restore one common environment
+and execute every frozen submission, but that does not change what candidates could
+observe or erase their original elapsed time and claims.
 
 A corrected proposal or targeted recheck measures recovery on an exposed case, not the
 revised Skill's first-pass success. Keep those runs separate from full fresh-session runs;

@@ -1,6 +1,6 @@
 # Start from a requirement and repository
 
-[中文](../zh-CN/cold-start.md)
+[简体中文](../zh-CN/cold-start.md)
 
 For a copyable project, agent request, confirmation and CLI session, start with the
 [hands-on tutorial](hands-on.md). This guide adapts that workflow to your own inputs.

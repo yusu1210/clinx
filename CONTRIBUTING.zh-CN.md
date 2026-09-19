@@ -2,7 +2,7 @@
 
 [English](CONTRIBUTING.md)
 
-clinx 提供 AI-native 全栈研发方法论与可移植 Agent Skill。只有在解决实际接入、续接或验证问题时，
+clinx 提供 AI-native 全栈研发方法论与两份可移植 Agent Skill。只有在解决实际接入、续接或验证问题时，
 才增加 CLI 功能；不把它扩成环境安装器或自主工作流引擎。
 
 ## 本地开发

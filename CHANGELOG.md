@@ -1,8 +1,37 @@
 # Changelog
 
-[中文](CHANGELOG.zh-CN.md)
+[简体中文](CHANGELOG.zh-CN.md)
 
 ## Unreleased
+
+- Task context and selected status discover bounded saved observation metadata,
+  retaining conflicting assertions and read errors without checking artifacts or
+  promoting claims. Explicit evidence inspection remains separate.
+- A runnable synthetic platform example exercises native HTTP result semantics,
+  build/target correlation, failed and incomplete cases, retained observations and
+  drift. The packaged workflow keeps real-target acceptance unresolved.
+- Delivery connects original outcomes to consumer observations and independently
+  owned QA assets; project-required tool checks retain explicit fallback obligations.
+- Evaluation separates fixed-runtime instruction comparisons from native orchestrator
+  comparisons, and treats symmetric dependency preparation failures as operational
+  evidence instead of candidate correctness.
+- Runtime modules are checked for import cycles. Benchmark fixture Git setup ignores
+  host redirects, signing and hooks, and workflow checkouts retain no repository token.
+  Formal runs pin and record the hosted runner image and reject mixed host identities.
+- Writer locks carry a unique ownership identity and are retained when their path is
+  externally replaced, preventing an older process from removing a later writer's lock.
+
+- Delivery references route consequential questions to existing evidence procedures,
+  select agreement depth by changed meaning, and qualify executable knowledge by
+  ownership, prevention timing and maintenance cost. No additional required artifacts.
+- Benchmark results distinguish shared base inputs from treatment inputs and reject
+  cross-arm base-input differences.
+
+- Failed task replacement cleans up only matching revision history and preserves
+  primary errors when cleanup fails; external edits and crash limits remain explicit.
+- Evidence attachment explains a missing verification plan before reading artifacts.
+- Formal benchmarks freeze experiment/material identity, bind repetitions and reject
+  mixed or unknown observed runtimes. Fixture diagnostics remain explicitly separate.
 
 - Continuity-only task agreements can omit the verification plan; partial plans fail,
   and verification still requires reviewed claims and obligations. Existing plans retain

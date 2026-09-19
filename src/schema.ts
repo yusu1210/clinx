@@ -192,6 +192,21 @@ export const evidenceSchema = z.strictObject({
 });
 export type Evidence = z.infer<typeof evidenceSchema>;
 export type EvidenceInput = z.infer<typeof evidenceInputSchema>;
+// A bounded navigation projection. Reading metadata never checks archived bytes,
+// current local applicability or a remote target.
+export interface EvidenceIndex {
+  records: {
+    id: string;
+    path: string;
+    observation: Evidence['observation'];
+  }[];
+  issues: { path: string; error: string }[];
+  truncated: boolean;
+  integrity: 'not-checked';
+  localBinding: 'not-checked';
+  remoteState: 'not-checked';
+  instruction: string;
+}
 export const testSummarySchema = z.strictObject({
   total: z.number().int().nonnegative(),
   passed: z.number().int().nonnegative(),

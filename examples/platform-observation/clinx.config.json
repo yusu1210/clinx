@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "name": "platform-observation",
+  "sources": [
+    {
+      "id": "adapter",
+      "path": ".",
+      "inputs": ["observe.mjs", "provider.mjs", "observe.test.mjs", "clinx.config.json"]
+    }
+  ],
+  "checks": [
+    {
+      "id": "adapter-tests",
+      "source": "adapter",
+      "description": "Synthetic HTTP checks of observation interpretation, not real platform acceptance",
+      "command": ["node", "--test", "--test-reporter=junit", "observe.test.mjs"],
+      "timeoutMs": 15000,
+      "result": {
+        "format": "junit",
+        "from": "stdout",
+        "minTests": 4,
+        "expectedTests": [
+          "test#correlated terminal cases pass; accepted and running replies stay inconclusive",
+          "test#business errors, wrong identities, missing cases and unreadable responses never pass",
+          "test#failed jobs and failed cases remain failures even with HTTP 200",
+          "test#transport failure and missing acceptance identity do not become success"
+        ]
+      }
+    }
+  ]
+}

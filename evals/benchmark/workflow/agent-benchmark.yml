@@ -29,7 +29,7 @@ permissions:
 
 jobs:
   preflight:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       BENCHMARK_MODEL: ${{ inputs.model }}
@@ -47,50 +47,65 @@ jobs:
 
   matrix:
     needs: preflight
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
     steps:
-      - id: plan
-        env:
-          SCENARIO: ${{ inputs.scenario }}
-          REPEATS: ${{ inputs.repeats }}
-        run: |
-          node <<'NODE'
-          const all = ['campaign-cross-repo','campaign-resume-drift','campaign-confirmation'];
-          const scenario = process.env.SCENARIO;
-          const repeats = Number(process.env.REPEATS);
-          if (!Number.isInteger(repeats) || repeats < 1 || repeats > 5) throw Error('repeats must be 1..5');
-          const scenarios = scenario === 'all' ? all : [scenario];
-          if (scenarios.some(s => !all.includes(s))) throw Error('unknown scenario');
-          const include = [];
-          for (const s of scenarios)
-            for (const arm of ['baseline','skill','skill-cli'])
-              for (let rep = 1; rep <= repeats; rep++) include.push({scenario:s,arm,rep});
-          require('fs').appendFileSync(process.env.GITHUB_OUTPUT, `matrix=${JSON.stringify({include})}\n`);
-          NODE
-
-  prepare:
-    needs: matrix
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
-    runs-on: ubuntu-latest
-    steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: '22.16.0'
           cache: npm
       - run: npm ci
       - run: npm run build
+      - id: plan
+        env:
+          SCENARIO: ${{ inputs.scenario }}
+          REPEATS: ${{ inputs.repeats }}
+          BENCHMARK_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          BENCHMARK_REVISION: ${{ github.sha }}
+          BENCHMARK_MODEL: ${{ inputs.model }}
+          BENCHMARK_EFFORT: ${{ inputs.effort }}
+        run: |
+          matrix=$(node evals/benchmark/scripts/plan.mjs "$GITHUB_WORKSPACE" "$RUNNER_TEMP/run-plan.json" "$SCENARIO" "$REPEATS")
+          printf 'matrix=%s\n' "$matrix" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: experiment-plan
+          path: ${{ runner.temp }}/run-plan.json
+          if-no-files-found: error
+          retention-days: 30
+
+  prepare:
+    needs: matrix
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22.16.0'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: experiment-plan
+          path: ${{ runner.temp }}
       - name: Prepare isolated candidate input
         run: |
           node evals/benchmark/scripts/prepare.mjs \
             "$GITHUB_WORKSPACE" \
             "${{ matrix.scenario }}" \
             "${{ matrix.arm }}" \
-            "$RUNNER_TEMP/run"
+            "$RUNNER_TEMP/run" \
+            "$RUNNER_TEMP/run-plan.json" "${{ matrix.rep }}"
           tar -C "$RUNNER_TEMP" -czf "$RUNNER_TEMP/input.tgz" run
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
@@ -104,7 +119,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
@@ -133,7 +148,18 @@ jobs:
           date +%s%3N > "$GITHUB_WORKSPACE/run/phase1-end-ms"
           printf '%s\n' "${{ steps.agent1.outcome }}" > "$GITHUB_WORKSPACE/run/phase1-agent-outcome"
           printf '%s\n' "$CODEX_FINAL_MESSAGE" > "$GITHUB_WORKSPACE/run/phase1-final.md"
-          codex --version > "$GITHUB_WORKSPACE/run/codex-version.txt" || true
+          codex --version > "$GITHUB_WORKSPACE/run/phase1-codex-version.txt" || true
+          node --input-type=module <<'NODE'
+          import { writeFileSync } from 'node:fs';
+          const value = {
+            runnerOs: process.env.RUNNER_OS ?? null,
+            runnerArch: process.env.RUNNER_ARCH ?? null,
+            imageOs: process.env.ImageOS ?? null,
+            imageVersion: process.env.ImageVersion ?? null,
+            node: process.version,
+          };
+          writeFileSync(`${process.env.GITHUB_WORKSPACE}/run/phase1-host.json`, `${JSON.stringify(value)}\n`);
+          NODE
           tar -C "$GITHUB_WORKSPACE" -czf "$RUNNER_TEMP/phase1.tgz" run
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
@@ -147,9 +173,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
           name: phase1-${{ matrix.scenario }}-${{ matrix.arm }}-${{ matrix.rep }}
@@ -174,7 +202,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
@@ -207,6 +235,18 @@ jobs:
           date +%s%3N > "$GITHUB_WORKSPACE/run/phase2-end-ms"
           printf '%s\n' "${{ steps.agent2.outcome }}" > "$GITHUB_WORKSPACE/run/phase2-agent-outcome"
           printf '%s\n' "$CODEX_FINAL_MESSAGE" > "$GITHUB_WORKSPACE/run/phase2-final.md"
+          codex --version > "$GITHUB_WORKSPACE/run/phase2-codex-version.txt" || true
+          node --input-type=module <<'NODE'
+          import { writeFileSync } from 'node:fs';
+          const value = {
+            runnerOs: process.env.RUNNER_OS ?? null,
+            runnerArch: process.env.RUNNER_ARCH ?? null,
+            imageOs: process.env.ImageOS ?? null,
+            imageVersion: process.env.ImageVersion ?? null,
+            node: process.version,
+          };
+          writeFileSync(`${process.env.GITHUB_WORKSPACE}/run/phase2-host.json`, `${JSON.stringify(value)}\n`);
+          NODE
       - run: tar -C "$GITHUB_WORKSPACE" -czf "$RUNNER_TEMP/final.tgz" run
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
@@ -220,9 +260,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
           name: final-${{ matrix.scenario }}-${{ matrix.arm }}-${{ matrix.rep }}
@@ -250,27 +292,23 @@ jobs:
   aggregate:
     needs: [matrix, grade]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         continue-on-error: true
         with:
           pattern: result-*
           path: ${{ runner.temp }}/results
           merge-multiple: true
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: experiment-plan
+          path: ${{ runner.temp }}/results
       - name: Retain every planned run, including missing results
-        env:
-          MATRIX: ${{ needs.matrix.outputs.matrix }}
-        run: |
-          node --input-type=module <<'NODE'
-          import { mkdir, writeFile } from 'node:fs/promises';
-          import { join } from 'node:path';
-          const directory = join(process.env.RUNNER_TEMP, 'results');
-          await mkdir(directory, { recursive: true });
-          await writeFile(join(directory, 'run-plan.json'), JSON.stringify(JSON.parse(process.env.MATRIX).include));
-          NODE
-          node evals/benchmark/scripts/aggregate.mjs "$RUNNER_TEMP/results"
+        run: node evals/benchmark/scripts/aggregate.mjs "$RUNNER_TEMP/results"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: benchmark-summary

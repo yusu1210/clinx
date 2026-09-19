@@ -1,6 +1,6 @@
 # Project and tool integration
 
-[中文](../zh-CN/adoption.md)
+[简体中文](../zh-CN/adoption.md)
 
 Start with the [Skill](../../skills/clinx-delivery/SKILL.md) and the project's existing
 tools. Add a map, operating guide, or CLI configuration only when it helps this or

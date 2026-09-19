@@ -1,6 +1,6 @@
 # Collaboration and authorization
 
-[中文](../zh-CN/collaboration.md)
+[简体中文](../zh-CN/collaboration.md)
 
 Agent-led delivery does not require an approval click for every step. Agree what the
 agent can do, what needs a decision and who owns that decision. Existing organizational

@@ -72,6 +72,11 @@ authorized and needed, the relevant local evidence; a URL alone does not bind it
 
 ## Keep one maintained source
 
+Invest in durable navigation when repeated work, recurring ownership questions or costly
+rediscovery justify its upkeep. A needed handoff or otherwise lost critical context may
+also justify a small entry. A one-off local task needs no new system map; repair a useful
+existing link rather than building a parallel inventory.
+
 Correct reusable facts through their owner's normal update path. Shared knowledge holds
 portable identities and relationships; local bindings hold machine locators; task records
 hold the chosen scope and temporary state. Reuse existing formats and access tools, not

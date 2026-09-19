@@ -1,6 +1,6 @@
 # Operational walkthrough
 
-[中文](../zh-CN/walkthrough.md)
+[简体中文](../zh-CN/walkthrough.md)
 
 This agent/maintainer reference uses an existing project and an [installed CLI](installation.md).
 It is not a sequence the user must execute for every requirement.

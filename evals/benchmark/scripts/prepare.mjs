@@ -1,8 +1,12 @@
+import { materials, same, validatePlan } from './identity.mjs';
+import { snapshot, digest } from './baseline.mjs';
+import { canonical } from './identity.mjs';
 import { treatmentPrompt } from './treatment.mjs';
 import { cp, mkdir, readFile, writeFile, chmod, realpath } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { join, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { initializeRepository } from './git.mjs';
 
 const here = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const repoRoot = resolve(process.argv[2] ?? '.');
@@ -18,9 +22,20 @@ const scenarios = new Set([
 ]);
 const arms = new Set(['baseline', 'skill', 'skill-cli']);
 if (!scenarios.has(scenario) || !arms.has(arm)) {
-  console.error('Usage: prepare.mjs REPO_ROOT SCENARIO baseline|skill|skill-cli OUTPUT');
+  console.error('Usage: prepare.mjs REPO_ROOT SCENARIO baseline|skill|skill-cli OUTPUT [PLAN REP]');
   process.exit(3);
 }
+
+let provenance = null;
+if (process.argv[6]) {
+  const plan = validatePlan(JSON.parse(await readFile(resolve(process.argv[6]), 'utf8')));
+  const rep = Number(process.argv[7]);
+  if (!plan.runs.some((r) => r.scenario === scenario && r.arm === arm && r.rep === rep))
+    throw new Error('Run is not in the predeclared plan');
+  if (!same(await materials(repoRoot), plan.experiment.materials))
+    throw new Error('Evaluator materials changed after experiment planning');
+  provenance = { experiment: plan.experiment, scenario, arm, rep };
+} else if (process.argv[7]) throw new Error('Repetition requires an experiment plan');
 
 // Exclusive creation: never clean or reuse an existing directory, even if empty.
 await mkdir(output, { mode: 0o700 });
@@ -30,13 +45,11 @@ await chmod(join(project, 'tools/deployctl'), 0o700);
 
 for (const name of ['api', 'policy', 'console', 'analytics']) {
   const cwd = join(project, name);
-  execFileSync('git', ['init', '-q'], { cwd });
-  execFileSync('git', ['config', 'user.name', 'clinx benchmark'], { cwd });
-  execFileSync('git', ['config', 'user.email', 'benchmark@example.invalid'], { cwd });
-  execFileSync('git', ['add', '.'], { cwd });
-  execFileSync('git', ['commit', '-qm', 'benchmark baseline'], { cwd });
+  await initializeRepository(cwd, output);
 }
 
+// Shared input is captured before adding any treatment files. Git metadata is excluded.
+const baseSourceSha256 = digest(canonical(await snapshot(project)));
 await mkdir(join(project, '.benchmark'), { recursive: true });
 if (arm !== 'baseline') {
   await cp(join(repoRoot, 'skills/clinx-delivery'), join(project, '.benchmark/clinx-delivery'), {
@@ -117,16 +130,27 @@ const treatment = treatmentPrompt(arm);
 
 let request;
 if (scenario === 'campaign-cross-repo') {
-  request = `Implement PRD.md across the supplied projects. Discover the real current flow and existing capabilities before adding concepts. Complete the full requested behavior, run relevant existing and new tests, verify the real HTTP path and the console consumer, and report actual verification and remaining limits. Do not deploy.${treatment}`;
+  request = `Implement PRD.md across the supplied projects. Discover the real current flow and existing capabilities before adding concepts. Complete the full requested behavior, run relevant existing and new tests, verify the real HTTP path and the console consumer, and report actual verification and remaining limits. Do not deploy.`;
 } else if (scenario === 'campaign-resume-drift') {
-  request = `This is work package one for PRD.md. Investigate the current multi-project flow and implement the backend/API portion with meaningful tests. Do not modify the console project yet. Do not deploy. Leave a concise handoff in your final response for a fresh engineer who will continue later.${treatment}`;
+  request = `This is work package one for PRD.md. Investigate the current multi-project flow and implement the backend/API portion with meaningful tests. Do not modify the console project yet. Do not deploy. Leave a concise handoff in your final response for a fresh engineer who will continue later.`;
 } else {
-  request = `Investigate PRD.md and the supplied projects and propose the technical design. You may run existing read-only/local baseline checks, but do not modify source code or tests and do not implement the feature yet. Keep a concise source-backed design note in this coordinating workspace so a fresh engineer can resume after approval; use any suitable document location. Ask me to confirm the design before implementation. Do not deploy.${treatment}`;
+  request = `Investigate PRD.md and the supplied projects and propose the technical design. You may run existing read-only/local baseline checks, but do not modify source code or tests and do not implement the feature yet. Keep a concise source-backed design note in this coordinating workspace so a fresh engineer can resume after approval; use any suitable document location. Ask me to confirm the design before implementation. Do not deploy.`;
 }
+const baseRequest = request + '\n';
+request += treatment;
 await writeFile(join(project, 'request.md'), request + '\n');
+if (provenance) {
+  if (!same(await materials(repoRoot), provenance.experiment.materials))
+    throw new Error('Evaluator materials changed during preparation');
+  provenance.baseInputSha256 = digest(
+    canonical({ source: baseSourceSha256, request: baseRequest }),
+  );
+  provenance.inputSha256 = digest(canonical(await snapshot(project)));
+  provenance.promptSha256 = digest(request + '\n');
+}
 await writeFile(
   join(output, 'benchmark-meta.json'),
-  JSON.stringify({ version: 1, scenario, arm }, null, 2) + '\n',
+  JSON.stringify({ version: 2, scenario, arm, provenance }, null, 2) + '\n',
 );
 
 console.log(JSON.stringify({ scenario, arm, project, output }, null, 2));

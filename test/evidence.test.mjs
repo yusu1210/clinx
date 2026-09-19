@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, readdir, symlink, unlink } from 'node:fs/promises';
+import { readFile, readdir, rename, symlink, unlink } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fixture, cli, put, json, contract } from './helpers.mjs';
+import { randomUUID } from 'node:crypto';
 
 const observation = () => ({
   obligations: ['browser'],
@@ -32,6 +33,89 @@ async function setup() {
 }
 const add = ({ dir, file }) => cli(dir, 'evidence', 'attach', 'change', '--file', file);
 const list = ({ dir }) => cli(dir, 'evidence', 'list', 'change');
+
+test('resumption discovers conflicting observer assertions without checking or promoting them', async () => {
+  const f = await setup();
+  await json(f.file, {
+    ...observation(),
+    outcome: 'fail',
+    summary: 'Receiver rejected the effect',
+  });
+  const failed = add(f).out;
+  await json(f.file, observation());
+  const passed = add(f).out;
+  // Discovery must remain useful even if an artifact and current source disappear.
+  await unlink(join(f.dir, dirname(passed.path), passed.record.artifacts[0].path));
+  await rename(join(f.dir, 'src'), join(f.dir, 'removed-src'));
+  const result = cli(f.dir, 'context', 'change');
+  assert.equal(result.status, 0, result.err);
+  assert.equal(result.out.continuity, 'reconcile-required');
+  const index = result.out.evidence;
+  assert.deepEqual(
+    new Set(index.records.map((r) => r.observation.outcome)),
+    new Set(['fail', 'pass']),
+  );
+  assert.ok(index.records.some((r) => r.id === failed.record.id));
+  assert.equal(index.integrity, 'not-checked');
+  assert.equal(index.localBinding, 'not-checked');
+  assert.equal(index.remoteState, 'not-checked');
+  assert.equal(index.truncated, false);
+  assert.deepEqual(index.issues, []);
+  assert.equal(
+    list(f).out.records.find((r) => r.record.id === passed.record.id).integrity,
+    'invalid',
+  );
+  assert.equal(cli(f.dir, 'status', 'change').out.acceptance, 'not-assessed');
+});
+
+test('observation discovery isolates malformed, oversized and linked metadata without reading artifacts', async () => {
+  const f = await setup();
+  const saved = add(f).out;
+  const directory = join(f.dir, '.clinx/evidence/change');
+  await put(join(directory, randomUUID(), 'record.json'), '{"secret":"must-not-disclose"');
+  await put(join(directory, randomUUID(), 'record.json'), 'x'.repeat(64 * 1024 + 1));
+  const outside = await fixture();
+  await put(join(outside, 'record.json'), 'must-not-disclose');
+  await symlink(outside, join(directory, randomUUID()));
+  // No artifact access during discovery, including symlinked artifact directories.
+  await unlink(join(f.dir, dirname(saved.path), saved.record.artifacts[0].path));
+  const index = cli(f.dir, 'context', 'change').out.evidence;
+  assert.equal(index.records.length, 1);
+  assert.equal(index.issues.length, 3);
+  assert.doesNotMatch(JSON.stringify(index), /must-not-disclose/);
+  assert.equal(index.integrity, 'not-checked');
+});
+
+test('observation discovery is bounded and missing archives remain read-only', async () => {
+  const f = await setup();
+  const before = await readdir(join(f.dir, '.clinx'));
+  assert.deepEqual(cli(f.dir, 'context', 'change').out.evidence.records, []);
+  assert.deepEqual(await readdir(join(f.dir, '.clinx')), before);
+  for (let i = 0; i < 65; i++)
+    await put(join(f.dir, '.clinx/evidence/change', randomUUID(), 'record.json'), '{}');
+  const index = cli(f.dir, 'context', 'change').out.evidence;
+  assert.equal(index.issues.length, 64);
+  assert.equal(index.truncated, true);
+  assert.equal(index.records.length, 0);
+});
+
+test('observation metadata byte budget reports unexamined records rather than dropping them', async () => {
+  const f = await setup();
+  const saved = add(f).out.record;
+  for (let i = 0; i < 6; i++) {
+    const record = structuredClone(saved);
+    record.id = randomUUID();
+    record.observation.summary = 's'.repeat(16000);
+    record.observation.limitations = Array.from({ length: 4 }, () => 'l'.repeat(10000));
+    await json(join(f.dir, '.clinx/evidence/change', record.id, 'record.json'), record);
+  }
+  const index = cli(f.dir, 'context', 'change').out.evidence;
+  assert.ok(index.records.length < 7);
+  assert.ok(index.issues.length > 0);
+  assert.equal(index.records.length + index.issues.length, 7);
+  assert.ok(Buffer.byteLength(JSON.stringify(index.records)) < 256 * 1024);
+  assert.equal(index.localBinding, 'not-checked');
+});
 
 test('attachments preserve artifacts and never satisfy an external obligation', async () => {
   const f = await setup();
@@ -316,4 +400,16 @@ test('stored artifact origins must remain unique and inside captured source iden
     assert.equal(result.record, null);
     assert.match(result.reasons.join(' '), /Artifact origin|Duplicate stored artifact references/);
   }
+});
+
+test('continuity-only attachment explains the missing plan before reading artifacts', async () => {
+  const dir = await fixture();
+  const { claims, defaultClaim, obligations, ...task } = contract();
+  await json(join(dir, 'clinx/tasks/change/contract.json'), task);
+  const file = join(dir, 'observation.json');
+  await json(file, observation()); // Artifact deliberately absent.
+  const result = add({ dir, file });
+  assert.equal(result.status, 3);
+  assert.match(result.err, /no verification plan.*task revise/s);
+  await assert.rejects(readdir(join(dir, '.clinx/evidence')), { code: 'ENOENT' });
 });

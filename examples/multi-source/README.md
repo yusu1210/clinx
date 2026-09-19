@@ -1,6 +1,6 @@
 # A task across sibling sources
 
-[中文](README.zh-CN.md)
+[简体中文](README.zh-CN.md)
 
 This synthetic example verifies an HTTP consumer across a client, service and shared
 policy source. A fourth analytics source is unrelated to the task. The coordination

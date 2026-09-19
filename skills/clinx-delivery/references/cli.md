@@ -84,6 +84,10 @@ Unsupported discovery does not block normal investigation or execution.
   `validate` immediately after a successful add/revise unless checking new information.
 - `clinx validate ID` checks structure and references, not command readiness.
 - `clinx context ID --focus build` restores the task, latest handoff and focused index.
+  It also discovers bounded saved observation metadata. Inspect relevant UUIDs with
+  `evidence list ID --record UUID`; metadata discovery checks neither artifacts nor
+  applicability. Failed, inconclusive and conflicting observations need reconciliation,
+  even when a newer local check passes; truncated or damaged history is not empty history.
   Use it on a real handoff or relevant change, not after every tool call.
 - `clinx verify ID` previews checks, source selections and obligations.
   Review argv, invoked scripts, target and authority. `clinx verify ID --run` executes

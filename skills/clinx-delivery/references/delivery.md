@@ -29,18 +29,32 @@ stack and constraints; an empty repository does not imply a new platform. Ask ab
 material product choices, choose routine details within scope, and avoid speculative
 components. Exercise an uncertain dependency early if it could invalidate the design.
 
-Keep a concise agreement: outcome, scope/non-goals, invariants and owners, acceptance
-observations, important decisions and authority. Freeze enough meaning to act, not
-every file and algorithm. Long reasoning can be referenced; do not duplicate a rule
-across requirement, plan, implementation notes and machine status.
-For consequential choices, use [design-review.md](design-review.md) to retain the
-reviewable design, distinguish its baseline from progress and check final conformance.
+## Choose agreement depth from the changed meaning
+
+| Change                                               | Establish before the dependent action                                                                                                 |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Local, reversible, within one owner's settled rules  | Outcome, scope, authority and observable acceptance; the conversation or existing request may suffice                                 |
+| Shared meaning or consumer compatibility changes     | Current-to-desired behavior, owners, material consumers, compatibility and acceptance in an existing reviewable home                  |
+| Consequential state, concurrency or external effects | Relevant pre/postconditions, safety and progress properties, effect boundary, failure/recovery semantics and a falsifying observation |
+
+Use existing contracts when they already settle these questions. Depth follows the
+actual semantic change, uncertainty and consequence, not domain keywords, file count
+or repository count. These are investigation choices, not stages or required files.
+For progress guarantees, identify the dependency/fairness assumptions and what happens
+when they fail; a finite test cannot prove unbounded eventual completion.
+Freeze enough meaning to act, not every file and algorithm. Retain non-goals and material
+unknowns; reference existing reasoning rather than creating a second specification owner.
+Use [design-review.md](design-review.md) for consequential choices and final conformance.
 For a multi-part requirement, retain concise, independently testable outcomes while
 investigating, including consumers outside the main execution path. Group routine
 changes without losing explicit behaviors or exceptions. Keep defaults distinct from
 bounds and unspecified values. Before confirmation, reconcile the proposed scope and
 verification with these outcomes and the original input; make omissions, deferred
 work and missing owners explicit. Reuse the task note rather than adding a template.
+Use those same outcomes through implementation and handoff: link each material one to
+its owning rule, affected consumer and planned observation; replace the plan with actual
+results as work proceeds. An outcome without suitable evidence stays open even when
+all selected checks pass. Do not derive the acceptance inventory only from the diff.
 When confirmation is required, resolve the named decision before its held action;
 use [collaboration.md](collaboration.md). Technical agreement does not authorize a
 different delivery endpoint or bypass project approval rules.
@@ -136,6 +150,12 @@ implementation. Include an observation that could reject a plausible but wrong d
 not only assertions of the chosen encoding or algorithm. For a justified new oracle,
 check that it rejects a broken control and accepts a compatible one; this validates the
 oracle, not agent effectiveness. Keep evaluator answers out of future raw task inputs.
+Reuse independently owned QA cases and domain checks when applicable and accessible.
+Inspect their requirement/version coverage and assertions; independence comes from
+their source and review authority, not simply from another model producing the cases.
+When a failure reveals a mistaken oracle, preserve the failure and resolve the rule
+with its owner before changing expected behavior. A reduced case set is a scope change,
+not a successful retry.
 
 Keep narrow claims and explicit gaps. Local hashes are drift checks, not signatures;
 neither test assertions nor acceptance mappings become correct because a CLI recorded

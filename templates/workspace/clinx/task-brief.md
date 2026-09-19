@@ -11,6 +11,9 @@ What should the user or actual consumer be able to observe? What observation wou
 reject an apparently plausible implementation? Include relevant negative cases.
 Name the original requirement and agreed delivery endpoint. Keep acceptance separate
 from the implementation proposal so choosing an approach cannot silently redefine success.
+For material outcomes, connect the owning requirement/rule, affected consumer, planned
+observation and actual result or remaining gap here. Update this same record through
+delivery; a passing subset of checks does not close outcomes it never examined.
 
 ## Current facts and capability choices
 

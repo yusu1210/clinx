@@ -1,8 +1,10 @@
 # Use code intelligence for the question
 
-Code intelligence is optional. Use a suitable existing tool when it materially reduces
-uncertainty; do not install a provider, modify host configuration or index additional
-repositories merely because this reference names it.
+No particular code-intelligence provider is required. For a material relationship
+question, use a verified, applicable project binding when its incremental cost is low.
+An applicable project-required check must run or remain explicitly unmet; optional
+provider choice does not waive it. Do not install a provider, modify host configuration
+or index additional repositories merely because this reference names it.
 
 ## Select the shortest useful route
 
@@ -33,6 +35,10 @@ runtime, index location/repository identity, one verified query and refresh limi
 Mark temporary locations as disposable; recheck them before reuse rather than installing
 or reindexing automatically. Keep these machine-specific facts out of portable Skills.
 An index runner mismatch can differ from source drift; inspect both before rebuilding.
+For a required binding, retain its owning rule, applicable scope, result meaning and
+permitted fallback in that same entry. A failed query can permit equivalent source
+investigation, but does not satisfy a provider-specific control unless its owner allows
+that fallback. Keep unrelated work moving and the affected obligation visibly open.
 
 ## Bound discovery and retain resolved anchors
 

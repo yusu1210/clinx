@@ -1,8 +1,12 @@
 # CLI reference and result semantics
 
-[中文](../zh-CN/cli.md)
+[简体中文](../zh-CN/cli.md)
 
-Use an [installed CLI](installation.md). `clinx --help` lists commands;
+This page defines command inputs, outputs, limits, and recovery behavior. For a guided
+workflow, use the [CLI walkthrough](walkthrough.md). For installation and Skill-file
+management, use the [installation guide](installation.md).
+
+`clinx --help` lists commands;
 `clinx task add --help` (or `clinx help task add`) explains that command and its inputs.
 Output is readable text by default, consistently in terminals and pipes. Use `--json`
 for machine results, including structured help and version. Errors go to stderr with
@@ -291,10 +295,13 @@ an unselected `.clinx-write-UUID.tmp`; do not rename it into a receipt or infer 
 from it. Preserve uncertain results for diagnosis. Every written file is limited to
 8 MiB, matching reads; multi-file runs are not transactions.
 
-The exclusive `.clinx/write.lock` contains a PID and creation time. If a writer
-crashed, confirm the recorded process is gone and no writer remains before removing
-only that lock manually. PID existence alone does not prove identity. clinx never
-steals the lock automatically. Two distinct workspace roots are not a shared lock domain.
+The exclusive `.clinx/write.lock` contains a PID, creation time and unique nonce.
+Before releasing it, clinx checks the file identity and bytes; if another process or
+user replaced that path, the current lock is retained and the operation reports cleanup
+as incomplete. If a writer crashed, confirm the recorded process is gone and no writer
+remains before removing only that lock manually. PID existence alone does not prove
+identity. clinx never steals the lock automatically. Two distinct workspace roots are
+not a shared lock domain.
 
 `context` reports `no-checkpoint`, `inputs-match` or `reconcile-required`. It does
 not replay commands, choose a task or detect remote state/liveness. For revision,

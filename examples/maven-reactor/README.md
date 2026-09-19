@@ -1,6 +1,6 @@
 # Synthetic Maven reactor
 
-[中文](README.zh-CN.md)
+[简体中文](README.zh-CN.md)
 
 Requires an existing Maven and JDK 17+. clinx does not install them. Maven resolves
 pinned public build/test dependencies into this fixture's `.clinx/m2` cache.

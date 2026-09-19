@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, cp, readFile, readdir, symlink } from 'node:fs/promises';
+import { chmod, mkdtemp, cp, readFile, readdir, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync, execFileSync } from 'node:child_process';
@@ -59,6 +59,33 @@ test('benchmark preparation refuses existing directories, files and symlinks wit
   }
   assert.equal(await readFile(join(parent, 'existing/sentinel'), 'utf8'), 'user content');
   assert.equal(await readFile(join(parent, 'file'), 'utf8'), 'user file');
+});
+
+test('benchmark preparation ignores inherited Git redirects, signing and hooks', async () => {
+  const parent = await mkdtemp(join(tmpdir(), 'clinx-git-isolation-'));
+  const hooks = join(parent, 'host-hooks');
+  const marker = join(parent, 'host-hook-ran');
+  await put(join(hooks, 'pre-commit'), `#!/bin/sh\nprintf invoked > "${marker}"\nexit 91\n`);
+  await chmod(join(hooks, 'pre-commit'), 0o700);
+  const globalConfig = join(parent, 'host.gitconfig');
+  await put(globalConfig, `[core]\n\thooksPath = ${hooks}\n[commit]\n\tgpgSign = true\n`);
+  const out = join(parent, 'prepared');
+  const env = {
+    ...process.env,
+    GIT_CONFIG_NOSYSTEM: '1',
+    GIT_CONFIG_GLOBAL: globalConfig,
+    GIT_DIR: join(parent, 'redirected.git'),
+    GIT_WORK_TREE: join(parent, 'redirected-worktree'),
+  };
+  delete env.NODE_TEST_CONTEXT;
+  const prepared = spawnSync(
+    process.execPath,
+    [join(pack, 'scripts/prepare.mjs'), root, 'campaign-cross-repo', 'baseline', out],
+    { env, encoding: 'utf8', timeout: 30000 },
+  );
+  assert.ifError(prepared.error);
+  assert.equal(prepared.status, 0, prepared.stderr);
+  await assert.rejects(readFile(marker), { code: 'ENOENT' });
 });
 
 test('benchmark CLI arm has a relocatable usable runtime without evaluator answers or dev dependencies', async () => {

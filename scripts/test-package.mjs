@@ -116,6 +116,51 @@ run(
 );
 const binary = join(temp, 'node_modules/.bin/clinx');
 const installed = join(temp, 'node_modules/clinx');
+const platformExample = join(temp, 'platform-observation');
+run(binary, ['example', 'copy', 'platform-observation', '--to', platformExample], temp);
+const platformLocal = JSON.parse(
+  run(binary, ['verify', 'observe-job', '--root', platformExample, '--run'], temp),
+);
+assert.equal(platformLocal.verdict.decision, 'supported');
+const platformObservations = run(process.execPath, ['demo.mjs'], platformExample)
+  .trim()
+  .split('\n')
+  .map((line) => JSON.parse(line));
+assert.deepEqual(
+  platformObservations.map((r) => r.outcome),
+  ['inconclusive', 'fail', 'pass'],
+);
+for (const observation of platformObservations)
+  run(
+    binary,
+    [
+      'evidence',
+      'attach',
+      'observe-job',
+      '--root',
+      platformExample,
+      '--file',
+      observation.attachment,
+    ],
+    temp,
+  );
+const platformContext = JSON.parse(
+  run(binary, ['context', 'observe-job', '--root', platformExample], temp),
+);
+assert.equal(platformContext.evidence.records.length, 3);
+assert.equal(platformContext.evidence.integrity, 'not-checked');
+assert.ok(platformContext.evidence.records.some((r) => r.observation.outcome === 'fail'));
+const platformIntegration = spawnSync(
+  binary,
+  ['verify', 'observe-job', '--root', platformExample, '--claim', 'integration', '--run', '--json'],
+  { cwd: temp, encoding: 'utf8', timeout: 30000 },
+);
+assert.equal(
+  platformIntegration.status,
+  2,
+  platformIntegration.stderr || String(platformIntegration.error),
+);
+assert.equal(JSON.parse(platformIntegration.stdout).verdict.decision, 'unresolved');
 for (const file of pack.files) await assertPublicFile(join(installed, file.path), file.path);
 const copyPackagedExample = async (name) => {
   const dir = await mkdtemp(join(tmpdir(), `clinx-package-${name}-`));

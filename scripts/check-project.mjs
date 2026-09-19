@@ -39,6 +39,38 @@ const walk = async (dir) => {
     const content = await assertPublicFile(path, relative(root, path));
     count++;
     if (!path.endsWith('.md')) continue;
+    const markdownPath = relative(root, path);
+    let inFence = false;
+    let previousHeading = 0;
+    let h1Count = 0;
+    for (const [index, line] of content.split('\n').entries()) {
+      if (/^```/.test(line)) {
+        inFence = !inFence;
+        continue;
+      }
+      if (inFence) continue;
+      const heading = /^(#{1,6})\s+/.exec(line);
+      if (!heading) continue;
+      const level = heading[1].length;
+      if (level === 1) h1Count++;
+      assert.ok(
+        previousHeading === 0 || level <= previousHeading + 1,
+        `${markdownPath}:${index + 1}: heading level skips from ${previousHeading} to ${level}`,
+      );
+      previousHeading = level;
+    }
+    assert.ok(!inFence, `${markdownPath}: unclosed fenced code block`);
+    assert.equal(h1Count, 1, `${markdownPath}: expected exactly one level-one heading`);
+    if (
+      /(^|\/)(?:README|CONTRIBUTING|SECURITY|CHANGELOG)\.zh-CN\.md$/.test(markdownPath) ||
+      markdownPath.startsWith('docs/zh-CN/')
+    ) {
+      assert.doesNotMatch(
+        content,
+        /\*\*[^*\n]+：\*\*/,
+        `${markdownPath}: keep the Chinese colon outside bold text`,
+      );
+    }
     for (const match of content.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
       const link = match[1].split('#')[0];
       if (!link || /^[a-z]+:/i.test(link)) continue;
@@ -60,12 +92,55 @@ assert.ok(
   !(await readdir(root)).includes('package-lock.json'),
   'Keep one publishable dependency lock',
 );
+for (const path of ['.github/workflows/ci.yml', 'evals/benchmark/workflow/agent-benchmark.yml']) {
+  const workflow = await readFile(join(root, path), 'utf8');
+  const actions = [...workflow.matchAll(/\buses:\s+([^\s]+)/g)].map((match) => match[1]);
+  assert.ok(actions.length > 0, `Expected pinned Actions in ${path}`);
+  for (const action of actions)
+    assert.match(action, /^[^@\s]+@[a-f0-9]{40}$/, `Pin Actions to a full commit in ${path}`);
+  assert.equal(
+    (workflow.match(/uses:\s+actions\/checkout@/g) ?? []).length,
+    (workflow.match(/persist-credentials:\s+false/g) ?? []).length,
+    `Every checkout must disable persisted credentials in ${path}`,
+  );
+}
 const translatedPairs = await checkTranslations(root);
-for (const name of (await readdir(join(root, 'src'))).filter((name) => name.endsWith('.ts')))
+const runtimeModules = (await readdir(join(root, 'src'))).filter((name) => name.endsWith('.ts'));
+for (const name of runtimeModules)
   assert.ok(
     manifest.files.includes(`dist/${name.slice(0, -3)}.js`),
     `Runtime module missing from package: ${name}`,
   );
+// Runtime modules should have one-way ownership. Checking emitted JavaScript avoids
+// rejecting type-only relationships that TypeScript removes from the actual module graph.
+const runtimeGraph = new Map();
+for (const source of runtimeModules) {
+  const module = source.slice(0, -3) + '.js';
+  const content = await readFile(join(root, 'dist', module), 'utf8');
+  runtimeGraph.set(
+    module,
+    [...content.matchAll(/(?:\bfrom\s+|^\s*import\s*)['"](\.\/[^'"]+\.js)['"]/gm)]
+      .map((match) => match[1].slice(2))
+      .filter((dependency) => runtimeModules.includes(dependency.replace(/\.js$/, '.ts'))),
+  );
+}
+const visiting = new Set();
+const visited = new Set();
+const moduleStack = [];
+function assertAcyclic(module) {
+  if (visited.has(module)) return;
+  if (visiting.has(module)) {
+    const start = moduleStack.indexOf(module);
+    assert.fail(`Runtime import cycle: ${[...moduleStack.slice(start), module].join(' -> ')}`);
+  }
+  visiting.add(module);
+  moduleStack.push(module);
+  for (const dependency of runtimeGraph.get(module) ?? []) assertAcyclic(dependency);
+  moduleStack.pop();
+  visiting.delete(module);
+  visited.add(module);
+}
+for (const module of runtimeGraph.keys()) assertAcyclic(module);
 for (const [name, schema] of Object.entries({
   config: configSchema,
   task: taskSchema,

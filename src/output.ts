@@ -86,6 +86,19 @@ export function renderResult(command: string, root: string, result: unknown): st
         ? [
             `Selected task: ${terminalText(data.selected.task.id)}; continuity: ${data.selected.continuity}`,
             ...data.selected.changes.map((change) => `  change: ${terminalText(change)}`),
+            `Saved observations: ${data.selected.evidence.records.length} listed; ${data.selected.evidence.issues.length} issue(s); artifacts and applicability not checked`,
+            ...data.selected.evidence.records.map(
+              (entry) =>
+                `  observer ${entry.observation.outcome} [${terminalText(entry.id)}]: ${terminalText(entry.observation.summary)}`,
+            ),
+            ...data.selected.evidence.issues.map(
+              (issue) =>
+                `  evidence issue: ${terminalText(issue.path)} — ${terminalText(issue.error)}`,
+            ),
+            ...(data.selected.evidence.truncated
+              ? ['  Evidence discovery truncated; omitted observations remain unexamined.']
+              : []),
+            `Inspect saved observations: clinx evidence list ${terminalText(data.selected.task.id)} --record UUID`,
             ...(data.selected.checkpoint
               ? [
                   `Saved summary: ${terminalText(data.selected.checkpoint.note.summary)}`,

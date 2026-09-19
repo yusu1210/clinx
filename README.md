@@ -1,96 +1,67 @@
 # clinx — AI-native full-stack engineering
 
-clinx helps agents turn requirements and existing projects into implemented, verified,
-usable results, and retain useful learning for the next task. It provides a general
-methodology, portable Skills and an optional CLI without replacing your stack or environment.
+clinx helps an agent turn a requirement and existing code into a working, verified result. It provides a portable engineering method, two agent Skills, and an optional CLI for tasks that need durable context or evidence.
 
-[简体中文](README.zh-CN.md) · [Start](docs/en/cold-start.md) · [Hands-on](docs/en/hands-on.md) · [Documentation](docs/en/README.md)
+[简体中文](README.zh-CN.md) · [Start](docs/en/cold-start.md) · [Hands-on tutorial](docs/en/hands-on.md) · [Documentation](docs/en/README.md)
 
-## Connect once, then give the task
+## Start with the requirement
 
-[Connect a reviewed Skill](docs/en/installation.md), or reuse an available host/team copy.
-Skill-only use needs no Node runtime, CLI, project map or task JSON. Do not initialize every repository.
+[Connect a reviewed Skill](docs/en/installation.md), or reuse a copy already available to your host or team. Skill-only use needs no Node.js runtime, CLI configuration, project map, or task JSON.
 
-Once connected:
+Then give the agent the task in ordinary language:
 
 > Use clinx for this PRD: `<file or link>`, in our current product context.
-> Confirm the key design with me, then implement and verify autonomously. Do not push or deploy.
+> Confirm the key design with me, then implement and verify it locally. Do not push or deploy.
 
-Known project locations come from the current task, knowledge entry and local bindings;
-you need not repeat them. A new host without an entry needs one project or knowledge
-anchor. See [context reuse](docs/en/project-context.md) for moved paths and ambiguous copies.
+For low-risk work, you can authorize implementation in the initial request. Say when you want design, diagnosis, or review only. The agent inspects the relevant code and project tools, reuses existing capabilities, and asks when a product decision or additional authority is actually needed. See [collaboration and authorization](docs/en/collaboration.md).
 
-For low-risk work, authorize implementation directly. State when you want only design,
-diagnosis or review. The agent investigates engineering facts, reuses existing capabilities
-and chooses relevant tools and checks. It asks at agreed checkpoints or for a genuinely
-missing decision or authority, not for technical configuration or a graph-provider choice.
-[Scope and authorization](docs/en/collaboration.md) still apply.
+A useful handoff tells you:
 
-Expect a usable result: what changed, how to run and stop it, what was actually verified,
-and what remains incomplete. Full-stack means the boundaries the outcome needs, not a
-mandatory page, API and database for every request.
+- what changed and which existing capabilities were reused;
+- how to run, exercise, and stop the result;
+- what was observed, including relevant failure cases;
+- what remains unresolved or unverified.
 
-## Where it fits
+Full-stack describes the boundaries required by the outcome. It does not require every task to add a UI, API, and database.
 
-| Your task                                    | What clinx supports                                                                |
-| -------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Build from zero                              | Resolve necessary decisions and run a complete slice early                         |
-| Extend or reuse a system                     | Check existing semantics, ownership and affected consumers                         |
-| Deliver across repositories                  | Coordinate once and reference sources without moving or initializing each one      |
-| Resume interrupted work                      | Recover intent, changes and pending decisions without blindly replaying operations |
-| Understand or maintain engineering knowledge | Verify sources, correct old guidance and make findings retrievable                 |
+## What clinx supports
 
-`clinx-delivery` guides software changes; `clinx-knowledge` handles independent knowledge work.
-Both are self-contained and share knowledge rules. Hosts can select by intent; explicitly
-name the relevant Skill when automatic selection is unavailable.
-The method is **Discover → Contract → Build → Verify → Learn**, not five human approval gates.
+| Task                           | How clinx helps                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------------------ |
+| Build from zero                | Settle the necessary decisions and run a complete slice early                        |
+| Change an existing system      | Trace current semantics, ownership, and affected consumers                           |
+| Work across repositories       | Coordinate from one workspace without moving or initializing each repository         |
+| Resume interrupted work        | Recover intent, changes, and pending decisions without replaying operations blindly  |
+| Maintain engineering knowledge | Check current sources, correct stale guidance, and keep useful findings discoverable |
 
-The [hands-on case](docs/en/hands-on.md) starts with an unfinished PRD and shows the request,
-design decision and observable result. The [knowledge case](docs/en/knowledge.md) covers
-stale guidance, conflicting implementation and later revalidation.
-These original synthetic projects are exercises, not production endorsements.
+The method is **Discover → Contract → Build → Verify → Learn**. These are questions to revisit during delivery, not five approval gates.
 
-## CLI: add records when they help
+- [`clinx-delivery`](skills/clinx-delivery/SKILL.md) guides software changes.
+- [`clinx-knowledge`](skills/clinx-knowledge/SKILL.md) guides investigations and reusable engineering knowledge.
 
-The CLI retains agreements, inputs and execution results for long tasks, handoffs and
-repeatable verification; it does not call models. Ordinary tasks can use only the Skill
-and native project tools. When records help, the agent prepares technical fields and
-runs commands while you review consequential boundaries.
+Both Skills work without the CLI. The [hands-on tutorial](docs/en/hands-on.md) starts from an unfinished PRD; the [knowledge tutorial](docs/en/knowledge.md) covers stale guidance, conflicting implementation, and later revalidation. Both use original synthetic projects.
 
-This is a source/local-package preview, **not an npm registry release**. The optional CLI
-requires macOS/Linux, Node.js 22.16+ and npm. This does not constrain the application's stack
-or require npm files in business repositories. See [installation](docs/en/installation.md).
+## Add the CLI when records help
 
-With the CLI available:
+The CLI records task agreements, selected inputs, handoffs, checks, and local observations. It is useful for long-running work, cross-session handoffs, and repeatable verification. It does not call a model or replace project-native tools.
+
+The CLI is currently distributed from reviewed source or local release bundles; it is **not published to the npm registry**. It requires macOS or Linux, Node.js 22.16 or later, and npm. See [installation](docs/en/installation.md).
 
 ```sh
 clinx status
 clinx COMMAND --help
 ```
 
-`status` summarizes local installation, configuration and tasks without running checks
-or selecting work. No local ownership record does not mean the host lacks a Skill;
-missing configuration does not block ordinary engineering.
-For a needed workspace-local installation, use `clinx init --agent codex --apply`;
-do not initialize again when a suitable copy is already available.
-Machine callers use `--json`; preview is not a mandatory extra human confirmation.
+`clinx status` reports local setup and saved tasks without running checks or selecting work. Machine callers use `--json`. For task records, resumption, and exact command semantics, see [recorded delivery](docs/en/recorded-delivery.md), the [CLI reference](docs/en/cli.md), and [workspace ownership](docs/en/workspace.md).
 
-See [records and resumption](docs/en/recorded-delivery.md), [CLI reference](docs/en/cli.md)
-and [workspace ownership](docs/en/workspace.md) for deeper use.
-Reuse existing tools; no graph engine, knowledge database or second deployment platform is required.
+## Scope and evidence
 
-## Quality and boundaries
+clinx is independent of application language, framework, and deployment platform. It reuses the project's own build, test, browser, and platform tools.
 
-The method and Skills are company-, language- and domain-independent. CLI execution and
-parsing have explicit support limits. Local checks are not integration verification,
-release readiness is not authority, and saved knowledge is not necessarily correct.
-Commands inherit current permissions, environment and network. clinx is not a sandbox,
-agent runtime or environment builder.
+A local pass supports only what that check observed. It does not establish remote state, integration acceptance, release authorization, or the correctness of saved knowledge. Commands run with the current process permissions, environment, and network access. clinx is not a sandbox, agent runtime, environment builder, or deployment system.
 
-[Verification](docs/en/validation.md) covers implementation and distribution checks.
-[Evaluation](docs/en/evaluation.md) separately measures agent outcomes; general efficiency
-gains are not yet established. See [Security](SECURITY.md) for trust and sensitive-data boundaries.
+[Verification](docs/en/validation.md) describes repository and distribution checks. [Evaluation](docs/en/evaluation.md) covers agent-outcome experiments; general productivity gains have not been established. See [Security](SECURITY.md) for trust and sensitive-data boundaries.
 
-MIT licensed. Supported interfaces are Skills, CLI and JSON Schemas.
-The CLI has no model calls, telemetry or automatic publication.
+MIT licensed. Public interfaces are the Skills, CLI, and JSON Schemas. The CLI has no telemetry or automatic publication.
+
 [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)

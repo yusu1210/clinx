@@ -1,6 +1,6 @@
 # Synthetic eligible-item picker
 
-[中文](README.zh-CN.md)
+[简体中文](README.zh-CN.md)
 
 A synthetic domain and HTTP example demonstrating rule ownership, filtering before
 pagination, matching counts and a loopback HTTP boundary. It has no browser UI.

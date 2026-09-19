@@ -20,6 +20,12 @@ This is intentionally **not** a CRUD benchmark and not a test of raw algorithm a
 `skill-cli` is named by **availability**, not usage. CLI use is measured separately and
 never forced.
 
+Formal runs use the versioned experiment plan described in [README](README.md).
+Freeze it before preparing candidates. Requested model/effort and material hashes
+bind the treatment; observed per-phase CLI versions remain separate evidence. The
+aggregator refuses inconsistent provenance instead of silently pooling it. This is
+necessary for interpretable comparisons, not proof of an agent benefit or attestation.
+
 ## Scenario 1 — campaign-cross-repo
 
 Four sibling repositories are visible:
@@ -111,12 +117,22 @@ A run is eligible for comparative analysis only when:
 - the agent cannot see hidden graders or reference solutions;
 - graders execute real code after the agent is frozen;
 - failures are retained, not retried away;
+- candidate dependencies are prepared from the same reviewed lock and bytes with
+  evaluator-controlled immutable copies or isolated caches;
+- preparation failure follows one predeclared symmetric fallback and remains an
+  operational observation, not a candidate acceptance failure;
 - host permissions are equivalent across arms;
 - model/tool/host versions and elapsed time are recorded;
 - unavailable metrics remain `null`, never fabricated as zero.
 
 The GitHub workflow uses separate artifact-only agent jobs: those jobs do not check out
 the clinx repository, so hidden graders remain in later evaluator jobs.
+
+Do not combine method-only and native-runtime comparisons. The current arms keep one
+agent runtime fixed and vary instructions or optional clinx availability. A product's
+own model selection, scheduler, global setup or external integrations form a different
+whole-system treatment. If that runtime is unavailable, report it as unavailable; do
+not execute exported instructions manually and label the result a native-runtime run.
 
 ## Sample size
 

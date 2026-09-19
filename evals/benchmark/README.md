@@ -40,6 +40,9 @@ Source comparisons use the evaluator's fixture bytes, not candidate Git status.
 Committed changes, additions, deletions and symlinks remain visible. The resume
 transition records existing owner-scope violations and changes only matching baseline
 files; it never commits or overwrites candidate work as evaluator activity.
+Fixture repositories are created with inherited Git redirection, signing, hooks and
+global/system configuration disabled. Workflow checkouts do not retain GitHub credentials,
+including the hidden grader job that imports candidate code.
 Final snapshots cannot detect a temporary edit later reverted: independent reviewers
 must also inspect the frozen tool trace. This is not a sandbox or tamper-proof attestation.
 
@@ -50,6 +53,18 @@ The CLI arm copies runtime code, public assets and locked production dependencie
 it verifies the executable before returning. No installation hooks or registry calls
 run during preparation. Evaluators, benchmark answers and reference solvers are not
 copied; links to withheld evaluation material are not available in the candidate.
+
+These arms compare one fixed agent runtime with different instruction/tool availability.
+They do not evaluate another product's native scheduler or model runtime. Treat such a
+runtime as a separate whole-system experiment, including its installation, identity,
+external-service and side-effect requirements. If it cannot run, retain that
+unavailability instead of substituting manual use of its instructions.
+
+Prepare product dependencies before the candidate timer from identical reviewed inputs.
+Use isolated caches or immutable dependency copies across arms. If preparation fails,
+apply the predeclared fallback symmetrically and retain the raw operational failure.
+Evaluator-side recovery may execute every frozen submission later, but it does not
+rewrite the candidate's original environment, timing or first-pass claims.
 
 ## Grading and review
 
@@ -105,15 +120,39 @@ The review is an evaluation record, not a CLI approval feature or production aut
 
 ## Summaries without dropping runs
 
-Before running agents, retain a `run-plan.json` array of `{scenario, arm, rep}` entries.
-Place the plan beside `result-SCENARIO-ARM-REP.json` files, then run:
+Before running agents, create an exclusive, versioned `run-plan.json` with
+`plan.mjs ROOT OUTPUT SCENARIO|all REPEATS`. Set `BENCHMARK_ID`, `BENCHMARK_MODEL`,
+`BENCHMARK_EFFORT` and `BENCHMARK_REVISION` (the full source commit). Build first.
+The plan freezes the requested model/effort, pinned action, source revision, fixture,
+evaluator (including prompt and transition code), Skill and runtime material hashes.
+`prepare.mjs ROOT SCENARIO ARM OUTPUT PLAN REP` verifies those materials before and
+after copying, then records the prepared input and initial prompt hashes. A separate base-input hash
+binds the copied fixture before treatment and the shared request (including authority),
+so cross-arm fairness is checked independently of treatment-specific content. Preparation
+without a plan remains available for fixture diagnostics, not formal comparisons.
+
+Place the unchanged plan beside `result-SCENARIO-ARM-REP.json` files, then run:
 
 ```sh
 node evals/benchmark/scripts/aggregate.mjs /path/to/results
 ```
 
-The supplied workflow derives the plan from its original matrix, even if result
-artifacts are missing. Missing, invalid and unresolved runs stay in the denominator
+The supplied workflow saves the plan before preparing candidates and downloads that
+same artifact for aggregation, even if results are missing. Result metadata binds each
+repetition to the experiment, including operational failures. Formal jobs use the fixed
+`ubuntu-24.04` runner label. The grader retains the observed Codex CLI version, runner
+OS/architecture, hosted image and Node.js version for each phase separately from the requested model.
+Mismatched identities/repetitions, different base inputs across arms of one scenario,
+changed prepared inputs within a treatment, mixed
+observed CLI or runner-image versions, or missing runtime/host observations are invalid for formal pooling.
+Original result files remain available for inspection. Legacy array plans are labeled
+`fixture-diagnostics-only` and reject results bearing formal provenance.
+
+These hashes detect mismatched records; they do not attest execution, prove provider
+model identity, or freeze remote tools and infrastructure. The phase-two request also
+includes the agent's handoff; retain that artifact and traces when interpreting results.
+The evaluator and its artifacts remain trusted. Missing runtime observations mean
+comparison is unavailable, not that the candidate failed acceptance. Missing, invalid and unresolved runs stay in the denominator
 and remain unknown. `passRate` is null until every planned verdict is known;
 `confirmedPassRate` is confirmed passes divided by all planned runs. Means include
 only complete known measurements and report their sample counts. Single-phase cases

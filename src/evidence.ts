@@ -11,6 +11,7 @@ import {
   withLock,
   writeNew,
 } from './files.js';
+import { evidenceStore, validateEvidenceRecord } from './evidence-store.js';
 import {
   openWorkspace,
   fingerprintSources,
@@ -19,14 +20,10 @@ import {
   taskSources,
   type Workspace,
 } from './workspace.js';
-import { readTask, taskPath } from './task.js';
+import { readTask } from './task.js';
 import { evidenceInputSchema, evidenceSchema, unique, type Evidence } from './schema.js';
 
 const maxTotalBytes = 16 * 1024 * 1024;
-const store = (id: string) => {
-  taskPath(id); // Validate identity before using it as a path component.
-  return `.clinx/evidence/${id}`;
-};
 const note =
   'Attachments retain an observer assertion, not a verified verdict or authority. Local bindings describe capture-time inputs, not necessarily the observed deployment. Remote state and target revision are not verified; review all relevant pass/fail/inconclusive observations alongside verify.';
 async function binding(p: Workspace, id: string) {
@@ -49,6 +46,10 @@ export async function addEvidence(p: Workspace, id: string, value: unknown) {
   return withLock(p.root, async () => {
     const current = await openWorkspace(p.root);
     const { task } = await readTask(current, id);
+    if (!task.obligations?.length)
+      throw new Error(
+        'Task has no verification plan. Evidence attachments must reference declared obligations; use task revise to add a plan before attaching evidence.',
+      );
     for (const obligation of input.obligations)
       if (!(task.obligations ?? []).some((o) => o.id === obligation))
         throw new Error(`Unknown evidence obligation: ${obligation}`);
@@ -90,7 +91,7 @@ export async function addEvidence(p: Workspace, id: string, value: unknown) {
       observation,
       artifacts: copies.map((c) => c.entry),
     });
-    const directory = `${store(id)}/${record.id}`;
+    const directory = `${evidenceStore(id)}/${record.id}`;
     await makePrivateDir(current.root, `${directory}/artifacts`);
     for (const copy of copies)
       await writeNew(
@@ -119,7 +120,7 @@ interface ListedEvidence {
 export async function listEvidence(root: string, id: string, recordId?: string) {
   root = await realpath(root);
   // Archive integrity does not depend on today's configuration or task contract.
-  const location = store(id);
+  const location = evidenceStore(id);
   const names: string[] = [];
   try {
     if (recordId !== undefined) names.push(evidenceSchema.shape.id.parse(recordId));
@@ -160,28 +161,7 @@ export async function listEvidence(root: string, id: string, recordId?: string) 
       const record = evidenceSchema.parse(
         await readJson(await boundedPath(directory, 'record.json')),
       );
-      if (record.id !== name || record.taskId !== id) throw new Error('Evidence identity mismatch');
-      unique(record.observation.obligations, 'evidence obligation IDs');
-      unique(
-        record.artifacts.map((a) => a.path),
-        'stored artifact paths',
-      );
-      unique(
-        record.capturedInputs.sources.map((s) => s.id),
-        'captured source IDs',
-      );
-      unique(
-        record.artifacts.map((a) => JSON.stringify([a.original.source ?? null, a.original.path])),
-        'stored artifact references',
-      );
-      for (const artifact of record.artifacts)
-        if (
-          artifact.original.source &&
-          !record.capturedInputs.sources.some((s) => s.id === artifact.original.source)
-        )
-          throw new Error(`Artifact origin outside captured sources: ${artifact.original.source}`);
-      if (Date.parse(record.observation.observedAt) > Date.parse(record.createdAt))
-        throw new Error('Observation postdates capture');
+      validateEvidenceRecord(record, id, name);
       // Preserve valid metadata even when an artifact is missing, changed or beyond
       // the aggregate listing budget. Integrity is a separate assessment.
       entry.record = record;

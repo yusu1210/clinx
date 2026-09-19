@@ -59,6 +59,13 @@ export async function translationSnapshot(directory = root) {
       readFile(join(directory, source)),
       readFile(join(directory, translation)),
     ]);
+    const fenceLanguages = (bytes) =>
+      [...bytes.toString().matchAll(/^```([^\n]*)\n.*?^```$/gms)].map((match) => match[1]);
+    assert.deepEqual(
+      fenceLanguages(original),
+      fenceLanguages(translated),
+      `Code-block mismatch: ${source} / ${translation}`,
+    );
     for (const [from, to, bytes] of [
       [source, translation, original],
       [translation, source, translated],

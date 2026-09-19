@@ -2,31 +2,40 @@
 
 [简体中文](../zh-CN/README.md)
 
-For your own requirement, start with [your first task](cold-start.md): connect once,
-provide the requirement and projects, then review results and agreed decisions.
-For a runnable example, use the [hands-on tutorial](hands-on.md).
-The [Skill](../../skills/clinx-delivery/SKILL.md) guides the agent without requiring the CLI.
-The following references are for specific needs, not an onboarding reading list.
+New to clinx? Follow one of these paths:
 
-Already know the product? [Reuse its context](project-context.md) without repeating
-repository paths, knowledge entry locations or configuration.
+- **Use clinx on your project:** [start from a requirement](cold-start.md).
+- **Try a runnable example:** follow the [hands-on tutorial](hands-on.md).
+- **Install or update the Skills and CLI:** read [installation](installation.md).
+- **Return to a known product:** use [project context](project-context.md).
 
-| Goal                                              | Guide                                     |
-| ------------------------------------------------- | ----------------------------------------- |
-| Install, connect, upgrade or remove               | [Installation](installation.md)           |
-| Understand the engineering method                 | [Method](method.md)                       |
-| Agree on scope and confirmation points            | [Collaboration](collaboration.md)         |
-| Choose workspace layout and knowledge owners      | [Workspace](workspace.md)                 |
-| Reuse existing project knowledge and tools        | [Project integration](adoption.md)        |
-| Build, retrieve and correct engineering knowledge | [Knowledge in practice](knowledge.md)     |
-| Record a task with the optional CLI               | [Walkthrough](walkthrough.md)             |
-| Inspect the tutorial's optional records           | [Recorded delivery](recorded-delivery.md) |
-| Look up commands and result meanings              | [CLI reference](cli.md)                   |
-| Save a local observation                          | [Evidence](evidence.md)                   |
-| Understand component ownership and limits         | [Architecture](architecture.md)           |
-| Reproduce repository checks                       | [Verification](validation.md)             |
-| Evaluate agent outcomes                           | [Evaluation](evaluation.md)               |
+The Skills guide the agent without requiring the CLI. The remaining pages are references for a specific task.
 
-For contribution and release rules, read [Contributing](../../CONTRIBUTING.md). Report vulnerabilities through [Security](../../SECURITY.md).
+## Method and collaboration
 
-Runnable examples cover [domain and HTTP](../../examples/node-picker/README.md), [browser, API and persistence](../../examples/reading-list/README.md), [multi-module builds](../../examples/maven-reactor/README.md), and [sibling repositories](../../examples/multi-source/README.md). Their stacks illustrate specific boundaries; they do not limit the method's scope.
+| Need                                                   | Guide                              |
+| ------------------------------------------------------ | ---------------------------------- |
+| Understand the engineering method                      | [Method](method.md)                |
+| Agree on scope, authority, and confirmation points     | [Collaboration](collaboration.md)  |
+| Choose workspace layout and information ownership      | [Workspace](workspace.md)          |
+| Reuse existing project guidance and tools              | [Project integration](adoption.md) |
+| Investigate, retain, and correct engineering knowledge | [Knowledge](knowledge.md)          |
+
+## Optional records and reference
+
+| Need                                      | Guide                                     |
+| ----------------------------------------- | ----------------------------------------- |
+| Record and resume a task                  | [Recorded delivery](recorded-delivery.md) |
+| Follow the CLI workflow                   | [CLI walkthrough](walkthrough.md)         |
+| Look up commands and result semantics     | [CLI reference](cli.md)                   |
+| Preserve a reviewed local observation     | [Evidence](evidence.md)                   |
+| Understand component ownership and limits | [Architecture](architecture.md)           |
+
+## Project maintenance
+
+- [Reproduce repository and package checks](validation.md)
+- [Evaluate implementation and agent outcomes](evaluation.md)
+- [Contribute](../../CONTRIBUTING.md)
+- [Report a vulnerability](../../SECURITY.md)
+
+Runnable examples cover [domain and HTTP](../../examples/node-picker/README.md), [browser, API, and persistence](../../examples/reading-list/README.md), [multi-module builds](../../examples/maven-reactor/README.md), [multiple repositories](../../examples/multi-source/README.md), and [platform observations](../../examples/platform-observation/README.md).

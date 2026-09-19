@@ -7,6 +7,13 @@ import { version } from './version.js';
 const packageRoot = resolve(import.meta.dirname, '..');
 export const exampleCatalog = [
   {
+    name: 'platform-observation',
+    path: 'examples/platform-observation',
+    description:
+      'Synthetic job-result interpretation, conflicting observations and an unresolved real-target claim',
+    requires: 'Node.js 22.16+',
+  },
+  {
     name: 'noticeboard',
     path: 'evals/fixtures/noticeboard',
     description: 'Unfinished PRD with existing service and viewer; use the hands-on guide',

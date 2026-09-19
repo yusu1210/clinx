@@ -1,9 +1,9 @@
 # Contributing
 
-[中文](CONTRIBUTING.zh-CN.md)
+[简体中文](CONTRIBUTING.zh-CN.md)
 
 clinx provides an AI-native full-stack engineering methodology and portable agent
-Skill. Add CLI features for demonstrated onboarding, continuity or verification needs.
+Skills. Add CLI features for demonstrated onboarding, continuity, or verification needs.
 The CLI is not an environment installer or autonomous workflow engine.
 
 ## Development

@@ -1,6 +1,6 @@
 # Workspace layout and ownership
 
-[中文](../zh-CN/workspace.md)
+[简体中文](../zh-CN/workspace.md)
 
 Start with the existing repositories and the requirement. A workspace is the place
 from which a delivery is coordinated, not a new development environment or a required
