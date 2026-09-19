@@ -192,13 +192,30 @@ that "saves time" by omitting the necessary final-consumer validation has not im
 
 ### Separate repair from first-pass performance
 
-Define the evaluated unit before running it: an author's first draft or the complete
-delivery loop, including review and repair. If internal review is part of the method,
-permit and budget it consistently across comparison arms; a no-delegation draft trial
-does not measure that whole loop. Keep internal feedback separate from withheld final
-acceptance. Report first-draft and final outcomes separately, retaining all repair cost;
-feeding acceptance findings back to the author does not erase the original failure or
-make the repaired result a fresh unseen trial.
+Freeze the first completed submission before independent acceptance feedback. Native
+tests, probes and repairs within the authorized attempt are part of first-pass delivery;
+forbidding them would penalize early feedback. If internal review belongs to the method,
+permit and charge it consistently across arms. An author's pre-review draft can be a
+separate snapshot, not a substitute for evaluating the complete method. Predeclare the
+submission boundary and budget; retain timeouts and incomplete submissions. Report that
+snapshot and the post-feedback result separately, with all investigation, review and repair
+cost. Feeding acceptance findings back does not erase the failure or create an unseen trial.
+
+For a claimed preventable omission, identify evidence accessible at the decision time,
+a feasible way to find/check it within scope and budget, and the decision it could change.
+File existence alone does not prove preventability. Distinguish retrieval, interpretation,
+action and feedback failures using observable records; an opened file does not prove
+understanding. Keep attribution unknown where necessary. Execution-dependent discovery,
+environment exposure and preventability can overlap; they are not exclusive severity bins.
+
+When studying recovery, distinguish the earliest externally evidenced wrong action,
+the first relevant feedback available to the agent, recognition, and a verified repair.
+Record intervening work/effects and who supplied the signal; a later passing outcome
+does not show self-detection or undo prior effects. Judge against evidence available at
+the time, not hidden future requirements. Keep ambiguous or diffuse failures unresolved
+instead of forcing every trajectory into one first-error label. Compare feedback changes
+from matched starting conditions; retrospective localization alone does not prove that
+an online reviewer would have caught the error or improved delivery.
 
 Calibrate reviewers to the agreed endpoint before grading. A design-only task may
 identify external decisions and runtime checks that hold implementation or release;
@@ -227,6 +244,66 @@ Then compare the full Skill with a shorter version, or optional CLI availability
 Skill alone, only where that factor addresses the observed failure. Predeclare the
 acceptance criteria, cost measure, unacceptable regressions and stopping rule; report
 uncertainty rather than choosing a winner from one successful run.
+
+### Measure learning across different tasks
+
+To test whether retained knowledge reduces repeated investigation, predeclare a sequence
+of different requirements on the same evolving system. Use domains not used to tune the
+instructions, fresh sessions, and identical initial source, tools, authority and acceptance
+for each arm. Compare native assistance, a frozen minimal instruction and the current
+Skill; keep the full text/manifests of both instruction treatments. This is a study
+protocol, not a completed benchmark or a requirement for ordinary delivery.
+
+Carry each arm's actual code, tests, tools and legitimate project guidance into its next
+task. Native agents must also be allowed to retain normal artifacts; removing their
+documentation would confound the result. Do not carry conversations, evaluator answers
+or hidden future requirements into candidate context. Keep internal review/repair budgets
+symmetric. A failed task remains in the denominator: predeclare whether the sequence
+stops or continues after charged repair; never silently replace it with a reference patch.
+
+Include reuse, a contract change, a new consumer, stale guidance and recovery in the
+sequence where they fit the domain. Grade externally observable requirements, old behavior,
+authority and recovery at each step. Later tasks should challenge earlier choices without
+requiring a preferred internal architecture. Track change amplification and duplicated
+rules with source review, not a universal complexity threshold.
+
+Compare cumulative cost and quality across arms on the same task sequence. Later tasks
+may be harder, so a monotonically falling per-task cost is neither required nor proof of
+learning. Treat the sequence as the dependent experimental unit; five checkpoints are not
+five independent samples. Repeat across unseen task families and retain failures and
+uncertainty. Setup, source revalidation, knowledge maintenance, review, repair and human
+attention belong in total cost. Investigating a still-valid fact again is a candidate
+waste only after accounting for the recheck its consequence or drift required.
+
+To attribute a gain to retained assets, branch from the same frozen source checkpoint
+with the same method/tools and vary only access to the selected assets, including a
+stale-asset condition. Changing both instructions and assets estimates a combined treatment.
+If resetting every arm to a canonical implementation between tasks, predeclare what carries
+over and check asset compatibility: maps, tests and tools may refer to the discarded code.
+Charge adaptation and revalidation; do not silently repair assets, import a candidate patch
+through a tool, or expose future requirements through the reference implementation. Such
+resets measure transfer to that implementation, not the arm's natural maintenance trajectory.
+Keep them separate from carrying each arm's actual code forward. Add graph/CLI factors only
+when their marginal value is the question. Existing knowledge/context exercises protect
+known failures; they do not establish gains on an unseen requirement sequence.
+
+State the decision the baseline represents. Adopting clinx in an existing team compares
+future work and additional setup against that team's current expertise and tools; charging
+all past human training only to the baseline distorts that decision. Studying onboarding
+is a different comparison and requires matched access to project history and owners.
+Neither comparison justifies trading required correctness or authority for fewer searches.
+
+Evaluate retained assets through their next applicable use, including discovery, source
+revalidation, upkeep and damage from stale or wrong guidance. Fewer reads or questions
+can mean useful reuse or an unchecked assumption; require evidence of the decision they
+improved. A new test can preserve a mistaken rule, so its authority and an independent
+behavioral counterexample matter. Prefer an existing owner or executable check where it
+serves the recurring need; no document, index or environment investment earns its place
+merely by persisting. Distinguish supported reuse, necessary revalidation, avoidable
+reconstruction and unsafe reuse, retaining unknown attribution and non-use. To study whether
+learning prevented recurrence, count later applicable opportunities, not all later tasks;
+no recurrence without an opportunity shows no prevention. Record the asset's actual role
+or compare its availability before attributing a success to it.
 
 ### Keep collection distinct from outcomes
 

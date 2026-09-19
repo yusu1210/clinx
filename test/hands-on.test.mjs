@@ -14,13 +14,22 @@ test('hands-on guide JSON runs the documented task without treating passing old 
     ].map((match) => JSON.parse(match[1]));
   const english = await blocks('en');
   assert.deepEqual(await blocks('zh-CN'), english);
-  assert.equal(english.length, 3);
-  const [config, task, note] = english;
+  assert.equal(english.length, 4);
+  const [continuity, config, task, note] = english;
   const dir = await mkdtemp(join(tmpdir(), 'clinx-hands-on-'));
   await cp(join(root, 'evals/fixtures/noticeboard'), dir, { recursive: true });
   // CLI records work without claiming ownership of a host- or team-managed Skill.
   await assert.rejects(access(join(dir, '.agents')), /ENOENT/);
   await json(join(dir, 'clinx.config.json'), config);
+  await json(join(dir, 'continuity.json'), continuity);
+  assert.equal(cli(dir, 'task', 'add', '--file', join(dir, 'continuity.json')).status, 0);
+  await json(join(dir, 'resume.json'), note);
+  assert.equal(
+    cli(dir, 'task', 'checkpoint', continuity.id, '--file', join(dir, 'resume.json')).status,
+    0,
+  );
+  assert.equal(cli(dir, 'context', continuity.id).out.continuity, 'inputs-match');
+  assert.match(cli(dir, 'verify', continuity.id).err, /no verification plan/);
   await json(join(dir, 'proposal.json'), task);
   assert.equal(cli(dir, 'task', 'add', '--file', join(dir, 'proposal.json')).status, 0);
   assert.equal(cli(dir, 'validate', task.id).status, 0);

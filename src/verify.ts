@@ -35,12 +35,20 @@ import {
   type Verdict,
 } from './schema.js';
 
+function resolveClaim(task: TaskContract, requestedClaim?: string): string {
+  if (!task.claims)
+    throw new Error(
+      'Task has no verification plan. Add reviewed claims and obligations with task revise before verification.',
+    );
+  return requestedClaim ?? task.defaultClaim;
+}
 function selected(task: TaskContract, claim: string) {
+  if (!task.claims) throw new Error('Task has no verification plan');
   if (!task.claims.includes(claim)) throw new Error(`Unknown claim: ${claim}`);
   return task.obligations.filter((o) => o.claims.includes(claim));
 }
 function planChecks(p: Workspace, task: TaskContract, id: string, requestedClaim?: string) {
-  const claim = requestedClaim ?? task.defaultClaim;
+  const claim = resolveClaim(task, requestedClaim);
   const obligations = selected(task, claim);
   const ids = new Set(obligations.flatMap((o) => ('checks' in o ? o.checks : [])));
   return {
@@ -157,7 +165,7 @@ export async function reconcile(
   // Callers may retain an old Workspace object across an execution or a long pause.
   p = await openWorkspace(p.root);
   const task = await readTaskDefinition(p, id);
-  const claim = requestedClaim ?? task.defaultClaim;
+  const claim = resolveClaim(task, requestedClaim);
   const obligations = selected(task, claim);
   const file = await boundedPath(p.root, receiptPath);
   const receipt = receiptSchema.parse(await readJson(file));

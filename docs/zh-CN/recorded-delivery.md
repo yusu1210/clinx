@@ -4,6 +4,27 @@
 
 这是[实操案例](hands-on.md)的 Agent/维护者参考，不是用户开始任务前必须阅读的教程。需要留存验收或跨会话交接时再使用。命令与 JSON 展示可检查的内部过程，通常由 Agent 完成。
 
+## 只保留续接，不建立验证计划
+
+只需续接时，在 `clinx.config.json` 声明相关来源输入，需要检查时再添加 checks。
+最小任务约定可以是：
+
+```json
+{
+  "version": 1,
+  "id": "2026-09-19-notice-visibility",
+  "title": "Investigate notice visibility",
+  "outcome": "Identify the current visibility rule and unresolved consumer behavior",
+  "mode": "diagnosis",
+  "scope": ["Visibility owner and affected consumers"]
+}
+```
+
+使用 `task add`，再以普通 summary/next/blockers 使用 `task checkpoint` 和 `context`。
+该约定没有验收结论。执行 `verify` 前，通过 `task revise` 一起添加 `defaultClaim`、`claims`
+和 `obligations`。现有来源与任务绑定检查仍然生效；省略声明不授权无绑定采集或执行。
+机器续接没有额外价值时，任务文档仍然足够。
+
 ## 记录同一需求
 
 如果一次对话已经交付，跳过这节即可。长任务、多人交接、跨工程改动或需要检查记录时，

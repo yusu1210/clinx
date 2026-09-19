@@ -4,6 +4,8 @@ import { readFile, readdir, symlink, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fixture, cli, put, json, contract, bin } from './helpers.mjs';
+import { listTasks } from '../dist/task.js';
+import { withFdBudget } from './fd-budget.mjs';
 
 test('missing contracts stay visible without classifying notes as recorded tasks or hiding lost records', async () => {
   const dir = await fixture();
@@ -111,7 +113,7 @@ test('status retains actionable field diagnostics in JSON and text', async () =>
   assert.match(human.stdout, /checks\.0\.command/);
 });
 
-test('task pages are compact, resumable and safe under a low file-descriptor limit', async () => {
+test('task pages are compact, resumable and bound application file descriptors', async (t) => {
   const dir = await fixture();
   for (let i = 0; i < 180; i++) {
     const id = `task-${String(i).padStart(3, '0')}`;
@@ -130,23 +132,10 @@ test('task pages are compact, resumable and safe under a low file-descriptor lim
   assert.equal(all.length, 181);
   assert.equal(new Set(all).size, 181);
   assert.deepEqual(all, [...all].sort());
-  const env = { ...process.env };
-  delete env.NODE_TEST_CONTEXT;
-  const bounded = spawnSync(
-    '/bin/sh',
-    [
-      '-c',
-      'ulimit -n 64\nexec "$1" "$2" --root "$3" --json task list --limit 200',
-      'test',
-      process.execPath,
-      bin,
-      dir,
-    ],
-    { env, encoding: 'utf8', timeout: 15000 },
-  );
-  assert.equal(bounded.status, 0, bounded.stderr);
-  assert.equal(JSON.parse(bounded.stdout).tasks.length, 181);
-  assert.ok(JSON.parse(bounded.stdout).tasks.every((t) => t.issues.length === 0));
+  const { result: bounded, peak } = await withFdBudget(t, 8, () => listTasks(dir, { limit: 200 }));
+  assert.ok(peak > 0 && peak <= 8);
+  assert.equal(bounded.tasks.length, 181);
+  assert.ok(bounded.tasks.every((task) => task.issues.length === 0));
   await symlink('task-001', join(dir, 'clinx/tasks/broken-link'));
   const selected = cli(dir, 'status', 'change');
   assert.deepEqual(

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { fixture, cli, put, json, contract } from './helpers.mjs';
 
 async function agreementFixture() {
@@ -94,73 +95,108 @@ test('changed confirmation context invalidates local bindings without interpreti
   }
 });
 
-test('checkpoint can carry bounded loop state without becoming an approval state machine', async () => {
+test('legacy loop notes stay readable while new checkpoints use ordinary handoff fields', async () => {
   const { dir } = await agreementFixture();
-  const note = join(dir, 'loop-note.json');
-  await json(note, {
-    focus: 'verify',
-    state: 'handoff',
-    summary: 'One hypothesis tested; a review gate remains',
-    next: 'Resume only after the named reviewer resolves the gate',
-    blockers: ['Independent semantic review'],
-    loop: {
-      iteration: 2,
-      hypothesis: 'The existing policy owner can serve the new filter',
-      mechanism: 'Compose filtering after the authoritative eligibility call',
-      treatment: 'Run the API and console boundary checks',
-      plannedChecks: ['api-boundary', 'console-transport'],
-      observations: ['Local positive and negative cases passed'],
-      unknowns: ['Production authentication was not observed'],
-      nextAction: 'Obtain the independent review before another implementation round',
-      stopReason: 'needs-review',
-    },
-  });
-  const saved = cli(dir, 'task', 'checkpoint', 'change', '--file', note);
-  assert.equal(saved.status, 0, saved.err);
-  assert.equal(saved.out.checkpoint.note.loop.iteration, 2);
-  assert.equal(saved.out.checkpoint.note.loop.stopReason, 'needs-review');
-  const resumed = cli(dir, 'context', 'change');
-  assert.equal(resumed.status, 0, resumed.err);
-  assert.deepEqual(resumed.out.checkpoint.note.loop.unknowns, [
-    'Production authentication was not observed',
-  ]);
-  assert.equal(resumed.out.checkpoint.note.loop.stopReason, 'needs-review');
-});
-
-test('optional loop metadata does not impose a second execution lifecycle', async () => {
-  const { dir } = await agreementFixture();
-  const note = join(dir, 'progress.json');
+  const note = join(dir, 'note.json');
   const progress = {
     focus: 'verify',
     state: 'active',
-    summary: 'Local repair passed; provider guarantees remain unknown',
+    summary: 'A repair passed; provider guarantees remain unknown',
     next: 'Read the provider contract',
     blockers: [],
   };
   await json(note, progress);
-  const plain = cli(dir, 'task', 'checkpoint', 'change', '--file', note);
-  assert.equal(plain.status, 0, plain.err);
-  const loop = {
-    iteration: 4,
-    hypothesis: 'Local repair preserves retries',
-    mechanism: 'Check the affected boundary',
-    treatment: 'Repair local encoding',
-    observations: ['Local positive and negative checks passed'],
+  const saved = cli(dir, 'task', 'checkpoint', 'change', '--file', note);
+  assert.equal(saved.status, 0, saved.err);
+  const legacy = saved.out.checkpoint;
+  legacy.note.loop = {
+    iteration: 2,
+    hypothesis: 'Retries are safe',
+    mechanism: 'Receiver contract',
+    treatment: 'Inspect provider',
+    plannedChecks: [],
+    observations: [],
     unknowns: ['Provider guarantees'],
     nextAction: progress.next,
     stopReason: 'fixed',
   };
-  await json(note, { ...progress, loop });
-  const structured = cli(dir, 'task', 'checkpoint', 'change', '--file', note);
-  assert.equal(structured.status, 0, structured.err);
-  assert.equal(structured.out.checkpoint.sequence, plain.out.checkpoint.sequence + 1);
+  const historical = join(dir, saved.out.path);
+  await json(historical, legacy);
+  const bytes = await readFile(historical, 'utf8');
   const resumed = cli(dir, 'context', 'change');
+  assert.equal(resumed.status, 0, resumed.err);
+  assert.equal(resumed.out.continuity, 'inputs-match');
+  assert.equal(resumed.out.checkpoint.note.loop.stopReason, 'fixed');
   assert.equal(resumed.out.checkpoint.note.state, 'active');
-  assert.equal(resumed.out.checkpoint.note.next, progress.next);
-  assert.deepEqual(resumed.out.checkpoint.note.loop.unknowns, ['Provider guarantees']);
-  // A new host-owned loop can restart numbering without rewriting saved history.
-  await json(note, { ...progress, loop: { ...loop, iteration: 1, stopReason: 'continue' } });
-  const restarted = cli(dir, 'task', 'checkpoint', 'change', '--file', note);
-  assert.equal(restarted.status, 0, restarted.err);
-  assert.equal(restarted.out.checkpoint.sequence, structured.out.checkpoint.sequence + 1);
+  await json(note, legacy.note);
+  const rejected = cli(dir, 'task', 'checkpoint', 'change', '--file', note);
+  assert.equal(rejected.status, 3);
+  assert.match(rejected.err, /loop/);
+  assert.equal(await readFile(historical, 'utf8'), bytes);
+  await json(note, progress);
+  const next = cli(dir, 'task', 'checkpoint', 'change', '--file', note);
+  assert.equal(next.status, 0, next.err);
+  assert.equal(next.out.checkpoint.sequence, 2);
+  assert.equal(next.out.checkpoint.note.loop, undefined);
+  assert.equal(await readFile(historical, 'utf8'), bytes);
+});
+
+test('continuity-only agreements add, resume and revise without artificial claims', async () => {
+  const dir = await fixture();
+  const agreement = contract();
+  agreement.id = 'investigation';
+  agreement.mode = 'diagnosis';
+  delete agreement.defaultClaim;
+  delete agreement.claims;
+  delete agreement.obligations;
+  const input = join(dir, 'agreement.json');
+  await json(input, agreement);
+  assert.equal(cli(dir, 'task', 'add', '--file', input).status, 0);
+  const note = join(dir, 'note.json');
+  await json(note, {
+    focus: 'discover',
+    state: 'active',
+    summary: 'Located rule owner',
+    next: 'Inspect consumers',
+  });
+  const saved = cli(dir, 'task', 'checkpoint', 'investigation', '--file', note);
+  assert.equal(saved.status, 0, saved.err);
+  assert.equal(cli(dir, 'context', 'investigation').out.continuity, 'inputs-match');
+  for (const extra of [[], ['--run'], ['--claim', 'invented']]) {
+    const result = cli(dir, 'verify', 'investigation', ...extra);
+    assert.equal(result.status, 3);
+    assert.match(result.err, /no verification plan/);
+  }
+  const oldBytes = await readFile(join(dir, saved.out.path), 'utf8');
+  const planned = {
+    ...agreement,
+    defaultClaim: 'local',
+    claims: ['local'],
+    obligations: contract().obligations,
+  };
+  await json(input, planned);
+  const revised = cli(
+    dir,
+    'task',
+    'revise',
+    'investigation',
+    '--file',
+    input,
+    '--reason',
+    'Add reviewed local acceptance',
+  );
+  assert.equal(revised.status, 0, revised.err);
+  assert.equal(cli(dir, 'context', 'investigation').out.continuity, 'reconcile-required');
+  assert.equal(cli(dir, 'verify', 'investigation', '--run').out.verdict.decision, 'supported');
+  assert.equal(await readFile(join(dir, saved.out.path), 'utf8'), oldBytes);
+  // Partial plans must fail; absence must never silently discard an intended check.
+  for (const fragment of [
+    { claims: ['local'] },
+    { defaultClaim: 'local' },
+    { obligations: [] },
+    { defaultClaim: 'local', claims: ['local'], obligations: [] },
+  ]) {
+    await json(input, { ...agreement, id: 'invalid', ...fragment });
+    assert.equal(cli(dir, 'task', 'add', '--file', input).status, 3);
+  }
 });

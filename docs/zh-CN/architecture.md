@@ -84,16 +84,16 @@ clinx/
 | 可选工作区地图或指南                  | 跨源导航和协调步骤，链接已有归属方                  |
 | `clinx/tasks/ID/contract.json`        | 结果、范围、不变量、决策、权限、验收条件            |
 | 任务 `context`                        | 引用的本地方案，其内容参与任务绑定                  |
-| `checkpoints/NNNNNNNN.json`           | 输入绑定的续接说明，可含有界 loop 状态，不表示完成  |
+| `checkpoints/NNNNNNNN.json`           | 输入绑定的续接说明，旧元数据仍可读，不表示完成      |
 | `revisions/*.json`                    | 旧约定及原因、摘要，不回滚代码                      |
 | `.clinx/runs/UUID/receipt.json`       | 本地执行记录，未签名、未独立认证                    |
 | 同目录 stdout/stderr/XML              | 有界的原始执行输出                                  |
 | `.clinx/evidence/ID/UUID/record.json` | 观察者声明与复制附件，不是验收结论                  |
 
 交付记录模型由 `src/schema.ts` 定义，构建生成 JSON Schema。
-重复改进时，由外部 Goal/编排器负责 loop 预算、权限和是否继续。检查点可选的
-`loop` 对象记录迭代假设、处理、计划检查、观察、未知、下一步和停止原因，
-让新的 Agent 能在不重放旧推理的情况下续接；clinx 不运行 Agent，也不会偷偷推进 loop。
+重复改进时，外部 Goal/编排器负责预算、权限和是否继续。在普通 summary/next/blockers 字段中
+留存假设与观察。新检查点不再接受结构化 loop 元数据，旧记录仍可读取。
+CLI 保存用户/Agent 的陈述，不拥有其真实性，也不运行 Agent。
 CLI 额外检查交叉引用、唯一性和文件系统约束；只做 Schema 校验并不等价。
 Markdown 保存推理，JSON 保存机器记录。支持 Skill、CLI 和 Schema，不提供独立 JavaScript SDK。
 

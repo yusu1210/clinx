@@ -4,6 +4,28 @@
 
 This is the agent/maintainer companion to the [hands-on case](hands-on.md), not required reading before a user starts. Use it when acceptance records or cross-session handoffs help. Commands and JSON expose an inspectable internal process normally performed by the agent.
 
+## Retain a handoff without a verification plan
+
+For continuity alone, declare the relevant source inputs in `clinx.config.json` and
+omit checks until needed. A minimal task agreement can be:
+
+```json
+{
+  "version": 1,
+  "id": "2026-09-19-notice-visibility",
+  "title": "Investigate notice visibility",
+  "outcome": "Identify the current visibility rule and unresolved consumer behavior",
+  "mode": "diagnosis",
+  "scope": ["Visibility owner and affected consumers"]
+}
+```
+
+Use `task add`, then `task checkpoint` and `context` with ordinary summary/next/blockers.
+There is no acceptance verdict for this agreement. Before `verify`, use `task revise`
+to add `defaultClaim`, `claims` and `obligations` together. Existing source and task
+binding checks still apply; omitted claims do not authorize unbound capture or execution.
+A task document alone remains sufficient when machine continuity adds no value.
+
 ## Record the same task
 
 Skip this section if a single conversation already delivered the work. For long tasks,

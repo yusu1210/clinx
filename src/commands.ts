@@ -98,7 +98,7 @@ export const commands: Record<string, Command> = {
     options: ['file'],
     positionals: 2,
     details:
-      'Requires reviewed clinx.config.json and a complete contract. --file is relative to the invoking cwd, not --root; use --file - for piped JSON (8 MiB maximum). The agent prepares the agreement from the PRD and engineering facts; the user need not fill a JSON form. See resources for task schema and templates.',
+      'Requires reviewed clinx.config.json and a complete agreement. For continuity alone, omit defaultClaim, claims and obligations together; add them together when verification is needed. --file is relative to the invoking cwd, not --root; use --file - for piped JSON (8 MiB maximum). The agent prepares the agreement from the PRD and engineering facts; the user need not fill a JSON form. See resources for task schema and templates.',
     examples: [
       'clinx task add --file contract.json',
       'clinx task add --file - --json < contract.json',
@@ -183,7 +183,7 @@ export const commands: Record<string, Command> = {
     options: ['claim', 'run', 'allow-external'],
     positionals: 2,
     details:
-      'Defaults to a read-only preview, not a passing verdict. --run executes reviewed checks with inherited OS permissions, environment and network. --allow-external also requires --run and real task-specific authority; it is not an approval credential. Exit 0 supported, 1 failed, 2 unresolved, 3 input/operational error. Commands must complete; do not register a permanent server process as a check.',
+      'Requires declared defaultClaim, claims and obligations; continuity-only tasks must first be revised to include them. Defaults to a read-only preview, not a passing verdict. --run executes reviewed checks with inherited OS permissions, environment and network. --allow-external also requires --run and real task-specific authority; it is not an approval credential. Exit 0 supported, 1 failed, 2 unresolved, 3 input/operational error. Commands must complete; do not register a permanent server process as a check.',
     examples: [
       'clinx verify feature',
       'clinx verify feature --run --json',

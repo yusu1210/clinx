@@ -125,8 +125,8 @@ For an improvement loop, preserve the question under test, distinguishing eviden
 remaining acceptance and next action in the current task note. Resume the same
 investigation after interruption; a new checkpoint does not require a new hypothesis
 or iteration. Existing summary/next/blocker fields can preserve this information.
-The host owns budgets and execution; optional loop metadata is historical context,
-not an execution gate, approval or verdict.
+The host owns budgets and execution. Older checkpoints may retain descriptive loop
+metadata; new notes use summary/next/blockers, not another lifecycle or verdict.
 
 Save when a handoff, interruption or meaningful milestone makes it useful, not
 after every tool call. The note contains focus (`discover`, `contract`, `build`,

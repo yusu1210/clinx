@@ -138,6 +138,7 @@ export async function fingerprint(
   root = await realpath(root);
   const entries = new Map<string, string>();
   const visited = new Set<string>();
+  const pending: string[] = [];
   let total = 0;
   const excluded = source.exclude.map((p) => resolve(root, p));
   if (excluded.some((p) => !inside(root, p) || p === root))
@@ -157,7 +158,17 @@ export async function fingerprint(
     if (info.isDirectory()) {
       entries.set(`${rel}/`, 'directory');
       const directory = await opendir(file);
-      for await (const child of directory) await visit(join(file, child.name));
+      for await (const child of directory) {
+        const path = join(file, child.name);
+        if (excluded.some((p) => inside(p, path)) || visited.has(path)) continue;
+        // Bound queued entries as well as visited entries, without keeping ancestor
+        // directory handles open while descending into a deep tree.
+        if (visited.size + pending.length >= MAX_SOURCE_ENTRIES)
+          throw new Error('Input scope too large; declare focused source inputs');
+        if (taskBudget && taskBudget.entries + pending.length >= MAX_TASK_ENTRIES)
+          throw new Error('Task input scope too large; select fewer or more focused sources');
+        pending.push(path);
+      }
     } else if (info.isFile()) {
       if (entries.has(rel)) return;
       const size = Number(info.size);
@@ -179,6 +190,7 @@ export async function fingerprint(
     if (excluded.some((p) => inside(p, file)))
       throw new Error(`Explicit input is excluded: ${source.id}:${input}`);
     await visit(file);
+    while (pending.length) await visit(pending.pop()!);
   }
   const files = [...entries.keys()].filter((p) => !p.endsWith('/')).length;
   if (files === 0) throw new Error(`${source.id}: input scope contains no files`);

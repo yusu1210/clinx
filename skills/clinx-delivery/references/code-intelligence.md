@@ -93,68 +93,20 @@ the relevant current source directly. Preserve the reason for incomplete evidenc
 Same HEAD is not proof of the same indexed working tree. A watcher is not a guarantee
 that a just-saved edit is already indexed.
 
-## Candidate integrations
+## Trial only the capability that is missing
 
-No backend is required or designated best. These are usage boundaries, not claims of
-completed integration tests; verify the chosen version in the actual environment.
+Use one primary relationship backend by default. A second technique can resolve a
+material ambiguity; agreement between correlated indexes is not independent proof.
+Resolve the exact qualified symbol before tracing, then compare equivalent queries
+with the same direction, depth and coverage. Source and consumer checks remain available.
 
-- **GitNexus:** keep as an optional specialist for process-flow views, framework-aware
-  symbol context and impact questions when those views justify its heavier index. Check
-  the actual repository/worktree, index warnings and cross-boundary coverage. Its result
-  is still a candidate set; source, protocol and tests remain authoritative. Use
-  index-only mode and external/private storage where supported.
-- **codebase-memory-mcp:** inspect indexing status, symbol search and call-path tools.
-  Consider it for repeated caller/callee and architecture queries after checking a
-  representative relationship against receiver types in current source. Confirm the index generation corresponds to the relevant inputs, not merely
-  that status reports the current filesystem HEAD. Use a persistent stdio session when
-  multiple queries are needed; one-shot CLI startup can dominate the query time. Resolve
-  the exact qualified symbol through search before tracing; do not invent its indexed name. Do not
-  treat an accepted request as a durable runtime-graph import without checking
-  implementation and persisted results.
-- **Understand Anything or generated domain views:** use explanations to select topics
-  and source locations. Verify the analyzed root/worktree and whether behavior-only
-  changes refresh summaries. Keep inference and source references visible.
-- **Existing LSP, SCIP, IDE or enterprise navigation:** reuse working project bindings.
-  Confirm build/dependency/index coverage; precise symbol navigation alone does not
-  establish cross-service contracts or runtime activation.
-
-### Trial selection criteria
-
-Use these criteria to select a bounded trial. They are starting hypotheses, not a
-backend ranking or a reproducible performance result.
-
-| Need                                                                      | Default                                                | Use a graph backend when                                                                              | Avoid or defer when                                                                       |
-| ------------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| One or a few definitions, literals, filenames, or exact consumers         | `rg` plus the project language service                 | the result set is too broad to inspect safely                                                         | indexing would take longer than the bounded search                                        |
-| Repeated callers, callees, or blast-radius questions in one investigation | an already-running LSP or one persistent graph session | several related queries justify the cold index and coverage audit                                     | starting a new CLI process for each query                                                 |
-| Cross-module Java/TypeScript call graph                                   | existing LSP or a source-checked graph session         | the index reports the relevant files as parsed and the graph answers a concrete relationship question | dynamic dispatch, generated code, MQ/HTTP, or framework wiring is material and unverified |
-| Process flows, framework-aware context or specialist impact review        | source and a checked backend; GitNexus where useful    | process-level views justify the heavier cold index and its warnings are reviewable                    | a bounded search or ordinary caller/callee query answers the question                     |
-| Project orientation and generated context files                           | manually maintained project guidance                   | a separate context generator is explicitly authorized to write its files                              | it would write instructions, hooks, or IDE files into a source checkout without review    |
-
-Compare equivalent successful queries with the same symbol, direction, depth and
-coverage. Separate process startup, cold indexing and warm queries; include symbol
-resolution and failed lookups in total investigation cost. Persistent sessions may
-avoid repeated startup, but low query latency alone does not justify a default.
-Keep measured numbers with the exact tool identity/version, input revision, query,
-raw result and acceptance review in the authorized evaluation record. Do not carry
-private or unreproducible measurements into portable instructions as performance claims.
-
-More edges do not establish better coverage: check receiver types, heuristic matches
-and material omitted external calls. Resolve and validate one query before repeating
-a benchmark; do not rank fast errors as successful searches. These checks do not
-require running two backends on every task. A context generator that writes instruction
-files or hooks belongs to the authorized project-context workflow; inspect its actual
-writes and refresh behavior before adopting it for that purpose.
-
-For any candidate backend, record the version, cold-index time, warm-query time, update
-result, parsed/partial/unusable counts, exclusions, generated files and storage path.
-Prefer external/private index storage and an index-only mode where supported. A clean
-status or a successful request does not prove freshness. Preserve native search and
-source/test checks as the fallback and acceptance path.
-
-Use one primary relationship backend by default. A second independent technique can
-resolve a high-risk ambiguity; do not average confidence numbers or count agreement
-between correlated indexes as proof. Keep tests, contracts and source inspection available.
+For a proposed adoption, record the installed version, cold setup, warm queries,
+update behavior, failed lookups, parse limits, generated files and storage location.
+Include startup and maintenance in total cost; a fast error is not a successful query.
+Prefer external/private storage and index-only mode where supported. Tools that write
+instructions, hooks or project files require review of those effects before adoption.
+Keep version-specific recipes in the project's tool binding or maintainer guide,
+not in portable decision rules. No backend is required or designated best.
 
 ## Verify the slice, not the graph
 

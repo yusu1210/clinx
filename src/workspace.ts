@@ -52,7 +52,7 @@ export function verificationDefinition(
   task: TaskContract,
   checks?: Check[],
 ): VerificationDefinition {
-  const ids = new Set(task.obligations.flatMap((o) => ('checks' in o ? o.checks : [])));
+  const ids = new Set((task.obligations ?? []).flatMap((o) => ('checks' in o ? o.checks : [])));
   return {
     sources: taskSources(p, task),
     checks: checks ?? p.config.checks.filter((c) => ids.has(c.id)),

@@ -4,8 +4,8 @@
     {
       "source": "CHANGELOG.md",
       "translation": "CHANGELOG.zh-CN.md",
-      "sourceSha256": "0402a0523c7931af09328a4f653399bf91bd715642608c2498e0b6efe5c3c8b1",
-      "translationSha256": "e07937e62cf68a6f1c8ba6fe1d4340d184e29f5c35b2a1b42d969709d36c268a"
+      "sourceSha256": "870966540de995114fc99df83a6f21454ca57297db06cd45dc3616dae22311a1",
+      "translationSha256": "4aab9c78f3ab11590923f5c64b675438fc15d0ee855a40879825bd27a6c4f28b"
     },
     {
       "source": "CONTRIBUTING.md",
@@ -22,14 +22,14 @@
     {
       "source": "docs/en/architecture.md",
       "translation": "docs/zh-CN/architecture.md",
-      "sourceSha256": "e5ed47a0c32fc5873414de34e33dd38243dc42cda36b84f14e12f667eff58d39",
-      "translationSha256": "799a06b01c2786705c9045e03086ac1e36e4f148d6088779fc34d8040a6b1db8"
+      "sourceSha256": "6539ac616143c81e47cf2c6fab717993839473beb2a226010b017a225de09b20",
+      "translationSha256": "92379776d0255d90c4139d3523d458a830215820f5c656b96015451daa1380ac"
     },
     {
       "source": "docs/en/cli.md",
       "translation": "docs/zh-CN/cli.md",
-      "sourceSha256": "8bdedc61baacec5e14fb6c95ffce7e2c6ca6acc5aeb2ea107e253b2f9fb2621d",
-      "translationSha256": "9d76d0d682cc7d92178f4ba8e19afced8835791413ba8b3b4989a95d285d1fd0"
+      "sourceSha256": "a955a7094a43871bc01bb749a189a64b433cf360c18ccd9c8d4cf2d8ad07dd0f",
+      "translationSha256": "cafdeb84b3fda762fc097fc8b8c93913a9ef8307d819ba217fcf15a9bd48263d"
     },
     {
       "source": "docs/en/cold-start.md",
@@ -46,8 +46,8 @@
     {
       "source": "docs/en/evaluation.md",
       "translation": "docs/zh-CN/evaluation.md",
-      "sourceSha256": "a082e4f93a1bad1d06e9d6c00c9055fff77c4e4e214b7d36bef28585cadf1f43",
-      "translationSha256": "f692edca0c00af5a879ac3e65c9662cde6b375f12a50d655984febe7507366d7"
+      "sourceSha256": "4a6ba493743371c22af2e3eb65833c390a04e341b900d7cb826ca096f81eef79",
+      "translationSha256": "a37ae8d1d89e65310240918d0f7d508af40cdefd46c2eef4fd7c25d1ba257d3a"
     },
     {
       "source": "docs/en/evidence.md",
@@ -70,8 +70,8 @@
     {
       "source": "docs/en/knowledge.md",
       "translation": "docs/zh-CN/knowledge.md",
-      "sourceSha256": "c146d00f3a715fe9448380df85113fbc9fd61bfb6362c227295f9fbb3d7b41b1",
-      "translationSha256": "0ce85814ee23fbfdeb0a561b810e299c6aafe2c9de0b939e3590b98e89782bdb"
+      "sourceSha256": "6562de255c7f92319b1ccde348e52f28665a5dd1072d8aae054a60c87eb70026",
+      "translationSha256": "04b29a151b413480e4f8be5387a6e910702d25740eae44fe5e3b050412e3051c"
     },
     {
       "source": "docs/en/method.md",
@@ -94,8 +94,8 @@
     {
       "source": "docs/en/recorded-delivery.md",
       "translation": "docs/zh-CN/recorded-delivery.md",
-      "sourceSha256": "d472ae197420113486022c447de2c4cf7b590070c36b2ab92498b733e5d1f3da",
-      "translationSha256": "580635edbc5b1c58fbbed15b607fa279707eeb30580a5d386854285c07b573f2"
+      "sourceSha256": "092aa64ecfc9798aed94e267de0a1bf1b365a36b3f325ec64f4e27c95f9dd5eb",
+      "translationSha256": "89f3b5e4e93e88ccf5098959c6e0f5452eeb212ee7c9e6d729f835f0787f3fad"
     },
     {
       "source": "docs/en/validation.md",

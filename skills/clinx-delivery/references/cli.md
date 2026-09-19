@@ -75,6 +75,8 @@ Unsupported discovery does not block normal investigation or execution.
 
 - `clinx task add --file CONTRACT.json --json` validates and persists the actual agreement.
   A structurally valid agreement can still omit required behavior.
+  For continuity alone, omit `defaultClaim`, `claims` and `obligations` together.
+  Add all three through `task revise` before verification is needed.
   All `--file` commands also accept `-` for piped JSON (8 MiB maximum); never ask the
   user to prepare a technical form when you can derive the agreement from current facts.
   Reuse existing project configuration and canonical requirement/design references.

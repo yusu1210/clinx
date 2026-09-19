@@ -48,6 +48,12 @@ be nonblank. Commands allow 1–128 strings, each at most 16,384 characters and 
 Check IDs must be unique ignoring case, because they name artifacts on both
 case-sensitive and case-insensitive filesystems. This is validated before execution.
 
+Bootstrap diagnostics expose an allowlisted `causeCode` without paths or stacks.
+`EMFILE`/`ENFILE` report `RESOURCE_LIMIT`; unavailable package modules retain
+`INSTALLATION_INCOMPLETE`. Unexpected command failures use `CLI_FAILED`, not an
+installation diagnosis. The CLI does not promise startup at a particular OS open-file
+limit; bounded application traversal is tested separately from the runtime loader.
+
 ## Workspace and task scope
 
 `resources --json` returns `skills.delivery` and `skills.knowledge` paths. Initialization
@@ -76,6 +82,14 @@ Task `sources` is an optional nonempty list of relevant source IDs; omitting it 
 all configured sources. Include unchanged dependencies and affected consumers. Check
 sources and source-owned task references must be inside the task scope. `validate ID`
 checks those roots; `validate` without an ID checks every configured root.
+
+Tasks select source IDs, not per-task `inputs` overrides. All tasks selecting one source
+share its configured selectors: a change elsewhere inside a broad `src` input can require
+reconciliation even when the task's behavior is unaffected. Two source IDs cannot alias
+the same real root. This conservative binding does not identify semantic impact; inspect
+the change before deciding what to recheck. Narrow inputs only after accounting for shared
+dependencies and consumers, never merely to restore a matching digest. Selector edits also
+change bindings; omitted dependencies can change behavior while declared inputs still match.
 
 Both config and task `context` accept `{ "source": "service", "path": "docs/design.md" }`.
 Omit `source` for a workspace-local file. Task reference bytes bind the agreement;
@@ -170,6 +184,13 @@ Exit 0 means inspection completed (possibly with diagnostics), not project valid
 [receipt schema](../../schemas/receipt.schema.json), [evidence input](../../schemas/evidence-input.schema.json)
 and [evidence record](../../schemas/evidence.schema.json) are generated from runtime models.
 Use the CLI to also validate cross-references and path constraints.
+
+A continuity-only task omits `defaultClaim`, `claims` and `obligations` together.
+It can use `task add`, `task revise`, `task checkpoint` and `context` with reviewed
+source inputs, without inventing acceptance claims. Verification requires all three
+fields as a complete plan; a partial or empty plan is rejected. Add it through
+`task revise` when needed; the changed binding requires reconciliation of old notes.
+Existing contracts with claims retain their shape and binding semantics.
 
 Claims are explicit task labels, not built-in quality levels. Each claim has at
 least one obligation; each obligation references one or more existing checks (all
@@ -301,17 +322,10 @@ created or was lost. Continue through the workspace's document entry, or recover
 contract that was expected; do not create placeholder records to clear the diagnostic.
 The CLI does not infer a task title, acceptance or completion from Markdown files.
 
-A checkpoint may include an optional `loop` object for a bounded improvement loop:
-`iteration`, falsifiable `hypothesis`, `mechanism`, `treatment`, `plannedChecks`,
-`observations`, `unknowns`, `nextAction` and `stopReason`. The Goal or other external
-orchestrator owns the loop budget, authority and continuation decision. clinx binds the
-record to current task inputs and exposes it through `context`/`task show`; it does not
-invoke another agent, silently retry a `needs-review` gate or create a second workflow.
-Loop fields are descriptive metadata, not an enforced execution lifecycle. A local
-repair can be `fixed` while the wider task remains active, and a new host loop may
-restart its iteration count. Immutable checkpoint sequence numbers preserve history.
-Ordinary `summary`, `next` and `blockers` are sufficient; structured loop metadata is
-optional and does not establish improved delivery or permission to continue.
+New checkpoints use `summary`, `next` and `blockers` for hypotheses, observations and
+remaining work. The former optional `loop` input is no longer accepted. Saved version-2
+checkpoints with that metadata remain readable and unchanged; it grants no authority
+or completion. The host owns iteration, budgets and continuation decisions.
 
 `task list` and unselected `status` default to 50 summaries; `--limit` accepts 1–200.
 A 256 KiB content budget can shorten a page. Pass the returned `nextAfter` as

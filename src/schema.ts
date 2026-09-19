@@ -27,7 +27,8 @@ const loopStopReasonSchema = z.enum([
   'needs-review',
   'blocked',
 ]);
-const loopStateSchema = z.strictObject({
+// Read compatibility for saved version-2 checkpoints; no longer accepted on write.
+const legacyLoopStateSchema = z.strictObject({
   iteration: z.number().int().positive(),
   hypothesis: text,
   mechanism: text,
@@ -95,7 +96,7 @@ export const configSchema = z.strictObject({
   checks: z.array(checkSchema).default([]),
 });
 const obligationBase = { id, description: text, claims: z.array(id).min(1) };
-export const taskSchema = z.strictObject({
+const taskAgreementSchema = z.strictObject({
   $schema: z.string().optional(),
   version: z.literal(1),
   id,
@@ -108,27 +109,33 @@ export const taskSchema = z.strictObject({
   decisions: z.array(z.strictObject({ question: text, choice: text, basis: text })).default([]),
   context: z.array(fileRefSchema.extend({ why: text })).default([]),
   mode: z.enum(['implementation', 'design', 'diagnosis', 'review']),
-  defaultClaim: id,
-  claims: z.array(id).min(1),
   nonGoals: z.array(text).default([]),
-  obligations: z
-    .array(
-      z.union([
-        z.strictObject({ ...obligationBase, checks: z.array(id).min(1) }),
-        z.strictObject({ ...obligationBase, external: text }),
-      ]),
-    )
-    .min(1),
 });
+export const taskSchema = z.union([
+  taskAgreementSchema.extend({
+    defaultClaim: id,
+    claims: z.array(id).min(1),
+    obligations: z
+      .array(
+        z.union([
+          z.strictObject({ ...obligationBase, checks: z.array(id).min(1) }),
+          z.strictObject({ ...obligationBase, external: text }),
+        ]),
+      )
+      .min(1),
+  }),
+  taskAgreementSchema.extend({
+    defaultClaim: z.never().optional(),
+    claims: z.never().optional(),
+    obligations: z.never().optional(),
+  }),
+]);
 export const checkpointInputSchema = z.strictObject({
   focus: focusSchema,
   state: z.enum(['active', 'blocked', 'handoff']),
   summary: text,
   next: text,
   blockers: z.array(text).default([]),
-  // Optional bounded-loop state. The external orchestrator owns iteration and
-  // authority; clinx only persists an input-bound, inspectable handoff.
-  loop: loopStateSchema.optional(),
 });
 export const checkpointSchema = z.strictObject({
   version: z.literal(2),
@@ -138,7 +145,7 @@ export const checkpointSchema = z.strictObject({
   definitionDigest: digest,
   taskDigest: digest,
   sources: z.array(z.strictObject({ id, digest })).max(MAX_SOURCES),
-  note: checkpointInputSchema,
+  note: checkpointInputSchema.extend({ loop: legacyLoopStateSchema.optional() }),
 });
 export const evidenceInputSchema = z.strictObject({
   obligations: z.array(id).min(1).max(128),
@@ -302,6 +309,8 @@ export function parseTask(value: unknown): TaskContract {
     task.context.map((ref) => JSON.stringify([ref.source ?? null, ref.path])),
     'task context references',
   );
+  // Continuity-only agreements do not invent verification claims.
+  if (!task.claims) return task;
   unique(task.claims, 'claim IDs');
   unique(
     task.obligations.map((o) => o.id),
@@ -333,7 +342,7 @@ export function validateTask(value: unknown, config: WorkspaceConfig): TaskContr
     if (ref.source && !sources.includes(ref.source))
       throw new Error(`Context source outside task sources: ${ref.source}`);
   }
-  for (const o of task.obligations) {
+  for (const o of task.obligations ?? []) {
     if ('checks' in o && o.checks.some((c) => !config.checks.some((check) => check.id === c)))
       throw new Error(`${o.id}: unknown check`);
     if ('checks' in o) {

@@ -14,9 +14,9 @@ on:
         required: true
         default: '1'
       model:
-        description: Codex model; empty uses the action default
-        required: false
-        default: ''
+        description: Explicit model ID for every comparison run
+        required: true
+        type: string
       effort:
         description: Reasoning effort
         required: true
@@ -32,9 +32,14 @@ jobs:
     runs-on: ubuntu-latest
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      BENCHMARK_MODEL: ${{ inputs.model }}
     steps:
       - name: Require benchmark credential
         run: |
+          if [ -z "${BENCHMARK_MODEL//[[:space:]]/}" ]; then
+            echo "An explicit model ID is required; action defaults are not a comparison baseline." >&2
+            exit 1
+          fi
           if [ -z "$OPENAI_API_KEY" ]; then
             echo "OPENAI_API_KEY repository secret is required for true Codex agent runs." >&2
             exit 1

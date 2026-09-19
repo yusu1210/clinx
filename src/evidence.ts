@@ -50,7 +50,7 @@ export async function addEvidence(p: Workspace, id: string, value: unknown) {
     const current = await openWorkspace(p.root);
     const { task } = await readTask(current, id);
     for (const obligation of input.obligations)
-      if (!task.obligations.some((o) => o.id === obligation))
+      if (!(task.obligations ?? []).some((o) => o.id === obligation))
         throw new Error(`Unknown evidence obligation: ${obligation}`);
     const capturedInputs = await binding(current, id);
     let total = 0;

@@ -32,7 +32,8 @@ transition rejects missing or mismatched treatment identity rather than silently
 changing the arm.
 
 The GitHub workflow uses the official `openai/codex-action`, so it requires a repository
-`OPENAI_API_KEY` secret. The workflow is manual (`workflow_dispatch`) to avoid accidental
+`OPENAI_API_KEY` secret. Every run also requires an explicit model ID and reasoning effort;
+a changing action default is not a comparison baseline. The workflow is manual (`workflow_dispatch`) to avoid accidental
 API spend.
 
 Source comparisons use the evaluator's fixture bytes, not candidate Git status.

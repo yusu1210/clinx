@@ -28,7 +28,46 @@ test('an incomplete installation reports a recovery hint without an import stack
   const error = JSON.parse(failed.stderr);
   assert.equal(error.code, 'INSTALLATION_INCOMPLETE');
   assert.match(error.hint, /Reinstall/);
-  assert.doesNotMatch(failed.stderr, /ERR_MODULE_NOT_FOUND/);
+  assert.equal(error.causeCode, 'ERR_MODULE_NOT_FOUND');
+  assert.doesNotMatch(failed.stderr, /file:\/\/|clinx-incomplete-|\n\s+at /);
+});
+test('bootstrap errors retain safe causes and distinguish command failures', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'clinx-bootstrap-'));
+  await put(join(dir, 'package.json'), '{"type":"module"}');
+  await mkdir(join(dir, 'bin'));
+  await copyFile(bin, join(dir, 'bin/clinx.mjs'));
+  for (const [source, code, cause] of [
+    [
+      "throw Object.assign(new Error('private-path-secret'), {code:'EMFILE'})",
+      'RESOURCE_LIMIT',
+      'EMFILE',
+    ],
+    [
+      "throw Object.assign(new Error('private-path-secret'), {code:'SECRET\\u001b[31m'})",
+      'INSTALLATION_INCOMPLETE',
+      'UNKNOWN',
+    ],
+    ['export const broken = ;', 'INSTALLATION_INCOMPLETE', 'SYNTAX_ERROR'],
+    ['export const unrelated = true;', 'INSTALLATION_INCOMPLETE', 'UNKNOWN'],
+    [
+      "export async function main() { throw new Error('private-path-secret') }",
+      'CLI_FAILED',
+      undefined,
+    ],
+  ]) {
+    await put(join(dir, 'dist/cli.js'), source);
+    for (const args of [[], ['--json']]) {
+      const failed = spawnSync(process.execPath, [join(dir, 'bin/clinx.mjs'), ...args], {
+        encoding: 'utf8',
+      });
+      assert.equal(failed.status, 3);
+      assert.doesNotMatch(failed.stderr, /private-path-secret|SECRET|\x1b|\n\s+at /);
+      if (args.length) {
+        assert.equal(JSON.parse(failed.stderr).code, code);
+        assert.equal(JSON.parse(failed.stderr).causeCode, cause);
+      } else assert.ok(failed.stderr.includes(code));
+    }
+  }
 });
 test('a closed output consumer does not produce an unhandled broken-pipe error', async () => {
   const child = spawn(process.execPath, [bin, '--help'], { stdio: ['ignore', 'pipe', 'pipe'] });

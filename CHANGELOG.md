@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+- Continuity-only task agreements can omit the verification plan; partial plans fail,
+  and verification still requires reviewed claims and obligations. Existing plans retain
+  their shape. New checkpoint inputs use summary/next/blockers; legacy loop notes stay readable.
+- Deep source traversal closes ancestor directory handles. Task pagination tests bound
+  application file handles independently of Node's module loader. Bootstrap errors retain
+  safe cause codes and distinguish resource exhaustion from unexpected command failures.
+- Portable code-intelligence guidance keeps capability rules; provider trial details
+  live in the maintainer guide. Benchmark dispatch requires an explicit model.
+
 - Longitudinal knowledge exercises preserve actual guidance across isolated checkpoints,
   detect protected-input changes and cover new consumers, unavailable sources, configuration
   drift, resurfacing history and later implementation. Knowledge rules separate support

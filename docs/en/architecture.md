@@ -116,20 +116,20 @@ selected task triggers continuity fingerprinting.
 or JSON, and `resources.ts` locates packaged assets and copies examples into new
 directories without executing them. None plans or schedules agents.
 
-| Artifact                              | Owner and meaning                                                                      |
-| ------------------------------------- | -------------------------------------------------------------------------------------- |
-| `.clinx/install/state.json`           | Local Skill placement, version, baseline hashes and ownership; not an attestation      |
-| `.clinx/install/backups/UUID/`        | Original files and installation state retained before managed replacement/removal      |
-| `clinx.config.json`                   | Workspace: explicit source roots/inputs, context routing, reviewed check definitions   |
-| Existing maps and guides              | Maintained by their owners: source facts, navigation and operating procedures          |
-| Optional workspace map or guide       | Cross-source navigation and coordination procedures; links to existing owners          |
-| `clinx/tasks/ID/contract.json`        | Task: outcome, scope, invariants, decisions, authority, obligations                    |
-| Contract `context` references         | Task: local design content included in the contract binding                            |
-| `checkpoints/NNNNNNNN.json`           | Immutable handoff note with input digests; optional bounded-loop state; not completion |
-| `revisions/*.json`                    | Previous JSON contract and revision reason/digests; no code rollback                   |
-| `.clinx/runs/UUID/receipt.json`       | Local execution record; not signed or independently attested                           |
-| Sibling stdout/stderr/XML             | Bounded private evidence artifacts retained for inspection                             |
-| `.clinx/evidence/ID/UUID/record.json` | Observer assertion and copied artifacts, bound at capture time; never a verdict        |
+| Artifact                              | Owner and meaning                                                                           |
+| ------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `.clinx/install/state.json`           | Local Skill placement, version, baseline hashes and ownership; not an attestation           |
+| `.clinx/install/backups/UUID/`        | Original files and installation state retained before managed replacement/removal           |
+| `clinx.config.json`                   | Workspace: explicit source roots/inputs, context routing, reviewed check definitions        |
+| Existing maps and guides              | Maintained by their owners: source facts, navigation and operating procedures               |
+| Optional workspace map or guide       | Cross-source navigation and coordination procedures; links to existing owners               |
+| `clinx/tasks/ID/contract.json`        | Task: outcome, scope, invariants, decisions, authority, obligations                         |
+| Contract `context` references         | Task: local design content included in the contract binding                                 |
+| `checkpoints/NNNNNNNN.json`           | Immutable handoff note with input digests; legacy metadata remains readable; not completion |
+| `revisions/*.json`                    | Previous JSON contract and revision reason/digests; no code rollback                        |
+| `.clinx/runs/UUID/receipt.json`       | Local execution record; not signed or independently attested                                |
+| Sibling stdout/stderr/XML             | Bounded private evidence artifacts retained for inspection                                  |
+| `.clinx/evidence/ID/UUID/record.json` | Observer assertion and copied artifacts, bound at capture time; never a verdict             |
 
 Delivery-record Zod definitions in `src/schema.ts` are the model source. `npm run build` generates
 JSON Schemas. CLI validation adds cross-reference, uniqueness and filesystem checks;
@@ -186,11 +186,10 @@ The receipt also binds its selected claim: changing `--claim` does not promote a
 narrow run into broader acceptance, even when some checks overlap.
 
 Tasks and raw runs are separate: a handoff can be useful without verified completion.
-For repeated improvement, the external Goal/orchestrator owns the loop budget,
-authority and continuation decision. A checkpoint's optional `loop` object records
-the iteration hypothesis, treatment, planned checks, observations, unknowns, next
-action and stop reason so a fresh agent can resume without replaying stale reasoning.
-clinx does not run an agent or silently advance this loop.
+For repeated improvement, the external Goal/orchestrator owns budgets, authority and
+continuation. Save hypotheses and observations in ordinary summary/next/blockers fields.
+New checkpoints no longer accept structured loop metadata; old records remain readable.
+The CLI stores user/agent assertions without owning their truth or running an agent.
 Revision creates a new current contract and retains the old one. It does not delete
 old receipts or force all work back to stage zero. Current reconciliation determines
 whether a historical receipt still applies. No `mark-complete` or `force-pass` exists.

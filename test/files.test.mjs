@@ -22,6 +22,22 @@ import { checkpoint } from '../dist/task.js';
 import { execute } from '../dist/runner.js';
 import { verify, reconcile } from '../dist/verify.js';
 import { fixture, put, json, cli } from './helpers.mjs';
+import { withFdBudget } from './fd-budget.mjs';
+
+test('deep fingerprints close ancestor handles and preserve content and failure checks', async (t) => {
+  const dir = await fixture();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const path = join(dir, 'deep', ...Array(100).fill('d'), 'leaf.txt');
+  await put(path, 'first');
+  const source = { id: 'main', path: '.', inputs: ['deep'], exclude: [] };
+  const { result: first, peak } = await withFdBudget(t, 8, () => fingerprint(dir, source));
+  assert.equal(first.files, 1);
+  assert.ok(peak <= 2);
+  await put(path, 'changed');
+  assert.notEqual((await fingerprint(dir, source)).digest, first.digest);
+  await symlink('leaf.txt', join(path, '..', 'link'));
+  await withFdBudget(t, 8, () => assert.rejects(fingerprint(dir, source), /symlink input/));
+});
 
 test('fingerprint is independent of overlapping input ordering, but binds mode and content', async () => {
   const dir = await fixture();
